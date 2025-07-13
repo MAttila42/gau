@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 /* eslint-disable antfu/no-top-level-await */
 import process from 'node:process'
-import { $ } from 'bun'
+import { $, Glob } from 'bun'
 
 console.log('Cleaning dist directory...')
 await $`rm -rf packages/gau/dist`.quiet()
@@ -25,27 +25,17 @@ if (tscSolidResult.exitCode !== 0) {
 console.log('Successfully generated .d.ts files.')
 
 console.log('Bundling .mjs files...')
+
+const glob = new Glob('packages/gau/**/index.{ts,tsx}')
+
 const result = await Bun.build({
-  entrypoints: [
-    './packages/gau/index.ts',
-    './packages/gau/adapters/drizzle/index.ts',
-    './packages/gau/adapters/memory/index.ts',
-    './packages/gau/cli/index.ts',
-    './packages/gau/client/solid/index.tsx',
-    './packages/gau/client/svelte/index.ts',
-    './packages/gau/core/index.ts',
-    './packages/gau/jwt/index.ts',
-    './packages/gau/oauth/index.ts',
-    './packages/gau/runtimes/bun/index.ts',
-    './packages/gau/runtimes/cloudflare/index.ts',
-    './packages/gau/runtimes/tauri/index.ts',
-    './packages/gau/solidstart/index.ts',
-  ],
+  entrypoints: await Array.fromAsync(glob.scan()),
   outdir: './packages/gau/dist',
   root: './packages/gau',
   target: 'browser',
   splitting: true,
   packages: 'external',
+  sourcemap: 'external',
   naming: {
     entry: '[dir]/[name].mjs',
     chunk: '[name]-[hash].mjs',
