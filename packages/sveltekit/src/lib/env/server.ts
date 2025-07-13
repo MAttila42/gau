@@ -1,8 +1,9 @@
-import process from 'node:process'
+import * as rawEnv from '$env/static/private'
 import { z } from 'zod'
+
 import { serverScheme } from './schema'
 
-const env = serverScheme.safeParse(process.env)
+const env = serverScheme.safeParse(rawEnv)
 
 if (env.success === false) {
   console.error(z.prettifyError(env.error))

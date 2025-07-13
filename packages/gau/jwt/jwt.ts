@@ -18,7 +18,7 @@ interface CommonSignOptions {
 }
 
 export type SignOptions
-  = | ({ algorithm?: 'ES256', privateKey?: CryptoKey, secret?: never }
+  = | ({ algorithm?: 'ES256', privateKey?: CryptoKey, secret?: string }
     & CommonSignOptions & { iss?: string, aud?: string | string[], sub?: string })
   | ({ algorithm: 'HS256', secret?: string | Uint8Array, privateKey?: never }
     & CommonSignOptions & { iss?: string, aud?: string | string[], sub?: string })
@@ -31,13 +31,16 @@ export async function sign<T extends Record<string, unknown>>(payload: T, option
   let { algorithm = 'ES256', ttl, iss, aud, sub, privateKey, secret } = options
 
   if (algorithm === 'ES256' && !privateKey) {
-    const authSecret = process.env.AUTH_SECRET
+    const authSecret = secret ?? process.env.AUTH_SECRET
+    if (typeof authSecret !== 'string')
+      throw new AuthError('Invalid secret for ES256. Must be a base64url-encoded string.')
+
     if (!authSecret)
-      throw new AuthError('Missing AUTH_SECRET for ES256 signing');
+      throw new AuthError('Missing secret for ES256 signing');
     ({ privateKey } = await deriveKeysFromSecret(authSecret))
   }
   else if (algorithm === 'HS256' && !secret) {
-    secret = process.env.AUTH_SECRET
+    secret = options.secret ?? process.env.AUTH_SECRET
     if (!secret)
       throw new AuthError('Missing secret or AUTH_SECRET for HS256 signing')
   }
@@ -91,7 +94,7 @@ export async function sign<T extends Record<string, unknown>>(payload: T, option
 }
 
 export type VerifyOptions
-  = | { algorithm?: 'ES256', publicKey?: CryptoKey, secret?: never, iss?: string, aud?: string | string[] }
+  = | { algorithm?: 'ES256', publicKey?: CryptoKey, secret?: string, iss?: string, aud?: string | string[] }
     | { algorithm: 'HS256', secret?: string | Uint8Array, publicKey?: never, iss?: string, aud?: string | string[] }
 
 /**
@@ -103,14 +106,16 @@ export async function verify<T = Record<string, unknown>>(token: string, options
   let { algorithm = 'ES256', publicKey, secret, iss, aud } = options
 
   if (algorithm === 'ES256' && !publicKey) {
-    const authSecret = process.env.AUTH_SECRET
+    const authSecret = secret ?? process.env.AUTH_SECRET
+    if (typeof authSecret !== 'string')
+      throw new AuthError('Invalid secret for ES256. Must be a base64url-encoded string.')
     if (!authSecret)
       throw new AuthError('Missing AUTH_SECRET for ES256 verification');
     ({ publicKey } = await deriveKeysFromSecret(authSecret))
   }
 
   if (algorithm === 'HS256' && !secret) {
-    secret = process.env.AUTH_SECRET
+    secret = options.secret ?? process.env.AUTH_SECRET
     if (!secret)
       throw new AuthError('Missing secret or AUTH_SECRET for HS256 verification')
   }

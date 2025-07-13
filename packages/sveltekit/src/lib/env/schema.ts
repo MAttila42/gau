@@ -10,5 +10,5 @@ export const serverScheme = z.object({
 })
 
 export const clientScheme = z.object({
-  VITE_API_URL: z.string(),
+  PUBLIC_API_URL: z.string(),
 })

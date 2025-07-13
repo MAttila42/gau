@@ -1,6 +1,6 @@
-import type { RequestEvent } from '@sveltejs/kit'
+import type { Handle, RequestEvent } from '@sveltejs/kit'
 import type { CreateAuthOptions } from '../core'
-import { createAuth, createHandler } from '../core'
+import { createAuth, createHandler, parseCookies, SESSION_COOKIE_NAME } from '../core'
 
 type AuthInstance = ReturnType<typeof createAuth>
 
@@ -26,8 +26,34 @@ export function SvelteKitAuth(optionsOrAuth: CreateAuthOptions | AuthInstance) {
 
   const handler = createHandler(auth)
   const sveltekitHandler = (event: RequestEvent) => handler(event.request)
+
+  const handle: Handle = async ({ event, resolve }) => {
+    (event.locals as any).getSession = async () => {
+      const requestCookies = parseCookies(event.request.headers.get('Cookie'))
+      let sessionToken = requestCookies.get(SESSION_COOKIE_NAME)
+
+      if (!sessionToken) {
+        const authHeader = event.request.headers.get('Authorization')
+        if (authHeader?.startsWith('Bearer '))
+          sessionToken = authHeader.substring(7)
+      }
+
+      if (!sessionToken)
+        return null
+
+      try {
+        return await auth.validateSession(sessionToken)
+      }
+      catch {
+        return null
+      }
+    }
+    return resolve(event)
+  }
+
   return {
     GET: sveltekitHandler,
     POST: sveltekitHandler,
+    handle,
   }
 }

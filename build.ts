@@ -44,8 +44,8 @@ const result = await Bun.build({
   packages: 'external',
   sourcemap: 'external',
   naming: {
-    entry: '[dir]/[name].mjs',
-    chunk: '[name]-[hash].mjs',
+    entry: '[dir]/[name].js',
+    chunk: '[name]-[hash].js',
   },
 })
 

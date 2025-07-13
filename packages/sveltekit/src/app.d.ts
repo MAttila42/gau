@@ -1,11 +1,15 @@
-// See https://svelte.dev/docs/kit/types#app.d.ts
+// See https://kit.svelte.dev/docs/types#app
 // for information about these interfaces
 declare global {
   namespace App {
     // interface Error {}
-    // interface Locals {}
+    interface Locals {
+      getSession: () => Promise<{
+        user: import('@yuo-app/gau/core').User | null
+        session: { [key: string]: unknown, id: string, sub: string } | null
+      } | null>
+    }
     // interface PageData {}
-    // interface PageState {}
     // interface Platform {}
   }
 }

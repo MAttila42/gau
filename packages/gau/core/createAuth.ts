@@ -4,6 +4,7 @@ import type { OAuthProvider } from '../oauth'
 import type { Adapter, User } from './index'
 import { sign, verify } from '../jwt'
 import { DEFAULT_COOKIE_SERIALIZE_OPTIONS } from './cookies'
+import { AuthError } from './index'
 
 export interface CreateAuthOptions {
   adapter: Adapter
@@ -30,18 +31,28 @@ export function createAuth(options: CreateAuthOptions) {
 
   function buildSignOptions(custom: Partial<SignOptions> = {}): SignOptions {
     const base = { ttl: custom.ttl, iss: custom.iss ?? iss, aud: custom.aud ?? aud, sub: custom.sub }
-    if (algorithm === 'HS256')
+    if (algorithm === 'HS256') {
       return { algorithm, secret: custom.secret ?? secret, ...base }
-    else
-      return { algorithm, privateKey: custom.privateKey, ...base }
+    }
+    else {
+      const esSecret = custom.secret ?? secret
+      if (esSecret !== undefined && typeof esSecret !== 'string')
+        throw new AuthError('For ES256, the secret option must be a string.')
+      return { algorithm, privateKey: custom.privateKey, secret: esSecret, ...base }
+    }
   }
 
   function buildVerifyOptions(custom: Partial<VerifyOptions> = {}): VerifyOptions {
     const base = { iss: custom.iss ?? iss, aud: custom.aud ?? aud }
-    if (algorithm === 'HS256')
+    if (algorithm === 'HS256') {
       return { algorithm, secret: custom.secret ?? secret, ...base }
-    else
-      return { algorithm, publicKey: custom.publicKey, ...base }
+    }
+    else {
+      const esSecret = custom.secret ?? secret
+      if (esSecret !== undefined && typeof esSecret !== 'string')
+        throw new AuthError('For ES256, the secret option must be a string.')
+      return { algorithm, publicKey: custom.publicKey, secret: esSecret, ...base }
+    }
   }
 
   async function signJWT<T extends Record<string, unknown>>(payload: T, customOptions: Partial<SignOptions> = {}): Promise<string> {

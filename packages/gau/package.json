@@ -25,59 +25,59 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs"
+      "import": "./dist/index.js"
     },
     "./adapters/drizzle": {
       "types": "./dist/adapters/drizzle/index.d.ts",
-      "import": "./dist/adapters/drizzle/index.mjs"
+      "import": "./dist/adapters/drizzle/index.js"
     },
     "./adapters/memory": {
       "types": "./dist/adapters/memory/index.d.ts",
-      "import": "./dist/adapters/memory/index.mjs"
+      "import": "./dist/adapters/memory/index.js"
     },
     "./cli": {
       "types": "./dist/cli/index.d.ts",
-      "import": "./dist/cli/index.mjs"
+      "import": "./dist/cli/index.js"
     },
     "./client/solid": {
       "types": "./dist/client/solid/index.d.ts",
-      "import": "./dist/client/solid/index.mjs"
+      "import": "./dist/client/solid/index.js"
     },
     "./client/svelte": {
-      "types": "./dist/client/svelte/index.d.ts",
-      "import": "./dist/client/svelte/index.mjs"
+      "types": "./dist/client/svelte/index.svelte.d.ts",
+      "import": "./dist/client/svelte/index.svelte.js"
     },
     "./core": {
       "types": "./dist/core/index.d.ts",
-      "import": "./dist/core/index.mjs"
+      "import": "./dist/core/index.js"
     },
     "./jwt": {
       "types": "./dist/jwt/index.d.ts",
-      "import": "./dist/jwt/index.mjs"
+      "import": "./dist/jwt/index.js"
     },
     "./oauth": {
       "types": "./dist/oauth/index.d.ts",
-      "import": "./dist/oauth/index.mjs"
+      "import": "./dist/oauth/index.js"
     },
     "./runtimes/bun": {
       "types": "./dist/runtimes/bun/index.d.ts",
-      "import": "./dist/runtimes/bun/index.mjs"
+      "import": "./dist/runtimes/bun/index.js"
     },
     "./runtimes/cloudflare": {
       "types": "./dist/runtimes/cloudflare/index.d.ts",
-      "import": "./dist/runtimes/cloudflare/index.mjs"
+      "import": "./dist/runtimes/cloudflare/index.js"
     },
     "./runtimes/tauri": {
       "types": "./dist/runtimes/tauri/index.d.ts",
-      "import": "./dist/runtimes/tauri/index.mjs"
+      "import": "./dist/runtimes/tauri/index.js"
     },
     "./solidstart": {
       "types": "./dist/solidstart/index.d.ts",
-      "import": "./dist/solidstart/index.mjs"
+      "import": "./dist/solidstart/index.js"
     },
     "./sveltekit": {
       "types": "./dist/sveltekit/index.d.ts",
-      "import": "./dist/sveltekit/index.mjs"
+      "import": "./dist/sveltekit/index.js"
     }
   },
   "bin": {
