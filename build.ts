@@ -22,11 +22,18 @@ if (tscSolidResult.exitCode !== 0) {
   process.exit(1)
 }
 
+const tscSvelteResult = await $`bunx tsc --project packages/gau/client/svelte/tsconfig.json`.quiet()
+if (tscSvelteResult.exitCode !== 0) {
+  console.error('Failed to generate .d.ts files for Svelte client.')
+  console.error(tscSvelteResult.stderr.toString())
+  process.exit(1)
+}
+
 console.log('Successfully generated .d.ts files.')
 
 console.log('Bundling .mjs files...')
 
-const glob = new Glob('packages/gau/**/index.{ts,tsx}')
+const glob = new Glob('packages/gau/**/index.{ts,tsx,svelte.ts}')
 
 const result = await Bun.build({
   entrypoints: await Array.fromAsync(glob.scan()),

@@ -1,2 +1,2 @@
 export * from './solid'
-export * from './svelte'
+export * from './svelte/index.svelte'

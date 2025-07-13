@@ -57,13 +57,15 @@ export function AuthProvider(props: ParentProps & { baseUrl: string }) {
     { initialValue: null },
   )
 
-  const isTauri = !!import.meta.env.TAURI_ENV_PLATFORM
+  const isTauri = !isServer && !!(window as any).__TAURI__
 
   async function signIn(provider: string) {
     if (isTauri) {
-      const platform = import.meta.env.TAURI_ENV_PLATFORM
+      const { platform } = await import('@tauri-apps/plugin-os')
+      const { open } = await import('@tauri-apps/plugin-shell')
+      const currentPlatform = await platform()
       let redirectTo: string
-      if (platform === 'android' || platform === 'ios') {
+      if (currentPlatform === 'android' || currentPlatform === 'ios') {
         // This should match the host in tauri.conf.json
         redirectTo = encodeURIComponent('https://the-stack.hegyi-aron101.workers.dev')
       }
@@ -71,8 +73,7 @@ export function AuthProvider(props: ParentProps & { baseUrl: string }) {
         redirectTo = encodeURIComponent('the-stack://oauth/callback')
       }
       const authUrl = `${props.baseUrl}/${provider}?redirectTo=${redirectTo}`
-      const shell = await import('@tauri-apps/plugin-shell')
-      await shell.open(authUrl)
+      await open(authUrl)
     }
     else {
       const authUrl = `${props.baseUrl}/${provider}`
