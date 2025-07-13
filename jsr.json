@@ -1,0 +1,13 @@
+{
+  "name": "@yuo/gau",
+  "version": "0.0.1",
+  "exports": "./packages/gau/index.ts",
+  "publish": {
+    "include": [
+      "packages/gau/package.json",
+      "packages/gau/**/*.ts",
+      "LICENSE",
+      "README.md"
+    ]
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "name": "@yuo-app/gau",
+  "type": "module",
+  "version": "0.0.1",
+  "packageManager": "bun@1.2.18",
+  "description": "go-auth is a delightful auth library",
+  "license": "MIT",
+  "homepage": "https://github.com/yuo-app/gau#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yuo-app/gau.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yuo-app/gau/issues"
+  },
+  "keywords": [
+    "auth",
+    "authentication",
+    "oauth",
+    "solid-js",
+    "svelte",
+    "bun",
+    "tauri"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs"
+    },
+    "./adapters/drizzle": {
+      "types": "./dist/adapters/drizzle/index.d.ts",
+      "import": "./dist/adapters/drizzle/index.mjs"
+    },
+    "./adapters/memory": {
+      "types": "./dist/adapters/memory/index.d.ts",
+      "import": "./dist/adapters/memory/index.mjs"
+    },
+    "./cli": {
+      "types": "./dist/cli/index.d.ts",
+      "import": "./dist/cli/index.mjs"
+    },
+    "./client/solid": {
+      "types": "./dist/client/solid/index.d.ts",
+      "import": "./dist/client/solid/index.mjs"
+    },
+    "./client/svelte": {
+      "types": "./dist/client/svelte/index.d.ts",
+      "import": "./dist/client/svelte/index.mjs"
+    },
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core/index.mjs"
+    },
+    "./jwt": {
+      "types": "./dist/jwt/index.d.ts",
+      "import": "./dist/jwt/index.mjs"
+    },
+    "./oauth": {
+      "types": "./dist/oauth/index.d.ts",
+      "import": "./dist/oauth/index.mjs"
+    },
+    "./runtimes/bun": {
+      "types": "./dist/runtimes/bun/index.d.ts",
+      "import": "./dist/runtimes/bun/index.mjs"
+    },
+    "./runtimes/cloudflare": {
+      "types": "./dist/runtimes/cloudflare/index.d.ts",
+      "import": "./dist/runtimes/cloudflare/index.mjs"
+    },
+    "./runtimes/tauri": {
+      "types": "./dist/runtimes/tauri/index.d.ts",
+      "import": "./dist/runtimes/tauri/index.mjs"
+    },
+    "./solidstart": {
+      "types": "./dist/solidstart/index.d.ts",
+      "import": "./dist/solidstart/index.mjs"
+    }
+  },
+  "bin": {
+    "gau": "cli/index.ts"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "bun run --watch index.ts",
+    "lint": "eslint . --fix",
+    "check": "tsc --noEmit --skipLibCheck",
+    "test": "vitest",
+    "test:ui": "vitest --ui"
+  },
+  "peerDependencies": {
+    "@tauri-apps/api": "^2.6.0",
+    "@tauri-apps/plugin-shell": "^2.3.0",
+    "drizzle-orm": "^0.44.2",
+    "solid-js": "^1.9.7",
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@oslojs/jwt": "^0.3.0",
+    "arctic": "^3.7.0",
+    "cookie": "^1.0.2"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^4.16.2",
+    "@types/bun": "latest",
+    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/ui": "^3.2.4",
+    "bumpp": "^10.2.0",
+    "eslint": "^9.30.1",
+    "vitest": "^3.2.4"
+  }
+}

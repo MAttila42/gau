@@ -1,0 +1,17 @@
+{
+  "name": "gau-monorepo",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "packageManager": "bun@1.2.18",
+  "scripts": {
+    "build": "bun run build.ts",
+    "lint": "eslint . --fix",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "release": "bumpp && bun run build && npm publish --access public"
+  },
+  "workspaces": [
+    "packages/*"
+  ]
+}

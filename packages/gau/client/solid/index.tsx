@@ -1,0 +1,144 @@
+import type { Accessor, ParentProps } from 'solid-js'
+import type { User } from '../../core'
+import { listen } from '@tauri-apps/api/event'
+import { createContext, createResource, onMount, useContext } from 'solid-js'
+import { isServer } from 'solid-js/web'
+
+interface Session {
+  user: User | null
+}
+
+interface AuthContextValue {
+  session: Accessor<Session | null>
+  signIn: (provider: string) => Promise<void>
+  signOut: () => Promise<void>
+}
+
+const AuthContext = createContext<AuthContextValue>()
+
+function getStoredToken() {
+  if (typeof localStorage === 'undefined')
+    return null
+  return localStorage.getItem('gau-token')
+}
+
+function storeToken(token: string) {
+  try {
+    localStorage.setItem('gau-token', token)
+  }
+  catch {}
+}
+
+function clearToken() {
+  try {
+    localStorage.removeItem('gau-token')
+  }
+  catch {}
+}
+
+export function AuthProvider(props: ParentProps & { baseUrl: string }) {
+  const [session, { refetch }] = createResource<Session | null>(
+    async () => {
+      if (isServer)
+        return null
+
+      const token = getStoredToken()
+      const headers = token ? { Authorization: `Bearer ${token}` } : undefined
+      const res = await fetch(`${props.baseUrl}/session`, token ? { headers } : { credentials: 'include' })
+      if (!res.ok)
+        return null
+
+      const contentType = res.headers.get('content-type')
+      if (contentType?.includes('application/json'))
+        return res.json()
+
+      return null
+    },
+    { initialValue: null },
+  )
+
+  const isTauri = !!import.meta.env.TAURI_ENV_PLATFORM
+
+  async function signIn(provider: string) {
+    if (isTauri) {
+      const platform = import.meta.env.TAURI_ENV_PLATFORM
+      let redirectTo: string
+      if (platform === 'android' || platform === 'ios') {
+        // This should match the host in tauri.conf.json
+        redirectTo = encodeURIComponent('https://the-stack.hegyi-aron101.workers.dev')
+      }
+      else {
+        redirectTo = encodeURIComponent('the-stack://oauth/callback')
+      }
+      const authUrl = `${props.baseUrl}/${provider}?redirectTo=${redirectTo}`
+      const shell = await import('@tauri-apps/plugin-shell')
+      await shell.open(authUrl)
+    }
+    else {
+      const authUrl = `${props.baseUrl}/${provider}`
+      window.location.href = authUrl
+    }
+  }
+
+  const signOut = async () => {
+    clearToken()
+    document.cookie = '__gau-session-token=; path=/; max-age=0'
+    const token = getStoredToken()
+    const headers = token ? { Authorization: `Bearer ${token}` } : undefined
+    await fetch(`${props.baseUrl}/signout`, token ? { method: 'POST', headers } : { method: 'POST', credentials: 'include' })
+    refetch()
+  }
+
+  async function handleDeepLink(url: string) {
+    console.log(`[handleDeepLink] Received URL: ${url}`)
+    const parsed = new URL(url)
+    if (parsed.protocol !== 'the-stack:' && (parsed.protocol !== 'https:' || !parsed.host.endsWith('the-stack.hegyi-aron101.workers.dev'))) {
+      console.log(`[handleDeepLink] URL protocol/host is not valid, ignoring.`)
+      return
+    }
+
+    const token = parsed.searchParams.get('token')
+
+    if (token) {
+      // We received a token from the backend redirect.
+      // Store it for native platforms or set as a cookie for web context within Tauri.
+      storeToken(token)
+      document.cookie = `__gau-session-token=${token}; path=/; max-age=31536000; samesite=lax`
+      console.log('[handleDeepLink] Session token received and set. Refetching session...')
+      await refetch()
+    }
+    else {
+      console.error('[handleDeepLink] Deep link opened, but no token found in URL.')
+    }
+  }
+
+  onMount(async () => {
+    console.log('[onMount] Setting up deep link listener...')
+    if (!isTauri) {
+      console.log('[onMount] Not a Tauri environment, skipping deep link setup.')
+      return
+    }
+
+    await listen<string>('deep-link', async (event) => {
+      console.log('[deep-link] Event received. URL:', event.payload)
+      await handleDeepLink(event.payload)
+    })
+
+    console.log('[onMount] deep-link listener attached.')
+
+    // For initial launch with URL, it should be emitted from Rust setup
+  })
+
+  return (
+    <AuthContext.Provider value={{ session, signIn, signOut }}>
+      {props.children}
+    </AuthContext.Provider>
+  )
+}
+
+export function useAuth(): AuthContextValue {
+  const context = useContext(AuthContext)
+  if (!context)
+    throw new Error('useAuth must be used within an AuthProvider')
+  return context
+}
