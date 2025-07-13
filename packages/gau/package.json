@@ -3,7 +3,7 @@
   "type": "module",
   "version": "0.0.1",
   "packageManager": "bun@1.2.18",
-  "description": "go-auth is a delightful auth library",
+  "description": "gau is a delightful auth library",
   "license": "MIT",
   "homepage": "https://github.com/yuo-app/gau#readme",
   "repository": {
