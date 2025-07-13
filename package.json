@@ -9,7 +9,7 @@
     "lint": "eslint . --fix",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "release": "bumpp && bun run build && npm publish --access public"
+    "release": "bumpp packages/gau/package.json && bun run build && npm publish packages/gau --access public"
   },
   "workspaces": [
     "packages/*"
