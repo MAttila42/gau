@@ -6,6 +6,7 @@
     "include": [
       "packages/gau/package.json",
       "packages/gau/**/*.ts",
+      "packages/gau/**/*.tsx",
       "LICENSE",
       "README.md"
     ]
