@@ -7,7 +7,7 @@
 <main class='relative min-h-screen bg-zinc-900 p-6 font-mono text-emerald-100'>
   <div
     class='pointer-events-none absolute inset-0 bg-[linear-gradient(transparent_1px,#18181b_1px),linear-gradient(90deg,transparent_1px,#18181b_1px)] bg-[size:32px_32px] opacity-20'
-  />
+  ></div>
   <div class='relative mx-auto max-w-3xl space-y-6'>
     {#if auth.session?.user}
       <div
@@ -29,21 +29,21 @@
             class='flex items-center gap-2 justify-center rounded border border-emerald-900/30 bg-zinc-800 py-2 px-4 transition-all duration-200 hover:border-emerald-800/50 hover:bg-zinc-700'
             onclick={() => auth.signIn('github')}
           >
-            <div class='i-ph:github-logo size-5' />
+            <div class='i-ph:github-logo size-5'></div>
             <p>GitHub</p>
           </button>
           <button
             class='flex items-center gap-2 justify-center rounded border border-emerald-900/30 bg-zinc-800 py-2 px-4 transition-all duration-200 hover:border-emerald-800/50 hover:bg-zinc-700'
             onclick={() => auth.signIn('google')}
           >
-            <div class='i-ph:google-logo-bold size-5' />
+            <div class='i-ph:google-logo-bold size-5'></div>
             <p>Google</p>
           </button>
           <button
             class='flex items-center gap-2 justify-center rounded border border-emerald-900/30 bg-zinc-800 py-2 px-4 transition-all duration-200 hover:border-emerald-800/50 hover:bg-zinc-700'
             onclick={() => auth.signIn('microsoft-entra-id')}
           >
-            <div class='i-mdi:microsoft size-5' />
+            <div class='i-mdi:microsoft size-5'></div>
             <p>Microsoft</p>
           </button>
         </div>

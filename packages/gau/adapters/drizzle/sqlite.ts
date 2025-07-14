@@ -3,7 +3,7 @@ import type { BaseSQLiteDatabase } from 'drizzle-orm/sqlite-core'
 import type { Adapter, NewAccount, NewUser, User } from '../../core/index'
 import { and, eq } from 'drizzle-orm'
 
-type UsersTable = Table & {
+export type UsersTable = Table & {
   id: AnyColumn
   name: AnyColumn
   email: AnyColumn
@@ -12,7 +12,7 @@ type UsersTable = Table & {
   updatedAt: AnyColumn
 }
 
-type AccountsTable = Table & {
+export type AccountsTable = Table & {
   userId: AnyColumn
   provider: AnyColumn
   providerAccountId: AnyColumn

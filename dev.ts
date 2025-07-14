@@ -1,5 +1,9 @@
+/* eslint-disable no-console */
 /* eslint-disable antfu/no-top-level-await */
 import { $, Glob } from 'bun'
+
+console.log('Cleaning dist directory...')
+await $`rm -rf packages/gau/dist`.quiet()
 
 const tscMain = $`bunx tsc --project packages/gau/tsconfig.json --watch --preserveWatchOutput`
 const tscSolid = $`bunx tsc --project packages/gau/client/solid/tsconfig.json --watch --preserveWatchOutput`

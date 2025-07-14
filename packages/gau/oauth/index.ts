@@ -1,15 +1,18 @@
 import type { OAuth2Tokens } from 'arctic'
 
-export * from './providers/github'
-export * from './providers/google'
-export * from './providers/microsoft'
-export * from './utils'
+export { GitHub } from './providers/github'
+export { Google } from './providers/google'
+export { MicrosoftEntraId } from './providers/microsoft'
 
 export interface OAuthProviderConfig {
   clientId: string
   clientSecret: string
   redirectUri?: string
   scope?: string[]
+}
+
+export interface OAuthProviderConfigWithRedirectUri extends OAuthProviderConfig {
+  redirectUri: string
 }
 
 export interface AuthUser {

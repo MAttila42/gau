@@ -42,6 +42,7 @@ const result = await Bun.build({
   target: 'browser',
   splitting: true,
   packages: 'external',
+  minify: true,
   sourcemap: 'external',
   naming: {
     entry: '[dir]/[name].js',

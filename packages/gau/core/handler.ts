@@ -1,6 +1,6 @@
 import type { createAuth } from './createAuth'
 import type { RequestLike, ResponseLike } from './index'
-import { createOAuthUris } from '../oauth'
+import { createOAuthUris } from '../oauth/utils'
 import {
   CALLBACK_URI_COOKIE_NAME,
   Cookies,

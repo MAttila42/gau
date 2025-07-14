@@ -1,4 +1,4 @@
-import type { AuthUser, OAuthProvider, OAuthProviderConfig } from '../index'
+import type { AuthUser, OAuthProvider, OAuthProviderConfigWithRedirectUri } from '../index'
 import { CodeChallengeMethod, OAuth2Client } from 'arctic'
 
 // https://learn.microsoft.com/en-us/entra/identity-platform/v2-protocols-oidc
@@ -7,7 +7,7 @@ const MICROSOFT_USER_INFO_URL = 'https://graph.microsoft.com/v1.0/me'
 // https://learn.microsoft.com/en-us/graph/api/profilephoto-get?view=graph-rest-1.0
 const MICROSOFT_USER_PHOTO_URL = 'https://graph.microsoft.com/v1.0/me/photo/$value'
 
-interface MicrosoftEntraIdConfig extends OAuthProviderConfig {
+interface MicrosoftEntraIdConfig extends OAuthProviderConfigWithRedirectUri {
   tenant?: 'common' | 'organizations' | 'consumers' | string
 }
 
@@ -64,10 +64,10 @@ export function MicrosoftEntraId(config: MicrosoftEntraIdConfig): OAuthProvider 
   const authURL = `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/authorize`
   const tokenURL = `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`
 
-  const defaultClient = new OAuth2Client(config.clientId, config.clientSecret, config.redirectUri ?? null)
+  const defaultClient = new OAuth2Client(config.clientId, config.clientSecret, config.redirectUri)
 
   function getClient(redirectUri?: string): OAuth2Client {
-    if (!redirectUri || (config.redirectUri && redirectUri === config.redirectUri))
+    if (!redirectUri || redirectUri === config.redirectUri)
       return defaultClient
 
     return new OAuth2Client(config.clientId, config.clientSecret, redirectUri)

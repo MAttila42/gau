@@ -46,6 +46,7 @@ describe('microsoftEntraId Provider', () => {
   const provider = MicrosoftEntraId({
     clientId: 'test-client-id',
     clientSecret: 'test-client-secret',
+    redirectUri: 'http://localhost:5173/api/auth/microsoft-entra-id/callback',
   })
 
   it('should create an authorization URL', async () => {

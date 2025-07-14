@@ -1,4 +1,4 @@
-import type { AuthUser, OAuthProvider, OAuthProviderConfig } from '../index'
+import type { AuthUser, OAuthProvider, OAuthProviderConfigWithRedirectUri } from '../index'
 import { CodeChallengeMethod, OAuth2Client } from 'arctic'
 
 const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
@@ -31,11 +31,11 @@ async function getUser(accessToken: string): Promise<AuthUser> {
   }
 }
 
-export function Google(config: OAuthProviderConfig): OAuthProvider {
-  const defaultClient = new OAuth2Client(config.clientId, config.clientSecret, config.redirectUri ?? null)
+export function Google(config: OAuthProviderConfigWithRedirectUri): OAuthProvider {
+  const defaultClient = new OAuth2Client(config.clientId, config.clientSecret, config.redirectUri)
 
   function getClient(redirectUri?: string): OAuth2Client {
-    if (!redirectUri || (config.redirectUri && redirectUri === config.redirectUri))
+    if (!redirectUri || redirectUri === config.redirectUri)
       return defaultClient
 
     return new OAuth2Client(config.clientId, config.clientSecret, redirectUri)
