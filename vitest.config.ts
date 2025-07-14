@@ -7,9 +7,13 @@ export default defineConfig({
     coverage: {
       enabled: true,
       provider: 'v8',
-      reporter: ['text', 'html'],
+      reporter: [
+        'text',
+        'html',
+        ['text', { file: '../coverage.md' }],
+      ],
       include: [
-        'packages/**/*.ts',
+        'packages/gau/**/*.ts',
       ],
       exclude: ['**/dist/**', '**/build/**', '**/migrations/**'],
     },

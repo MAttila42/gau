@@ -31,12 +31,14 @@ export async function sign<T extends Record<string, unknown>>(payload: T, option
   let { algorithm = 'ES256', ttl, iss, aud, sub, privateKey, secret } = options
 
   if (algorithm === 'ES256' && !privateKey) {
-    const authSecret = secret ?? process.env.AUTH_SECRET
-    if (typeof authSecret !== 'string')
+    if (secret !== undefined && typeof secret !== 'string')
       throw new AuthError('Invalid secret for ES256. Must be a base64url-encoded string.')
 
+    const authSecret = typeof secret === 'string' ? secret : process.env.AUTH_SECRET
+
     if (!authSecret)
-      throw new AuthError('Missing secret for ES256 signing');
+      throw new AuthError('Missing AUTH_SECRET for ES256 signing');
+
     ({ privateKey } = await deriveKeysFromSecret(authSecret))
   }
   else if (algorithm === 'HS256' && !secret) {
@@ -106,11 +108,14 @@ export async function verify<T = Record<string, unknown>>(token: string, options
   let { algorithm = 'ES256', publicKey, secret, iss, aud } = options
 
   if (algorithm === 'ES256' && !publicKey) {
-    const authSecret = secret ?? process.env.AUTH_SECRET
-    if (typeof authSecret !== 'string')
+    if (secret !== undefined && typeof secret !== 'string')
       throw new AuthError('Invalid secret for ES256. Must be a base64url-encoded string.')
+
+    const authSecret = typeof secret === 'string' ? secret : process.env.AUTH_SECRET
+
     if (!authSecret)
       throw new AuthError('Missing AUTH_SECRET for ES256 verification');
+
     ({ publicKey } = await deriveKeysFromSecret(authSecret))
   }
 
