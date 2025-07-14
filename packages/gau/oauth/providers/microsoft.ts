@@ -1,4 +1,4 @@
-import type { AuthUser, OAuthProvider, OAuthProviderConfigWithRedirectUri } from '../index'
+import type { AuthUser, OAuthProvider, OAuthProviderConfig } from '../index'
 import { CodeChallengeMethod, OAuth2Client } from 'arctic'
 
 // https://learn.microsoft.com/en-us/entra/identity-platform/v2-protocols-oidc
@@ -7,7 +7,7 @@ const MICROSOFT_USER_INFO_URL = 'https://graph.microsoft.com/v1.0/me'
 // https://learn.microsoft.com/en-us/graph/api/profilephoto-get?view=graph-rest-1.0
 const MICROSOFT_USER_PHOTO_URL = 'https://graph.microsoft.com/v1.0/me/photo/$value'
 
-interface MicrosoftEntraIdConfig extends OAuthProviderConfigWithRedirectUri {
+interface MicrosoftEntraIdConfig extends OAuthProviderConfig {
   tenant?: 'common' | 'organizations' | 'consumers' | string
 }
 
@@ -19,13 +19,60 @@ interface MicrosoftUser {
   [key: string]: unknown
 }
 
-async function getUser(accessToken: string): Promise<AuthUser> {
+function base64url_decode(str: string): Uint8Array {
+  const base64 = str.replace(/-/g, '+').replace(/_/g, '/')
+  const padLength = (4 - (base64.length % 4)) % 4
+  const padded = base64.padEnd(base64.length + padLength, '=')
+  const binary_string = atob(padded)
+  const len = binary_string.length
+  const bytes = new Uint8Array(len)
+  for (let i = 0; i < len; i++)
+    bytes[i] = binary_string.charCodeAt(i)
+
+  return bytes
+}
+
+async function getUser(accessToken: string, idToken: string | null): Promise<AuthUser> {
   const userResponse = await fetch(MICROSOFT_USER_INFO_URL, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
   })
   const userData: MicrosoftUser = await userResponse.json()
+
+  let email: string | null = userData.mail ?? userData.userPrincipalName
+  let emailVerified = false
+  if (idToken) {
+    try {
+      const parts = idToken.split('.')
+      const payload = JSON.parse(new TextDecoder().decode(base64url_decode(parts[1]!))) as Record<string, any>
+      const personalTenantId = '9188040d-6c67-4c5b-b112-36a304b66dad'
+
+      // For work/school accounts, the `verified_primary_email` is the source of truth.
+      if (payload.verified_primary_email) {
+        const primaryEmail = Array.isArray(payload.verified_primary_email)
+          ? payload.verified_primary_email[0]
+          : payload.verified_primary_email
+
+        if (typeof primaryEmail === 'string') {
+          email = primaryEmail
+          emailVerified = true
+        }
+      }
+      // For personal accounts, the `email` claim is reliable and verified.
+      else if (payload.tid === personalTenantId) {
+        email = payload.email ?? email
+        emailVerified = true
+      }
+      // Legacy fallback for `xms_edov`.
+      else if (payload.xms_edov === true) {
+        email = payload.email ?? email
+        emailVerified = true
+      }
+    }
+    catch {
+    }
+  }
 
   const photoResponse = await fetch(MICROSOFT_USER_PHOTO_URL, {
     headers: {
@@ -52,7 +99,8 @@ async function getUser(accessToken: string): Promise<AuthUser> {
   return {
     id: userData.id,
     name: userData.displayName,
-    email: userData.mail ?? userData.userPrincipalName,
+    email,
+    emailVerified,
     avatar,
     raw: userData,
   }
@@ -64,7 +112,7 @@ export function MicrosoftEntraId(config: MicrosoftEntraIdConfig): OAuthProvider 
   const authURL = `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/authorize`
   const tokenURL = `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`
 
-  const defaultClient = new OAuth2Client(config.clientId, config.clientSecret, config.redirectUri)
+  const defaultClient = new OAuth2Client(config.clientId, config.clientSecret, config.redirectUri ?? null)
 
   function getClient(redirectUri?: string): OAuth2Client {
     if (!redirectUri || redirectUri === config.redirectUri)
@@ -75,6 +123,7 @@ export function MicrosoftEntraId(config: MicrosoftEntraIdConfig): OAuthProvider 
 
   return {
     id: 'microsoft-entra-id',
+    requiresRedirectUri: true,
 
     async getAuthorizationUrl(state: string, codeVerifier: string, options?: { scopes?: string[], redirectUri?: string }) {
       const client = getClient(options?.redirectUri)
@@ -86,7 +135,7 @@ export function MicrosoftEntraId(config: MicrosoftEntraIdConfig): OAuthProvider 
     async validateCallback(code: string, codeVerifier: string, redirectUri?: string) {
       const client = getClient(redirectUri)
       const tokens = await client.validateAuthorizationCode(tokenURL, code, codeVerifier)
-      const user = await getUser(tokens.accessToken())
+      const user = await getUser(tokens.accessToken(), tokens.idToken())
       return { tokens, user }
     },
   }

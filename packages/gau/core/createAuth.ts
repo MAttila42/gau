@@ -7,22 +7,35 @@ import { DEFAULT_COOKIE_SERIALIZE_OPTIONS } from './cookies'
 import { AuthError } from './index'
 
 export interface CreateAuthOptions {
+  /** The database adapter to use for storing users and accounts. */
   adapter: Adapter
+  /** Array of OAuth providers to support. */
   providers: OAuthProvider[]
+  /** Base path for authentication routes (defaults to '/api/auth'). */
   basePath?: string
+  /** Configuration for JWT signing and verification. */
   jwt?: {
+    /** Signing algorithm: 'ES256' (default) or 'HS256'. */
     algorithm?: 'ES256' | 'HS256'
-    secret?: string // Used for HS256 secret or ES256 private key source (overrides AUTH_SECRET)
+    /** Secret for HS256 or base64url-encoded private key for ES256 (overrides AUTH_SECRET). */
+    secret?: string
+    /** Issuer claim (iss) for JWTs. */
     iss?: string
+    /** Audience claim (aud) for JWTs. */
     aud?: string
+    /** Default time-to-live in seconds for JWTs (defaults to 1 day). */
     ttl?: number
   }
+  /** Custom options for session cookies. */
   cookies?: Partial<SerializeOptions>
+  /** Trusted hosts for CSRF protection: 'all' or array of hostnames (defaults to []). */
   trustHosts?: 'all' | string[]
+  /** Account linking behavior: 'verifiedEmail' (default), 'always', or false. */
+  autoLink?: 'verifiedEmail' | 'always' | false
 }
 
 export function createAuth(options: CreateAuthOptions) {
-  const { adapter, providers, basePath = '/api/auth', jwt: jwtConfig = {}, cookies: cookieConfig = {}, trustHosts = options.trustHosts ?? [] } = options
+  const { adapter, providers, basePath = '/api/auth', jwt: jwtConfig = {}, cookies: cookieConfig = {}, trustHosts = options.trustHosts ?? [], autoLink = 'verifiedEmail' } = options
   const { algorithm = 'ES256', secret, iss, aud, ttl: defaultTTL = 3600 * 24 } = jwtConfig
 
   const cookieOptions = { ...DEFAULT_COOKIE_SERIALIZE_OPTIONS, ...cookieConfig }
@@ -94,5 +107,6 @@ export function createAuth(options: CreateAuthOptions) {
     createSession,
     validateSession,
     trustHosts,
+    autoLink,
   }
 }

@@ -7,5 +7,6 @@ export default antfu({
   rules: {
     'no-console': 'warn',
     'curly': ['warn', 'multi-or-nest', 'consistent'],
+    'antfu/no-top-level-await': 'off',
   },
 })

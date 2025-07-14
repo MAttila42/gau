@@ -1,30 +1,10 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MicrosoftEntraId } from './microsoft'
 
-const mockReader = {
-  result: 'data:image/jpeg;base64,mocked_base64_string',
-  onloadend: () => {},
-  onerror: () => {},
-  readAsDataURL(this: any, _blob: Blob) {
-    this.onloadend()
-  },
-}
-vi.stubGlobal('FileReader', vi.fn(() => mockReader))
+const mockUser = { id: 'user-id-123', displayName: 'Test User', mail: 'fallback@example.com', userPrincipalName: 'upn@example.com' }
+const mockPhotoBlob = new Blob(['photo-data'], { type: 'image/jpeg' })
 
-vi.stubGlobal('fetch', vi.fn((url: string) => {
-  if (url.includes('/v1.0/me/photo/$value')) {
-    return Promise.resolve(new Response(new Blob(['mock_photo_data']), {
-      headers: { 'Content-Type': 'image/jpeg' },
-    }))
-  }
-  if (url.includes('/v1.0/me')) {
-    const mockUser = { id: 'mock-ms-id', displayName: 'Test User', mail: 'test@example.com', userPrincipalName: 'test@example.com' }
-    return Promise.resolve(new Response(JSON.stringify(mockUser), {
-      headers: { 'Content-Type': 'application/json' },
-    }))
-  }
-  return Promise.reject(new Error(`Unhandled fetch mock for ${url}`))
-}))
+let mockIdToken: (() => string | null) | null = null
 
 vi.mock('arctic', async (importOriginal) => {
   const original = await importOriginal<typeof import('arctic')>()
@@ -32,11 +12,12 @@ vi.mock('arctic', async (importOriginal) => {
     accessToken: () => 'test_access_token',
     accessTokenExpiresAt: () => new Date(Date.now() + 3600 * 1000),
     refreshToken: () => 'test_refresh_token',
+    idToken: () => mockIdToken?.() ?? null,
   }
   return {
     ...original,
     OAuth2Client: vi.fn(() => ({
-      createAuthorizationURLWithPKCE: vi.fn((authURL: string) => new URL(`${authURL}?mock=true`)),
+      createAuthorizationURLWithPKCE: vi.fn(() => new URL('https://login.microsoftonline.com/common/oauth2/v2.0/authorize?mock=true')),
       validateAuthorizationCode: vi.fn(() => Promise.resolve(mockTokens)),
     })),
   }
@@ -46,25 +27,99 @@ describe('microsoftEntraId Provider', () => {
   const provider = MicrosoftEntraId({
     clientId: 'test-client-id',
     clientSecret: 'test-client-secret',
-    redirectUri: 'http://localhost:5173/api/auth/microsoft-entra-id/callback',
   })
+
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn((url: string) => {
+      if (url.includes('graph.microsoft.com/v1.0/me/photo'))
+        return Promise.resolve(new Response(mockPhotoBlob))
+
+      if (url.includes('graph.microsoft.com/v1.0/me')) {
+        return Promise.resolve(new Response(JSON.stringify(mockUser), {
+          headers: { 'Content-Type': 'application/json' },
+        }))
+      }
+      return Promise.reject(new Error(`Unhandled fetch mock for ${url}`))
+    }))
+
+    vi.stubGlobal('FileReader', vi.fn(() => ({
+      readAsDataURL: vi.fn(function (this: any) {
+        this.onloadend()
+      }),
+      result: 'data:image/jpeg;base64,cGhvdG8tZGF0YQ==',
+      onerror: vi.fn(),
+      onloadend: vi.fn(),
+    })))
+  })
+
+  afterEach(() => {
+    mockIdToken = null
+    vi.restoreAllMocks()
+  })
+
+  function b64(payload: object): string {
+    const json = JSON.stringify(payload)
+    return btoa(json).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+  }
 
   it('should create an authorization URL', async () => {
     const url = await provider.getAuthorizationUrl('state', 'code-verifier')
-    expect(url.toString()).toContain('login.microsoftonline.com/common/oauth2/v2.0/authorize')
+    expect(url.toString()).toContain('https://login.microsoftonline.com/common/oauth2/v2.0/authorize')
     expect(url.toString()).toContain('mock=true')
   })
 
-  it('should validate the callback and return user data', async () => {
-    const { user, tokens } = await provider.validateCallback('code', 'code-verifier')
+  describe('validateCallback', () => {
+    it('should use `verified_primary_email` (string) for work/school accounts', async () => {
+      mockIdToken = () => `h.${b64({ verified_primary_email: 'work@example.com' })}.s`
+      const { user } = await provider.validateCallback('code', 'code-verifier')
+      expect(user.email).toBe('work@example.com')
+      expect(user.emailVerified).toBe(true)
+    })
 
-    mockReader.onloadend()
+    it('should use `verified_primary_email` (array) for work/school accounts', async () => {
+      mockIdToken = () => `h.${b64({ verified_primary_email: ['work-array@example.com', 'other@example.com'] })}.s`
+      const { user } = await provider.validateCallback('code', 'code-verifier')
+      expect(user.email).toBe('work-array@example.com')
+      expect(user.emailVerified).toBe(true)
+    })
 
-    expect(tokens.accessToken()).toBe('test_access_token')
-    expect(user.id).toBe('mock-ms-id')
-    expect(user.name).toBe('Test User')
-    expect(user.email).toBe('test@example.com')
-    expect(user.avatar).toBe('data:image/jpeg;base64,mocked_base64_string')
-    expect(user.raw).toEqual({ id: 'mock-ms-id', displayName: 'Test User', mail: 'test@example.com', userPrincipalName: 'test@example.com' })
+    it('should use `email` for personal accounts based on `tid`', async () => {
+      const personalTenantId = '9188040d-6c67-4c5b-b112-36a304b66dad'
+      mockIdToken = () => `h.${b64({ tid: personalTenantId, email: 'personal@example.com' })}.s`
+      const { user } = await provider.validateCallback('code', 'code-verifier')
+      expect(user.email).toBe('personal@example.com')
+      expect(user.emailVerified).toBe(true)
+    })
+
+    it('should use legacy `xms_edov` for email verification', async () => {
+      mockIdToken = () => `h.${b64({ xms_edov: true, email: 'legacy-verified@example.com' })}.s`
+      const { user } = await provider.validateCallback('code', 'code-verifier')
+      expect(user.email).toBe('legacy-verified@example.com')
+      expect(user.emailVerified).toBe(true)
+    })
+
+    it('should fall back to user profile email if `idToken` has no verified email', async () => {
+      mockIdToken = () => `h.${b64({ some_claim: 'value' })}.s`
+      const { user } = await provider.validateCallback('code', 'code-verifier')
+      expect(user.email).toBe('fallback@example.com') // from mockUser.mail
+      expect(user.emailVerified).toBe(false)
+    })
+
+    it('should fall back to user profile email if no `idToken` is provided', async () => {
+      mockIdToken = () => null
+      const { user } = await provider.validateCallback('code', 'code-verifier')
+      expect(user.email).toBe('fallback@example.com') // from mockUser.mail
+      expect(user.emailVerified).toBe(false)
+    })
+
+    it('should return basic user info and avatar', async () => {
+      mockIdToken = () => null
+      const { user, tokens } = await provider.validateCallback('code', 'code-verifier')
+      expect(tokens.accessToken()).toBe('test_access_token')
+      expect(user.id).toBe('user-id-123')
+      expect(user.name).toBe('Test User')
+      expect(user.avatar).toContain('data:image/jpeg;base64')
+      expect(user.raw).toEqual(mockUser)
+    })
   })
 })

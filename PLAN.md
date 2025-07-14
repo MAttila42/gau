@@ -139,28 +139,29 @@ interface Adapter {
 ## 4  Database Schema (Drizzle – v0)
 
 ```ts
-export const users = sqliteTable('users', {
-  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
-  name: text('name'),
-  email: text('email').unique(),
-  emailVerified: integer('email_verified', { mode: 'timestamp_ms' }),
-  image: text('image'),
-  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => Date.now()),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }).$defaultFn(() => Date.now()),
+export const Users = sqliteTable('users', {
+  id: text().primaryKey().$defaultFn(() => uuidV4Base64url()),
+  name: text(),
+  email: text().unique(),
+  emailVerified: integer({ mode: 'boolean' }),
+  image: text(),
+  createdAt: integer({ mode: 'timestamp' }).$defaultFn(() => new Date()),
+  updatedAt: integer({ mode: 'timestamp' }).$defaultFn(() => new Date()),
 })
 
-export const accounts = sqliteTable('accounts', {
-  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  type: text('type').notNull(), // 'oauth' for now
-  provider: text('provider').notNull(),
-  providerAccountId: text('provider_account_id').notNull(),
-  refreshToken: text('refresh_token'),
-  accessToken: text('access_token'),
-  expiresAt: integer('expires_at'),
-  tokenType: text('token_type'),
-  scope: text('scope'),
-  idToken: text('id_token'),
-  sessionState: text('session_state'),
+export const Accounts = sqliteTable('accounts', {
+  userId: text().notNull().references(() => Users.id, { onDelete: 'cascade' }),
+  type: text().notNull(),
+  provider: text().notNull(),
+  providerAccountId: text().notNull(),
+  refreshToken: text(),
+  accessToken: text(),
+  expiresAt: integer(),
+  tokenType: text(),
+  scope: text(),
+  idToken: text(),
+  sessionState: text(),
+  createdAt: integer({ mode: 'timestamp' }).$defaultFn(() => new Date()),
 }, account => [
   primaryKey({
     columns: [account.provider, account.providerAccountId],

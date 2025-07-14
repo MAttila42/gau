@@ -82,6 +82,7 @@ export function SQLiteDrizzleAdapter<
             name: data.name ?? null,
             email: data.email ?? null,
             image: data.image ?? null,
+            emailVerified: data.emailVerified ?? null,
             createdAt: new Date(),
             updatedAt: new Date(),
           } as DBInsertUser)
@@ -109,6 +110,7 @@ export function SQLiteDrizzleAdapter<
           name: partial.name ?? undefined,
           email: partial.email ?? undefined,
           image: partial.image ?? undefined,
+          emailVerified: partial.emailVerified ?? undefined,
           updatedAt: new Date(),
         } as Partial<DBInsertUser>)
         .where(eq(users.id, partial.id))

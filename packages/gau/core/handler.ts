@@ -23,7 +23,10 @@ async function handleSignIn(request: RequestLike, auth: Auth, providerId: string
   const url = new URL(request.url)
   const redirectTo = url.searchParams.get('redirectTo')
   const state = redirectTo ? `${originalState}.${btoa(redirectTo)}` : originalState
-  const callbackUri = url.searchParams.get('callbackUri')
+  let callbackUri = url.searchParams.get('callbackUri')
+  if (!callbackUri && provider.requiresRedirectUri)
+    callbackUri = `${url.origin}${auth.basePath}/${providerId}/callback`
+
   const authUrl = await provider.getAuthorizationUrl(state, codeVerifier, {
     redirectUri: callbackUri ?? undefined,
   })
@@ -103,14 +106,25 @@ async function handleCallback(request: RequestLike, auth: Auth, providerId: stri
   let user = userFromAccount
 
   if (!user) {
-    if (providerUser.email) {
-      const existingUser = await auth.getUserByEmail(providerUser.email)
+    const autoLink = auth.autoLink ?? 'verifiedEmail'
+    const shouldLinkByEmail = providerUser.email && (
+      (autoLink === 'always')
+      || (autoLink === 'verifiedEmail' && providerUser.emailVerified === true)
+    )
+    if (shouldLinkByEmail) {
+      const existingUser = await auth.getUserByEmail(providerUser.email!)
       if (existingUser) {
-        const alreadyLinked = await auth.getUserByAccount(providerId, providerUser.id)
-        if (alreadyLinked)
-          return json({ error: 'Account already linked to another user' }, { status: 400 })
-
-        user = existingUser
+        // If the email is verified by the new provider, and the existing user's email is not,
+        // update the user's email verification status.
+        if (providerUser.emailVerified && !existingUser.emailVerified) {
+          user = await auth.updateUser({
+            id: existingUser.id,
+            emailVerified: true,
+          })
+        }
+        else {
+          user = existingUser
+        }
       }
     }
     if (!user) {
@@ -119,6 +133,7 @@ async function handleCallback(request: RequestLike, auth: Auth, providerId: stri
           name: providerUser.name,
           email: providerUser.email,
           image: providerUser.avatar,
+          emailVerified: providerUser.emailVerified,
         })
       }
       catch (error) {

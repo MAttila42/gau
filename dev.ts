@@ -1,5 +1,4 @@
 /* eslint-disable no-console */
-/* eslint-disable antfu/no-top-level-await */
 import { $, Glob } from 'bun'
 
 console.log('Cleaning dist directory...')

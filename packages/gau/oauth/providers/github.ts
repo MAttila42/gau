@@ -14,6 +14,13 @@ interface GitHubUser {
   [key: string]: unknown
 }
 
+interface GitHubEmail {
+  email: string
+  primary: boolean
+  verified: boolean
+  visibility: 'public' | 'private' | null
+}
+
 async function getUser(accessToken: string): Promise<AuthUser> {
   const response = await fetch(`${GITHUB_API_URL}/user`, {
     headers: {
@@ -24,10 +31,39 @@ async function getUser(accessToken: string): Promise<AuthUser> {
   })
   const data: GitHubUser = await response.json()
 
+  let email: string | null = data.email
+  let emailVerified = false
+
+  const emailsResponse = await fetch(`${GITHUB_API_URL}/user/emails`, {
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'User-Agent': 'gau',
+      'Accept': 'application/vnd.github+json',
+    },
+  })
+
+  if (emailsResponse.ok) {
+    const emails: GitHubEmail[] = await emailsResponse.json()
+    const primaryEmail = emails.find(e => e.primary && e.verified)
+    if (primaryEmail) {
+      email = primaryEmail.email
+      emailVerified = true
+    }
+    else {
+      // Fallback to the first verified email if no primary is found
+      const verifiedEmail = emails.find(e => e.verified)
+      if (verifiedEmail) {
+        email = verifiedEmail.email
+        emailVerified = true
+      }
+    }
+  }
+
   return {
     id: data.id.toString(),
     name: data.name ?? data.login,
-    email: data.email,
+    email,
+    emailVerified,
     avatar: data.avatar_url,
     raw: data,
   }
@@ -48,7 +84,7 @@ export function GitHub(config: OAuthProviderConfig): OAuthProvider {
 
     async getAuthorizationUrl(state: string, codeVerifier: string, options?: { scopes?: string[], redirectUri?: string }) {
       const client = getClient(options?.redirectUri)
-      const scopes = options?.scopes ?? config.scope ?? []
+      const scopes = options?.scopes ?? config.scope ?? ['user:email']
       const url = await client.createAuthorizationURLWithPKCE(GITHUB_AUTH_URL, state, CodeChallengeMethod.S256, codeVerifier, scopes)
       return url
     },

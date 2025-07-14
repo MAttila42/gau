@@ -23,11 +23,11 @@ export interface User {
   id: string
   name?: string | null
   email?: string | null
-  emailVerified?: Date | null
+  emailVerified?: boolean | null
   image?: string | null
 }
 
-export interface NewUser extends Omit<User, 'id' | 'emailVerified'> {
+export interface NewUser extends Omit<User, 'id'> {
   id?: string
 }
 

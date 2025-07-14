@@ -15,12 +15,10 @@ export const { GET, POST, handle } = SvelteKitAuth({
     Google({
       clientId: serverEnv.AUTH_GOOGLE_ID,
       clientSecret: serverEnv.AUTH_GOOGLE_SECRET,
-      redirectUri: `${serverEnv.AUTH_URL}/api/auth/google/callback`,
     }),
     MicrosoftEntraId({
       clientId: serverEnv.AUTH_MICROSOFT_ID,
       clientSecret: serverEnv.AUTH_MICROSOFT_SECRET,
-      redirectUri: `${serverEnv.AUTH_URL}/api/auth/microsoft-entra-id/callback`,
     }),
   ],
   jwt: {

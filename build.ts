@@ -1,5 +1,4 @@
 /* eslint-disable no-console */
-/* eslint-disable antfu/no-top-level-await */
 import process from 'node:process'
 import { $, Glob } from 'bun'
 

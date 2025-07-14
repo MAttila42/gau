@@ -6,9 +6,19 @@ const mockTokens = {
   accessTokenExpiresAt: () => new Date(Date.now() + 3600 * 1000),
   refreshToken: () => 'test_refresh_token',
 }
-const mockUser = { id: 123, login: 'test-user', name: 'Test User', email: 'test@example.com', avatar_url: 'https://example.com/avatar.png' }
+const mockUser = { id: 123, login: 'testuser', name: 'Test User', email: 'public@example.com', avatar_url: 'https://example.com/avatar.png' }
+const mockEmails = [
+  { email: 'unverified@example.com', primary: false, verified: false, visibility: 'private' },
+  { email: 'verified-not-primary@example.com', primary: false, verified: true, visibility: 'public' },
+  { email: 'primary-verified@example.com', primary: true, verified: true, visibility: 'public' },
+]
 
 vi.stubGlobal('fetch', vi.fn((url: string) => {
+  if (url.includes('/user/emails')) {
+    return Promise.resolve(new Response(JSON.stringify(mockEmails), {
+      headers: { 'Content-Type': 'application/json' },
+    }))
+  }
   if (url.includes('/user')) {
     return Promise.resolve(new Response(JSON.stringify(mockUser), {
       headers: { 'Content-Type': 'application/json' },
@@ -46,7 +56,9 @@ describe('gitHub Provider', () => {
     expect(tokens.accessToken()).toBe('test_access_token')
     expect(user.id).toBe('123')
     expect(user.name).toBe('Test User')
-    expect(user.email).toBe('test@example.com')
+    expect(user.email).toBe('primary-verified@example.com')
+    expect(user.emailVerified).toBe(true)
+    expect(user.avatar).toBe('https://example.com/avatar.png')
     expect(user.raw).toEqual(mockUser)
   })
 })

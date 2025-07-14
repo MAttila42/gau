@@ -10,7 +10,7 @@ export default defineConfig({
       reporter: [
         'text',
         'html',
-        ['text', { file: '../coverage.md' }],
+        ['json-summary', { file: '../coverage.json' }],
       ],
       include: [
         'packages/gau/**/*.ts',

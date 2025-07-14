@@ -6,7 +6,7 @@ const mockTokens = {
   accessTokenExpiresAt: () => new Date(Date.now() + 3600 * 1000),
   refreshToken: () => 'test_refresh_token',
 }
-const mockUser = { sub: '1234567890', name: 'Test User', email: 'test@example.com', picture: 'https://example.com/avatar.png' }
+const mockUser = { sub: '1234567890', name: 'Test User', email: 'test@example.com', email_verified: true, picture: 'https://example.com/avatar.png' }
 
 vi.stubGlobal('fetch', vi.fn((url: string) => {
   if (url.includes('openidconnect.googleapis.com/v1/userinfo')) {
@@ -48,6 +48,7 @@ describe('google Provider', () => {
     expect(user.id).toBe('1234567890')
     expect(user.name).toBe('Test User')
     expect(user.email).toBe('test@example.com')
+    expect(user.emailVerified).toBe(true)
     expect(user.avatar).toBe('https://example.com/avatar.png')
     expect(user.raw).toEqual(mockUser)
   })

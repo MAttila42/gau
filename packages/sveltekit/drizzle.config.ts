@@ -1,13 +1,17 @@
+import process from 'node:process'
 import { defineConfig } from 'drizzle-kit'
-import { serverEnv } from './src/lib/env/server'
+import { parseEnv, serverScheme } from './src/lib/env/schema'
+
+const env = parseEnv(serverScheme, process.env, 'drizzle')
 
 export default defineConfig({
   schema: './src/lib/server/db/schema.ts',
   dialect: 'turso',
   dbCredentials: {
-    authToken: serverEnv.TURSO_AUTH_TOKEN,
-    url: serverEnv.TURSO_DB_URL,
+    authToken: env.TURSO_AUTH_TOKEN,
+    url: env.TURSO_DB_URL,
   },
   verbose: true,
   strict: true,
+  casing: 'snake_case',
 })
