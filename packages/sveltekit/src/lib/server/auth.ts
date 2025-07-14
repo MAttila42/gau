@@ -1,11 +1,9 @@
 import { serverEnv } from '$lib/env/server'
 import { DrizzleAdapter } from '@yuo-app/gau/adapters/drizzle'
-import { GitHub } from '@yuo-app/gau/oauth'
+import { GitHub, Google, MicrosoftEntraId } from '@yuo-app/gau/oauth'
 import { SvelteKitAuth } from '@yuo-app/gau/sveltekit'
 import { db } from './db'
 import { Accounts, Users } from './db/schema'
-
-console.log('SECRET', serverEnv.AUTH_SECRET)
 
 export const { GET, POST, handle } = SvelteKitAuth({
   adapter: DrizzleAdapter(db, Users, Accounts),
@@ -13,6 +11,14 @@ export const { GET, POST, handle } = SvelteKitAuth({
     GitHub({
       clientId: serverEnv.AUTH_GITHUB_ID,
       clientSecret: serverEnv.AUTH_GITHUB_SECRET,
+    }),
+    Google({
+      clientId: serverEnv.AUTH_GOOGLE_ID,
+      clientSecret: serverEnv.AUTH_GOOGLE_SECRET,
+    }),
+    MicrosoftEntraId({
+      clientId: serverEnv.AUTH_MICROSOFT_ID,
+      clientSecret: serverEnv.AUTH_MICROSOFT_SECRET,
     }),
   ],
   jwt: {
