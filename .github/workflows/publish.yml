@@ -24,4 +24,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
-      - run: bun x jsr publish --allow-slow-types
+      - name: Copy README to package for JSR
+        run: cp README.md packages/gau/README.md
+
+      - run: bun x jsr publish
+
+      - name: Clean up README from package
+        if: always()
+        run: rm packages/gau/README.md

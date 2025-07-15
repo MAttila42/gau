@@ -34,7 +34,25 @@ export interface CreateAuthOptions {
   autoLink?: 'verifiedEmail' | 'always' | false
 }
 
-export function createAuth(options: CreateAuthOptions) {
+export type Auth = Adapter & {
+  providerMap: Map<string, OAuthProvider>
+  basePath: string
+  cookieOptions: SerializeOptions
+  jwt: {
+    ttl: number
+  }
+  signJWT: <T extends Record<string, unknown>>(payload: T, customOptions?: Partial<SignOptions>) => Promise<string>
+  verifyJWT: <T = Record<string, unknown>>(token: string, customOptions?: Partial<VerifyOptions>) => Promise<T | null>
+  createSession: (userId: string, data?: Record<string, unknown>, ttl?: number) => Promise<string>
+  validateSession: (token: string) => Promise<{
+    user: User | null
+    session: { id: string, sub: string, [key: string]: any } | null
+  }>
+  trustHosts: 'all' | string[]
+  autoLink: 'verifiedEmail' | 'always' | false
+}
+
+export function createAuth(options: CreateAuthOptions): Auth {
   const { adapter, providers, basePath = '/api/auth', jwt: jwtConfig = {}, cookies: cookieConfig = {}, trustHosts = options.trustHosts ?? [], autoLink = 'verifiedEmail' } = options
   const { algorithm = 'ES256', secret, iss, aud, ttl: defaultTTL = 3600 * 24 } = jwtConfig
 

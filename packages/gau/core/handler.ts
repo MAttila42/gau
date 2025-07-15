@@ -1,4 +1,4 @@
-import type { createAuth } from './createAuth'
+import type { Auth } from './createAuth'
 import type { RequestLike, ResponseLike } from './index'
 import { createOAuthUris } from '../oauth/utils'
 import {
@@ -11,8 +11,6 @@ import {
   SESSION_COOKIE_NAME,
 } from './cookies'
 import { json, redirect } from './index'
-
-type Auth = ReturnType<typeof createAuth>
 
 async function handleSignIn(request: RequestLike, auth: Auth, providerId: string): Promise<ResponseLike> {
   const provider = auth.providerMap.get(providerId)
@@ -333,7 +331,7 @@ async function handleSignOut(request: RequestLike, auth: Auth): Promise<Response
   return response
 }
 
-export function createHandler(auth: Auth) {
+export function createHandler(auth: Auth): (request: RequestLike) => Promise<ResponseLike> {
   const { providerMap, basePath } = auth
 
   function applyCors(request: RequestLike, response: Response): Response {

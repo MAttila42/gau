@@ -5,10 +5,10 @@
   "license": "MIT",
   "publish": {
     "include": [
+      "README.md",
       "package.json",
       "**/*.ts",
-      "**/*.tsx",
-      "./../../README.md"
+      "**/*.tsx"
     ],
     "exclude": [
       "**/*.test.ts",
