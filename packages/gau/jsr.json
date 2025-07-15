@@ -1,18 +1,17 @@
 {
   "name": "@yuo/gau",
   "version": "0.2.0",
-  "exports": "./packages/gau/index.ts",
+  "exports": "./index.ts",
   "publish": {
     "include": [
-      "packages/gau/package.json",
-      "packages/gau/**/*.ts",
-      "packages/gau/**/*.tsx",
-      "LICENSE",
-      "README.md"
+      "package.json",
+      "**/*.ts",
+      "**/*.tsx",
+      "./../../README.md"
     ],
     "exclude": [
-      "packages/gau/**/*.test.ts",
-      "packages/gau/**/*.test.tsx"
+      "**/*.test.ts",
+      "**/*.test.tsx"
     ]
   }
 }
