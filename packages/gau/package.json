@@ -81,12 +81,15 @@
     }
   },
   "bin": {
-    "gau": "cli/index.ts"
+    "gau": "dist/cli/index.js"
   },
   "files": [
+    "README.md",
     "dist"
   ],
   "scripts": {
+    "prepublishOnly": "node -e \"require('fs').copyFileSync('../../README.md', 'README.md')\"",
+    "postpublish": "node -e \"require('fs').unlinkSync('README.md')\"",
     "dev": "bun run --watch index.ts",
     "lint": "eslint . --fix",
     "check": "tsc --noEmit --skipLibCheck",
