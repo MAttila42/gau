@@ -1,4 +1,7 @@
 {
+  "rust-analyzer.linkedProjects": [
+    "packages/sveltekit/src-tauri/Cargo.toml"
+  ],
   "svelte.enable-ts-plugin": false,
   "svelte.plugin.svelte.enable": false,
   "typescript.tsdk": "node_modules\\typescript\\lib",
