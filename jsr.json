@@ -9,6 +9,10 @@
       "packages/gau/**/*.tsx",
       "LICENSE",
       "README.md"
+    ],
+    "exclude": [
+      "packages/gau/**/*.test.ts",
+      "packages/gau/**/*.test.tsx"
     ]
   }
 }

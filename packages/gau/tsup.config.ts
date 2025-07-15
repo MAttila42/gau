@@ -26,9 +26,10 @@ export default defineConfig(async () => {
   const glob = new Glob('**/index.{ts,tsx,svelte.ts}')
   const allEntries = await Array.fromAsync(glob.scan('.'))
 
-  const svelteEntry = allEntries.find(e => e.includes('svelte'))!
-  const solidEntry = allEntries.find(e => e.includes('solid'))!
-  const otherEntries = allEntries.filter(e => e !== svelteEntry && e !== solidEntry)
+  const solidEntry = allEntries.find(e => /client[\\/]solid[\\/]index\.(?:ts|tsx)$/.test(e))!
+  const svelteEntry = allEntries.find(e => /client[\\/]svelte[\\/]index\.svelte\.ts$/.test(e))!
+
+  const otherEntries = allEntries.filter(e => e !== solidEntry && e !== svelteEntry)
 
   return [
     {
@@ -51,8 +52,12 @@ export default defineConfig(async () => {
     },
     {
       ...commonConfig,
+      splitting: false,
       entry: toEntryObject([svelteEntry]),
       tsconfig: 'client/svelte/tsconfig.json',
+      outExtension() {
+        return { js: '.svelte.js' }
+      },
     },
   ]
 })
