@@ -1,8 +1,7 @@
 # TODO
 
-- [x] nr dev is not consistent with nr build
-- [x] use tsgo
-- [x] fix npm publishing
+- [ ] when editing only svelte nr dev deletes all files in dist but svelte files, entries delete each other's work
+- [ ] client/solid async reactivity issue
 - [ ] more tests
 - [ ] extract tauri specific stuff from client/svelte and client/solid
 - [ ] sveltekit tauri dev/build

@@ -28,5 +28,6 @@ export function SolidAuth(optionsOrAuth: CreateAuthOptions | AuthInstance) {
   return {
     GET: solidHandler,
     POST: solidHandler,
+    OPTIONS: solidHandler,
   }
 }

@@ -5,7 +5,7 @@ import { SvelteKitAuth } from '@yuo-app/gau/sveltekit'
 import { db } from './db'
 import { Accounts, Users } from './db/schema'
 
-export const { GET, POST, handle } = SvelteKitAuth({
+export const { GET, POST, OPTIONS, handle } = SvelteKitAuth({
   adapter: DrizzleAdapter(db, Users, Accounts),
   providers: [
     GitHub({
@@ -24,4 +24,5 @@ export const { GET, POST, handle } = SvelteKitAuth({
   jwt: {
     secret: serverEnv.AUTH_SECRET,
   },
+  trustHosts: 'all',
 })

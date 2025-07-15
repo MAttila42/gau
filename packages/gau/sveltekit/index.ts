@@ -54,6 +54,7 @@ export function SvelteKitAuth(optionsOrAuth: CreateAuthOptions | AuthInstance) {
   return {
     GET: sveltekitHandler,
     POST: sveltekitHandler,
+    OPTIONS: sveltekitHandler,
     handle,
   }
 }

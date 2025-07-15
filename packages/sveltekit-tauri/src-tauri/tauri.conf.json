@@ -5,7 +5,7 @@
   "identifier": "gau.sveltekit.dev",
   "build": {
     "frontendDist": "../build",
-    "devUrl": "http://localhost:5173",
+    "devUrl": "http://localhost:4173",
     "beforeDevCommand": "bun run dev",
     "beforeBuildCommand": "bun run build"
   },
@@ -33,5 +33,14 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "deep-link": {
+      "desktop": {
+        "schemes": [
+          "gau"
+        ]
+      }
+    }
   }
 }

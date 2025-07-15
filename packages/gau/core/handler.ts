@@ -191,15 +191,84 @@ async function handleCallback(request: RequestLike, auth: Auth, providerId: stri
 
   const sessionToken = await auth.createSession(user.id)
 
-  const isDesktopRedirect = redirectTo.startsWith('the-stack://')
-  const isMobileRedirect = redirectTo.startsWith('https://the-stack.hegyi-aron101.workers.dev')
+  const requestUrl = new URL(request.url)
+  const redirectUrl = new URL(redirectTo)
+
+  const isDesktopRedirect = redirectUrl.protocol === 'gau:'
+  const isMobileRedirect = requestUrl.host !== redirectUrl.host
 
   // For Tauri, we can't set a cookie on a custom protocol or a different host,
-  // so we pass the token in the URL.
+  // so we pass the token in the URL. Additionally, return a small HTML page
+  // that immediately navigates to the deep-link and attempts to close the window,
+  // so the external OAuth tab does not stay open.
   if (isDesktopRedirect || isMobileRedirect) {
     const destination = new URL(redirectTo)
     destination.searchParams.set('token', sessionToken)
-    return redirect(destination.toString())
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Authentication Complete</title>
+  <style>
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+      background-color: #09090b;
+      color: #fafafa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      text-align: center;
+    }
+    .card {
+      background-color: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 0.75rem;
+      padding: 2rem;
+      max-width: 320px;
+    }
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 0 0 0.5rem;
+    }
+    p {
+      margin: 0;
+      color: #a1a1aa;
+    }
+  </style>
+  <script>
+    window.onload = function() {
+      const url = ${JSON.stringify(destination.toString())};
+      window.location.href = url;
+      setTimeout(window.close, 500);
+    };
+  </script>
+</head>
+<body>
+  <div class="card">
+    <h1>Authentication Successful</h1>
+    <p>You can now close this window.</p>
+  </div>
+</body>
+</html>`
+
+    // Clear temporary cookies (CSRF/PKCE/Callback URI) so they don't linger
+    cookies.delete(CSRF_COOKIE_NAME)
+    cookies.delete(PKCE_COOKIE_NAME)
+    if (callbackUri)
+      cookies.delete(CALLBACK_URI_COOKIE_NAME)
+
+    const response = new Response(html, {
+      status: 200,
+      headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    })
+    cookies.toHeaders().forEach((value, key) => {
+      response.headers.append(key, value)
+    })
+    return response
   }
 
   cookies.set(SESSION_COOKIE_NAME, sessionToken, { maxAge: auth.jwt.ttl, sameSite: 'none', secure: true })

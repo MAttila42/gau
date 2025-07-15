@@ -8,7 +8,6 @@ export const serverScheme = z.object({
   AUTH_MICROSOFT_ID: z.string(),
   AUTH_MICROSOFT_SECRET: z.string(),
   AUTH_SECRET: z.string(),
-  AUTH_URL: z.string(),
   TURSO_DB_URL: z.string(),
   TURSO_AUTH_TOKEN: z.string(),
 })

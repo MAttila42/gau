@@ -57,22 +57,22 @@ export function AuthProvider(props: ParentProps & { baseUrl: string }) {
     { initialValue: null },
   )
 
-  const isTauri = !isServer && !!(window as any).__TAURI__
+  const isTauri = '__TAURI_INTERNALS__' in window
 
   async function signIn(provider: string) {
     if (isTauri) {
       const { platform } = await import('@tauri-apps/plugin-os')
       const { open } = await import('@tauri-apps/plugin-shell')
-      const currentPlatform = await platform()
+      const currentPlatform = platform()
       let redirectTo: string
       if (currentPlatform === 'android' || currentPlatform === 'ios') {
         // This should match the host in tauri.conf.json
-        redirectTo = encodeURIComponent('https://the-stack.hegyi-aron101.workers.dev')
+        redirectTo = new URL(props.baseUrl).origin
       }
       else {
-        redirectTo = encodeURIComponent('the-stack://oauth/callback')
+        redirectTo = 'gau://oauth/callback'
       }
-      const authUrl = `${props.baseUrl}/${provider}?redirectTo=${redirectTo}`
+      const authUrl = `${props.baseUrl}/${provider}?redirectTo=${encodeURIComponent(redirectTo)}`
       await open(authUrl)
     }
     else {
@@ -93,7 +93,7 @@ export function AuthProvider(props: ParentProps & { baseUrl: string }) {
   async function handleDeepLink(url: string) {
     console.log(`[handleDeepLink] Received URL: ${url}`)
     const parsed = new URL(url)
-    if (parsed.protocol !== 'the-stack:' && (parsed.protocol !== 'https:' || !parsed.host.endsWith('the-stack.hegyi-aron101.workers.dev'))) {
+    if (parsed.protocol !== 'gau:' && parsed.origin !== new URL(props.baseUrl).origin) {
       console.log(`[handleDeepLink] URL protocol/host is not valid, ignoring.`)
       return
     }

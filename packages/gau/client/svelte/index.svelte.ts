@@ -57,7 +57,7 @@ export function createSvelteAuth(options: { baseUrl: string }) {
       session = { user: null }
   }
 
-  const isTauri = BROWSER && (window as any).__TAURI__
+  const isTauri = '__TAURI_INTERNALS__' in window
 
   async function signIn(provider: string) {
     if (isTauri) {
@@ -66,11 +66,11 @@ export function createSvelteAuth(options: { baseUrl: string }) {
       const currentPlatform = platform()
       let redirectTo: string
       if (currentPlatform === 'android' || currentPlatform === 'ios')
-        redirectTo = encodeURIComponent('https://the-stack.hegyi-aron101.workers.dev')
+        redirectTo = new URL(baseUrl).origin
       else
-        redirectTo = encodeURIComponent('the-stack://oauth/callback')
+        redirectTo = 'gau://oauth/callback'
 
-      const authUrl = `${baseUrl}/${provider}?redirectTo=${redirectTo}`
+      const authUrl = `${baseUrl}/${provider}?redirectTo=${encodeURIComponent(redirectTo)}`
       await open(authUrl)
     }
     else {
@@ -88,7 +88,7 @@ export function createSvelteAuth(options: { baseUrl: string }) {
 
   async function handleDeepLink(url: string) {
     const parsed = new URL(url)
-    if (parsed.protocol !== 'the-stack:' && (parsed.protocol !== 'https' || !parsed.host.endsWith('the-stack.hegyi-aron101.workers.dev')))
+    if (parsed.protocol !== 'gau:' && parsed.origin !== new URL(baseUrl).origin)
       return
 
     const token = parsed.searchParams.get('token')
@@ -104,7 +104,7 @@ export function createSvelteAuth(options: { baseUrl: string }) {
     if (isTauri) {
       listen<string>('deep-link', async (event) => {
         await handleDeepLink(event.payload)
-      })
+      }).catch(console.error)
     }
   }
 
