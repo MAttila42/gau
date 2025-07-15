@@ -1,7 +1,7 @@
 {
   "name": "@yuo-app/gau",
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "packageManager": "bun@1.2.18",
   "description": "gau is a delightful auth library",
   "license": "MIT",
