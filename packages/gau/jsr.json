@@ -1,6 +1,6 @@
 {
   "name": "@yuo/gau",
-  "version": "0.0.1",
+  "version": "0.2.0",
   "exports": "./packages/gau/index.ts",
   "publish": {
     "include": [
