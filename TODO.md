@@ -1,7 +1,7 @@
 # TODO
 
 - [x] nr dev is not consistent with nr build
-- [ ] use tsgo
+- [x] use tsgo
 - [ ] fix npm publishing
 - [ ] more tests
 - [ ] extract tauri specific stuff from client/svelte and client/solid
