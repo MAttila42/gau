@@ -8,7 +8,8 @@
   "homepage": "https://github.com/yuo-app/gau#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yuo-app/gau.git"
+    "url": "git+https://github.com/yuo-app/gau.git",
+    "directory": "packages/gau"
   },
   "bugs": {
     "url": "https://github.com/yuo-app/gau/issues"
