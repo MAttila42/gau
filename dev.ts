@@ -11,7 +11,7 @@ const tscSvelte = $`bunx tsc --project packages/gau/client/svelte/tsconfig.json 
 const glob = new Glob('packages/gau/**/index.{ts,tsx,svelte.ts}')
 const entrypoints = (await Array.fromAsync(glob.scan())) as string[]
 
-const bunBuild = $`bun build ${entrypoints} --outdir ./packages/gau/dist --splitting --target node --sourcemap=external --watch`
+const bunBuild = $`bun build ${entrypoints} --outdir ./packages/gau/dist --root ./packages/gau --splitting --target browser --packages external --sourcemap=external --entry-naming "[dir]/[name].js" --chunk-naming "[name]-[hash].js" --watch`
 
 await Promise.all([
   tscMain,
