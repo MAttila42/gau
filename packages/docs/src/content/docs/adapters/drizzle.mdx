@@ -1,0 +1,263 @@
+---
+title: Drizzle
+description: How to set up the Drizzle adapter for gau.
+---
+import { Steps, Tabs, TabItem } from '@astrojs/starlight/components'
+
+`gau` currently only supports the Drizzle ORM adapter and SQLite. The examples use Turso as the database provider.
+
+<Steps>
+1. **Install Dependencies**
+
+    <Tabs syncKey="pkg">
+      <TabItem label="npm">
+        ```sh
+        npm i drizzle-orm @libsql/client
+        npm i -D drizzle-kit
+        ```
+      </TabItem>
+      <TabItem label="pnpm">
+        ```sh
+        pnpm add drizzle-orm @libsql/client
+        pnpm add -D drizzle-kit
+        ```
+      </TabItem>
+      <TabItem label="yarn">
+        ```sh
+        yarn add drizzle-orm @libsql/client
+        yarn add -D drizzle-kit
+        ```
+      </TabItem>
+      <TabItem label="bun">
+        ```sh
+        bun add drizzle-orm @libsql/client
+        bun add -D drizzle-kit
+        ```
+      </TabItem>
+      <TabItem label="ni">
+        ```sh
+        ni drizzle-orm @libsql/client
+        ni -D drizzle-kit
+        ```
+      </TabItem>
+    </Tabs>
+
+2. **Define the Database Schema**
+
+   This is the complete schema for `gau`, depending on your OAuth provider you may be able to omit some of the columns, each provider lists its required columns.
+
+    <Tabs syncKey="framework">
+        <TabItem label="SvelteKit">
+            ```ts title="src/lib/server/db/schema.ts"
+            import { integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+
+            export const Users = sqliteTable('users', {
+              id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+              name: text('name'),
+              email: text('email').unique(),
+              emailVerified: integer('email_verified', { mode: 'boolean' }),
+              image: text('image'),
+              createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+              updatedAt: integer('updated_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+            })
+
+            export const Accounts = sqliteTable(
+              'accounts',
+              {
+                userId: text('user_id')
+                  .notNull()
+                  .references(() => Users.id, { onDelete: 'cascade' }),
+                type: text('type').notNull(),
+                provider: text('provider').notNull(),
+                providerAccountId: text('provider_account_id').notNull(),
+                refreshToken: text('refresh_token'),
+                accessToken: text('access_token'),
+                expiresAt: integer('expires_at'),
+                tokenType: text('token_type'),
+                scope: text('scope'),
+                idToken: text('id_token'),
+                sessionState: text('session_state'),
+                createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+              },
+              account => [
+                primaryKey({
+                  columns: [account.provider, account.providerAccountId],
+                }),
+              ],
+            )
+
+            export type SelectUser = typeof Users.$inferSelect
+            export type InsertUser = typeof Users.$inferInsert
+
+            export type SelectAccount = typeof Accounts.$inferSelect
+            export type InsertAccount = typeof Accounts.$inferInsert
+            ```
+        </TabItem>
+        <TabItem label="SolidStart">
+             ```ts title="src/db/schema.ts"
+            import { integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+
+            export const Users = sqliteTable('users', {
+              id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+              name: text('name'),
+              email: text('email').unique(),
+              emailVerified: integer('email_verified', { mode: 'boolean' }),
+              image: text('image'),
+              createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+              updatedAt: integer('updated_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+            })
+
+            export const Accounts = sqliteTable(
+              'accounts',
+              {
+                userId: text('user_id')
+                  .notNull()
+                  .references(() => Users.id, { onDelete: 'cascade' }),
+                type: text('type').notNull(),
+                provider: text('provider').notNull(),
+                providerAccountId: text('provider_account_id').notNull(),
+                refreshToken: text('refresh_token'),
+                accessToken: text('access_token'),
+                expiresAt: integer('expires_at'),
+                tokenType: text('token_type'),
+                scope: text('scope'),
+                idToken: text('id_token'),
+                sessionState: text('session_state'),
+                createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+              },
+              account => [
+                primaryKey({
+                  columns: [account.provider, account.providerAccountId],
+                }),
+              ],
+            )
+
+            export type SelectUser = typeof Users.$inferSelect
+            export type InsertUser = typeof Users.$inferInsert
+
+            export type SelectAccount = typeof Accounts.$inferSelect
+            export type InsertAccount = typeof Accounts.$inferInsert
+            ```
+        </TabItem>
+    </Tabs>
+
+3. **Configure DrizzleKit**
+
+   Configure the schema path and database credentials for migrations.
+
+    <Tabs syncKey="framework">
+        <TabItem label="SvelteKit">
+            ```ts title="drizzle.config.ts"
+            import { defineConfig } from 'drizzle-kit'
+
+            export default defineConfig({
+              schema: './src/lib/server/db/schema.ts',
+              dialect: 'turso',
+              dbCredentials: {
+                authToken: process.env.TURSO_AUTH_TOKEN!,
+                url: process.env.TURSO_DB_URL!,
+              },
+            })
+            ```
+        </TabItem>
+        <TabItem label="SolidStart">
+            ```ts title="drizzle.config.ts"
+            import { defineConfig } from 'drizzle-kit'
+
+            export default defineConfig({
+              schema: './src/db/schema.ts',
+              dialect: 'turso',
+              dbCredentials: {
+                authToken: process.env.TURSO_AUTH_TOKEN!,
+                url: process.env.TURSO_DB_URL!,
+              },
+            })
+            ```
+        </TabItem>
+    </Tabs>
+
+    Now you can run `npx drizzle-kit push` to apply your schema to the database.
+
+4. **Set up the Database Client**
+
+   Initialize the Drizzle client with your database connection.
+
+    <Tabs syncKey="framework">
+        <TabItem label="SvelteKit">
+            ```ts title="src/lib/server/db/index.ts"
+            import { env } from '$env/dynamic/private'
+            import { createClient } from '@libsql/client'
+            import { drizzle } from 'drizzle-orm/libsql'
+
+            const client = createClient({
+              url: env.TURSO_DB_URL,
+              authToken: env.TURSO_AUTH_TOKEN,
+            })
+
+            export const db = drizzle(client)
+            ```
+        </TabItem>
+        <TabItem label="SolidStart">
+             ```ts title="src/db/index.ts"
+            import process from 'node:process'
+            import { createClient } from '@libsql/client'
+            import { drizzle } from 'drizzle-orm/libsql'
+
+            const client = createClient({
+              url: process.env.TURSO_DB_URL!,
+              authToken: process.env.TURSO_AUTH_TOKEN!,
+            })
+
+            export const db = drizzle(client)
+            ```
+        </TabItem>
+    </Tabs>
+
+5. **Integrate with `createAuth`**
+
+   Finally, pass the Drizzle client and schema tables to the `DrizzleAdapter` in your `createAuth` configuration.
+
+    <Tabs syncKey="framework">
+        <TabItem label="SvelteKit">
+            ```ts title="src/lib/server/auth.ts"
+            import { env } from '$env/dynamic/private'
+            import { DrizzleAdapter } from '@yuo-app/gau/adapters/drizzle'
+            import { createAuth } from '@yuo-app/gau/core'
+            import { GitHub } from '@yuo-app/gau/oauth'
+            import { db } from './db'
+            import { Accounts, Users } from './db/schema'
+
+            export const auth = createAuth({
+              adapter: DrizzleAdapter(db, Users, Accounts),
+              providers: [
+                GitHub({
+                  clientId: env.GITHUB_CLIENT_ID,
+                  clientSecret: env.GITHUB_CLIENT_SECRET,
+                }),
+              ],
+            })
+            ```
+        </TabItem>
+        <TabItem label="SolidStart">
+            ```ts title="src/server/auth.ts"
+            import process from 'node:process'
+            import { DrizzleAdapter } from '@yuo-app/gau/adapters/drizzle'
+            import { createAuth } from '@yuo-app/gau/core'
+            import { GitHub } from '@yuo-app/gau/oauth'
+            import { db } from './db'
+            import { Accounts, Users } from './db/schema'
+
+            export const auth = createAuth({
+              adapter: DrizzleAdapter(db, Users, Accounts),
+              providers: [
+                GitHub({
+                  clientId: process.env.GITHUB_CLIENT_ID!,
+                  clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+                }),
+              ],
+            })
+            ```
+        </TabItem>
+    </Tabs>
+
+</Steps>

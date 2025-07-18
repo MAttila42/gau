@@ -1,0 +1,93 @@
+---
+title: Getting Started
+description: How to install and set up gau for the first time.
+---
+import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
+import IconLink from '~/components/IconLink.astro';
+
+This guide will walk you through installing `@yuo-app/gau` and setting it up for the first time.
+
+<Steps>
+1. **Install the package**
+    <Tabs syncKey="pkg">
+      <TabItem label="npm">
+        ```sh
+        npm i @yuo-app/gau
+        ```
+      </TabItem>
+      <TabItem label="pnpm">
+        ```sh
+        pnpm add @yuo-app/gau
+        ```
+      </TabItem>
+      <TabItem label="yarn">
+        ```sh
+        yarn add @yuo-app/gau
+        ```
+      </TabItem>
+      <TabItem label="bun">
+        ```sh
+        bun add @yuo-app/gau
+        ```
+      </TabItem>
+      <TabItem label="ni">
+        ```sh
+        ni @yuo-app/gau
+        ```
+      </TabItem>
+    </Tabs>
+
+2.  **Set up environment variables**
+
+    `gau` uses `AUTH_SECRET` for signing JWTs. You can generate a secure secret using the CLI:
+    <Tabs syncKey="pkg">
+      <TabItem label="npm">
+        ```sh
+        npx gau secret
+        ```
+      </TabItem>
+      <TabItem label="pnpm">
+        ```sh
+        pnpm dlx gau secret
+        ```
+      </TabItem>
+      <TabItem label="yarn">
+        ```sh
+        yarn dlx gau secret
+        ```
+      </TabItem>
+      <TabItem label="bun">
+        ```sh
+        bunx gau secret
+        ```
+      </TabItem>
+      <TabItem label="ni">
+        ```sh
+        nlx gau secret
+        ```
+      </TabItem>
+    </Tabs>
+    
+    Then, add the output and your provider credentials to your `.env` file:
+    ```txt title=".env"
+    AUTH_SECRET="your-generated-secret"
+    GITHUB_CLIENT_ID="your-github-client-id"
+    GITHUB_CLIENT_SECRET="your-github-client-secret"
+    ```
+
+3. **Choose your database adapter**
+
+    `gau` uses a database adapter to connect to your database.
+
+    <div class="row">
+      <IconLink href="/adapters/drizzle/" icon="drizzle" title="Drizzle" />
+    </div>
+
+
+4. **Choose your integration**
+
+    <div class="row">
+      <IconLink href="/integrations/sveltekit/" icon="svelte" title="SvelteKit" />
+      <IconLink href="/integrations/solidstart/" icon="solid" title="SolidStart" />
+    </div>
+</Steps>

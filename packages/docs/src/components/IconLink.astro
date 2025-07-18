@@ -1,0 +1,73 @@
+---
+import { Icon as StarlightIcon } from '@astrojs/starlight/components'
+import Drizzle from '~/assets/adapters/drizzle.svg?raw'
+import Solid from '~/assets/integrations/solid.svg?raw'
+import Svelte from '~/assets/integrations/svelte.svg?raw'
+
+interface Props {
+  href: string
+  icon: string
+  title: string
+}
+
+const { href, icon, title } = Astro.props
+
+const customIcons: Record<string, string | undefined> = {
+  drizzle: Drizzle,
+  solid: Solid,
+  svelte: Svelte,
+}
+
+const svg = customIcons[icon]
+---
+
+<a href={href} class="icon-link-card">
+  <div class="icon">
+    {svg ? <Fragment set:html={svg} /> : <StarlightIcon name={icon as any} />}
+  </div>
+  <span>{title}</span>
+</a>
+
+<style>
+.icon-link-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.5rem;
+  padding: 1.5rem 1rem;
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.5rem;
+  color: var(--sl-color-white);
+  text-decoration: none;
+  font-size: var(--sl-text-sm);
+  transition: border-color 0.2s, background-color 0.2s;
+  background-color: transparent;
+  width: 9rem; /* w-36 */
+  height: 8rem; /* h-32 */
+}
+
+.icon-link-card:hover,
+.icon-link-card:focus {
+  border-color: var(--sl-color-accent);
+  background: color-mix(in srgb, var(--sl-color-accent-low) 20%, transparent);
+  color: var(--sl-color-white);
+}
+
+.icon-link-card span {
+  font-weight: 600;
+  color: var(--sl-color-gray-1);
+}
+
+.icon-link-card:hover span,
+.icon-link-card:focus span {
+  color: var(--sl-color-white);
+}
+
+.icon-link-card .icon {
+  width: 3rem;
+  height: 3rem;
+  margin: 0 auto;
+}
+</style>

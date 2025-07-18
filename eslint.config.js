@@ -4,6 +4,7 @@ export default antfu({
   unocss: true,
   svelte: true,
   solid: true,
+  astro: true,
   rules: {
     'no-console': 'warn',
     'curly': ['warn', 'multi-or-nest', 'consistent'],

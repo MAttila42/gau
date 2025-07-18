@@ -1,0 +1,75 @@
+---
+title: SvelteKit Integration
+description: How to integrate gau with SvelteKit.
+---
+
+import { Tabs, TabItem, Steps, Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+import { DrizzleAdapter } from '@yuo-app/gau/adapters/drizzle';
+import { createAuth } from '@yuo-app/gau/core';
+import { GitHub } from '@yuo-app/gau/oauth';
+import { SvelteKitAuth } from '@yuo-app/gau/sveltekit';
+import { createSvelteAuth } from '@yuo-app/gau/client/svelte';
+
+This guide shows how to integrate `gau` with SvelteKit, using Drizzle (SQLite) and GitHub as examples.
+
+<Steps>
+1. **Follow the basic setup**
+
+   Complete the [Getting Started](/guides/getting-started) guide for installation, environment variables, and the auth configuration with the database setup.
+
+2. **Set up API Route**
+
+   Create a catch-all route for auth endpoints on the server.
+
+   ```ts title="src/routes/api/auth/[...gau]/+server.ts"
+   import { SvelteKitAuth } from '@yuo-app/gau/sveltekit'
+   import { auth } from '$lib/server/auth'
+
+   export const { GET, POST } = SvelteKitAuth(auth)
+   ```
+
+3. **Add Server Hook**
+
+   Add the SvelteKitAuth handle to make sessions available in `event.locals`.
+
+   ```ts title="src/hooks.server.ts"
+   import { SvelteKitAuth } from '@yuo-app/gau/sveltekit'
+   import { auth } from '$lib/server/auth'
+
+   export const { handle } = SvelteKitAuth(auth)
+   ```
+
+   Now, in server routes, you can access `event.locals.getSession()` which returns `{ user, session }` or `null`.
+
+4. **Set up the Client**
+
+   For the client, we create an auth store.
+
+   ```ts title="src/lib/auth.svelte.ts"
+   import { createSvelteAuth } from '@yuo-app/gau/client/svelte'
+
+   export const auth = createSvelteAuth()
+   ```
+
+   Use it in your components:
+
+   ```svelte title="+page.svelte"
+   <script>
+     import { auth } from '$lib/auth.svelte'
+   </script>
+
+   {#if auth.session?.user}
+     <p>Welcome, {auth.session.user.name}!</p>
+     <button onclick={() => auth.signOut()}>Sign Out</button>
+   {:else}
+     <button onclick={() => auth.signIn('github')}>Sign in with GitHub</button>
+   {/if}
+   ```
+
+5. **Next Steps**
+
+   - Explore other [OAuth Providers](/oauth-providers).
+   - See [Deployment](/guides/deployment) for production tips.
+   - Learn about how `gau` works.
+</Steps> 

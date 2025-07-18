@@ -1,0 +1,31 @@
+---
+title: Welcome to gau
+description: The vendor-neutral, runtime-agnostic OAuth & JWT authentication toolkit.
+template: splash
+hero:
+  tagline: Good auth that runs everywhere.
+  actions:
+    - text: Get Started
+      link: /guides/getting-started/
+      icon: right-arrow
+    - text: View on GitHub
+      link: https://github.com/yuo-app/gau
+      icon: external
+      variant: minimal
+---
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+<CardGrid stagger>
+  <Card title="Flexible" icon="puzzle">
+    Small and self-hostable, works with backend-only, full-stack, and native apps, and on different hosts.
+  </Card>
+  <Card title="Framework Agnostic" icon="random">
+    Core is framework-free, with helpers for SolidStart & SvelteKit.
+  </Card>
+  <Card title="Runtime Agnostic" icon="rocket">
+    Runs on Bun, Node, Deno, Cloudflare Workers, and even Tauri.
+  </Card>
+  <Card title="Database Agnostic" icon="document">
+    Supports any SQL engine via Drizzle adapters, currently SQLite only.
+  </Card>
+</CardGrid>
