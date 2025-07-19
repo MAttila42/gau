@@ -10,7 +10,7 @@
     "lint": "eslint . --fix",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "release": "bumpp packages/gau/package.json && bun run build && npm publish --workspace @rttnd/gau --access public"
+    "release": "bumpp packages/gau/package.json packages/gau/jsr.json && bun run build && npm publish --workspace @rttnd/gau --access public"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.17.0",
