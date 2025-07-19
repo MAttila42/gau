@@ -10,5 +10,11 @@ export default antfu({
     'curly': ['warn', 'multi-or-nest', 'consistent'],
     'antfu/no-top-level-await': 'off',
   },
-  ignores: ['**/build/**', '**/dist/**', '**/coverage/**', '**/target/**'],
+  ignores: [
+    '**/build/**',
+    '**/dist/**',
+    '**/coverage/**',
+    '**/target/**',
+    '**/.astro/**',
+  ],
 })
