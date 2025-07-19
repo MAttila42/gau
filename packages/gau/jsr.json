@@ -1,5 +1,5 @@
 {
-  "name": "@yuo/gau",
+  "name": "@rttnd/gau",
   "version": "0.2.0",
   "exports": "./index.ts",
   "license": "MIT",

@@ -17,7 +17,7 @@ This guide shows how to integrate `gau` with SvelteKit, using Drizzle (SQLite) a
    Create a catch-all route for auth endpoints on the server.
 
    ```ts title="src/routes/api/auth/[...gau]/+server.ts"
-   import { SvelteKitAuth } from '@yuo-app/gau/sveltekit'
+   import { SvelteKitAuth } from '@rttnd/gau/sveltekit'
    import { auth } from '$lib/server/auth'
 
    export const { GET, POST } = SvelteKitAuth(auth)
@@ -28,7 +28,7 @@ This guide shows how to integrate `gau` with SvelteKit, using Drizzle (SQLite) a
    Add the SvelteKitAuth handle to make sessions available in `event.locals`.
 
    ```ts title="src/hooks.server.ts"
-   import { SvelteKitAuth } from '@yuo-app/gau/sveltekit'
+   import { SvelteKitAuth } from '@rttnd/gau/sveltekit'
    import { auth } from '$lib/server/auth'
 
    export const { handle } = SvelteKitAuth(auth)
@@ -41,7 +41,7 @@ This guide shows how to integrate `gau` with SvelteKit, using Drizzle (SQLite) a
    For the client, we create an auth store.
 
    ```ts title="src/lib/auth.svelte.ts"
-   import { createSvelteAuth } from '@yuo-app/gau/client/svelte'
+   import { createSvelteAuth } from '@rttnd/gau/client/svelte'
 
    export const auth = createSvelteAuth()
    ```

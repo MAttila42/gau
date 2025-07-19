@@ -3,14 +3,14 @@
   "type": "module",
   "version": "0.0.1",
   "private": true,
-  "packageManager": "bun@1.2.18",
+  "packageManager": "bun@1.2.19",
   "scripts": {
     "build": "bun --bun --cwd packages/gau tsup",
     "dev": "bun --bun --cwd packages/gau tsup --watch",
     "lint": "eslint . --fix",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "release": "bumpp packages/gau/package.json && bun run build && npm publish --workspace @yuo-app/gau --access public"
+    "release": "bumpp packages/gau/package.json && bun run build && npm publish --workspace @rttnd/gau --access public"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.16.2",

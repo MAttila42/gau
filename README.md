@@ -3,17 +3,17 @@
   good auth
 </p>
 
-[![NPM Version](https://img.shields.io/npm/v/%40yuo-app%2Fgau?color=red)](https://www.npmjs.com/package/%40yuo-app%2Flin)
-[![JSR Version](https://img.shields.io/jsr/v/%40yuo/gau?color=yellow)](https://jsr.io/%40yuo/gau)
+[![NPM Version](https://img.shields.io/npm/v/%40rttnd%2Fgau?color=red)](https://www.npmjs.com/package/%40rttnd%2Fgau)
+[![JSR Version](https://img.shields.io/jsr/v/%40rttnd/gau?color=yellow)](https://jsr.io/%40rttnd/gau)
 
-Check out the [docs](https://gau.yuo.app) or continue reading below.
+Check out the [docs](https://gau.rettend.me) or continue reading below.
 
 ## get started
 
 ### install
 
 ```bash
-npm i @yuo-app/gau
+npm i @rttnd/gau
 ```
 
 TODO

@@ -17,10 +17,10 @@
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",
+    "@rttnd/gau": "workspace:*",
     "@tauri-apps/plugin-deep-link": "^2.4.0",
     "@tauri-apps/plugin-os": "2",
     "@tauri-apps/plugin-shell": "2",
-    "@yuo-app/gau": "workspace:*",
     "drizzle-orm": "^0.44.2"
   },
   "devDependencies": {

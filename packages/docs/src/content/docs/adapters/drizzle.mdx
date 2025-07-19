@@ -221,9 +221,9 @@ import { Steps, Tabs, TabItem } from '@astrojs/starlight/components'
         <TabItem label="SvelteKit">
             ```ts title="src/lib/server/auth.ts"
             import { env } from '$env/dynamic/private'
-            import { DrizzleAdapter } from '@yuo-app/gau/adapters/drizzle'
-            import { createAuth } from '@yuo-app/gau/core'
-            import { GitHub } from '@yuo-app/gau/oauth'
+            import { DrizzleAdapter } from '@rttnd/gau/adapters/drizzle'
+            import { createAuth } from '@rttnd/gau/core'
+            import { GitHub } from '@rttnd/gau/oauth'
             import { db } from './db'
             import { Accounts, Users } from './db/schema'
 
@@ -241,9 +241,9 @@ import { Steps, Tabs, TabItem } from '@astrojs/starlight/components'
         <TabItem label="SolidStart">
             ```ts title="src/server/auth.ts"
             import process from 'node:process'
-            import { DrizzleAdapter } from '@yuo-app/gau/adapters/drizzle'
-            import { createAuth } from '@yuo-app/gau/core'
-            import { GitHub } from '@yuo-app/gau/oauth'
+            import { DrizzleAdapter } from '@rttnd/gau/adapters/drizzle'
+            import { createAuth } from '@rttnd/gau/core'
+            import { GitHub } from '@rttnd/gau/oauth'
             import { db } from './db'
             import { Accounts, Users } from './db/schema'
 

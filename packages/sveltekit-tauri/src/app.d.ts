@@ -5,7 +5,7 @@ declare global {
     // interface Error {}
     interface Locals {
       getSession: () => Promise<{
-        user: import('@yuo-app/gau/core').User | null
+        user: import('@rttnd/gau/core').User | null
         session: { [key: string]: unknown, id: string, sub: string } | null
       } | null>
     }

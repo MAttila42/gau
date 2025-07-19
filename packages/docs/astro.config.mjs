@@ -4,7 +4,7 @@ import starlight from '@astrojs/starlight'
 import { defineConfig } from 'astro/config'
 
 export default defineConfig({
-  site: 'https://gau.yuo.app',
+  site: 'https://gau.rettend.me',
   base: '/',
   vite: {
     resolve: {
@@ -16,7 +16,7 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'gau',
-      social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/yuo-app/gau' }],
+      social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/rttnd/gau' }],
       customCss: ['@fontsource/inter/400.css', '@fontsource/inter/600.css', './src/styles/custom.css'],
       components: {
         Header: './src/components/Header.astro',

@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",
-    "@yuo-app/gau": "workspace:*",
+    "@rttnd/gau": "workspace:*",
     "drizzle-orm": "^0.44.2"
   },
   "devDependencies": {

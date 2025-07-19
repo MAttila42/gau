@@ -51,15 +51,15 @@ packages/        → temporary and just for easy testing, will be moved to a sep
   client/
     solid/       → SolidJS reactive client (~1 kB)
     svelte/      → Svelte 5 reactive client (~1 kB)
-  cli/           → `bunx @yuo-app/gau` scaffolder & code-gen
+  cli/           → `bunx @rttnd/gau` scaffolder & code-gen
 ```
 
 `core` is the only mandatory dependency; everything else can be swapped or omitted.
 
 ```ts
-import { DrizzleAdapter } from '@yuo-app/gau/adapters/drizzle'
-import { createAuth } from '@yuo-app/gau/core'
-import { GitHub } from '@yuo-app/gau/oauth'
+import { DrizzleAdapter } from '@rttnd/gau/adapters/drizzle'
+import { createAuth } from '@rttnd/gau/core'
+import { GitHub } from '@rttnd/gau/oauth'
 import { db } from './db'
 
 export const auth = createAuth({
@@ -130,7 +130,7 @@ interface Adapter {
 
 ### 3.6  Client Packages
 
-- Separate ESM clients (`@yuo-app/gau/solid`, `…/svelte`).
+- Separate ESM clients (`@rttnd/gau/solid`, `…/svelte`).
 - Expose reactive `session()` store, `signIn`, `signOut`.
 - Each ~1 kB gzipped, no dependencies beyond framework runtime.
 
@@ -224,7 +224,7 @@ Notes:
 - [ ] **[account-linking]** Automatic account linking across providers.
 - [ ] **[solid-tauri-example]** SolidStart + Tauri example demo.
 - [ ] **[cf-runtime]** Cloudflare Workers runtime helper.
-- [ ] **[cli-scaffolder]** CLI scaffolder (`bunx @yuo-app/gau init`) including auth secret key generation.
+- [ ] **[cli-scaffolder]** CLI scaffolder (`bunx @rttnd/gau init`) including auth secret key generation.
 - [ ] **[docs-site]** Documentation site (Astro Starlight) & examples gallery.
 - [ ] **[passkeys]** Passkeys/WebAuthn module with authenticators table and helpers.
 

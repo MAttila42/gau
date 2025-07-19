@@ -10,7 +10,7 @@ type AuthInstance = ReturnType<typeof createAuth>
  * @example
  * ```ts
  * // src/routes/api/auth/[...gau]/+server.ts
- * import { SvelteKitAuth } from '@yuo-app/gau/sveltekit'
+ * import { SvelteKitAuth } from '@rttnd/gau/sveltekit'
  * import { auth } from '$lib/server/auth'
  *
  * export const { GET, POST } = SvelteKitAuth(auth)

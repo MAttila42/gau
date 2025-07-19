@@ -9,7 +9,7 @@ type AuthInstance = ReturnType<typeof createAuth>
  * @example
  * ```ts
  * // src/routes/api/auth/[...auth].ts
- * import { SolidAuth } from '@yuo-app/gau/solid-start'
+ * import { SolidAuth } from '@rttnd/gau/solid-start'
  * import { authOptions } from '~/server/auth'
  *
  * export const { GET, POST } = SolidAuth(authOptions)

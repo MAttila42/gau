@@ -1,7 +1,7 @@
 import { serverEnv } from '$lib/env/server'
-import { DrizzleAdapter } from '@yuo-app/gau/adapters/drizzle'
-import { GitHub, Google, MicrosoftEntraId } from '@yuo-app/gau/oauth'
-import { SvelteKitAuth } from '@yuo-app/gau/sveltekit'
+import { DrizzleAdapter } from '@rttnd/gau/adapters/drizzle'
+import { GitHub, Google, MicrosoftEntraId } from '@rttnd/gau/oauth'
+import { SvelteKitAuth } from '@rttnd/gau/sveltekit'
 import { db } from './db'
 import { Accounts, Users } from './db/schema'
 
