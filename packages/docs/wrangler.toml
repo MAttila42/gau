@@ -1,6 +1,6 @@
 name = "gau-docs"
 compatibility_date = "2025-04-01"
-routes = [ { pattern = "gau.yuo.app", custom_domain = true } ]
+routes = [ { pattern = "gau.rettend.me", custom_domain = true } ]
 
 [assets]
 directory = "./dist"

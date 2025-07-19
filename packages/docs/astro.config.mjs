@@ -27,34 +27,21 @@ export default defineConfig({
           items: [
             { label: 'Getting Started', slug: 'guides/getting-started' },
             { label: 'Configuration', slug: 'guides/configuration' },
-            { label: 'Frontend Clients', slug: 'guides/clients' },
             { label: 'JWT', slug: 'guides/jwt' },
             { label: 'Deployment', slug: 'guides/deployment' },
           ],
         },
         {
           label: 'Integrations',
-          items: [
-            { label: 'SvelteKit', slug: 'integrations/sveltekit' },
-            { label: 'SolidStart', slug: 'integrations/solidstart', badge: 'Soon' },
-            { label: 'Cloudflare Workers', slug: 'integrations/cloudflare-workers' },
-            { label: 'Tauri', slug: 'integrations/tauri' },
-          ],
+          autogenerate: { directory: 'integrations' },
         },
         {
           label: 'Database Adapters',
-          items: [
-            { label: 'Drizzle', slug: 'adapters/drizzle' },
-            { label: 'Prisma', slug: 'adapters/prisma', badge: 'Soon' },
-          ],
+          autogenerate: { directory: 'adapters' },
         },
         {
           label: 'OAuth Providers',
-          items: [
-            { label: 'GitHub', slug: 'providers/github' },
-            { label: 'Google', slug: 'providers/google' },
-            { label: 'Microsoft Entra ID', slug: 'providers/microsoft' },
-          ],
+          autogenerate: { directory: 'providers' },
         },
         {
           label: 'Reference',
