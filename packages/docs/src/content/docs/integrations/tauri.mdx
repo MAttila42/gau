@@ -1,5 +1,277 @@
 ---
 title: Tauri
+description: How to integrate gau with Tauri for desktop applications.
 ---
 
-Coming soon. 
+import { Steps, Tabs, TabItem, Card, LinkCard } from '@astrojs/starlight/components';
+
+`gau` has first-class Tauri support. This guide explains how to build desktop apps with OAuth, and also shows how to set up the required deep linking to handle OAuth redirects.
+
+This guide assumes you have already completed the setup for your web framework (e.g., [SvelteKit](/integrations/sveltekit/)).
+
+<Steps>
+1. **Install Tauri Dependencies**
+
+    <Tabs syncKey="pkg">
+      <TabItem label="npm">
+        ```sh
+        npm i @tauri-apps/api @tauri-apps/plugin-deep-link @tauri-apps/plugin-os @tauri-apps/plugin-shell
+        npm i -D @tauri-apps/cli
+        ```
+      </TabItem>
+      <TabItem label="pnpm">
+        ```sh
+        pnpm add @tauri-apps/api @tauri-apps/plugin-deep-link @tauri-apps/plugin-os @tauri-apps/plugin-shell
+        pnpm add -D @tauri-apps/cli
+        ```
+      </TabItem>
+      <TabItem label="yarn">
+        ```sh
+        yarn add @tauri-apps/api @tauri-apps/plugin-deep-link @tauri-apps/plugin-os @tauri-apps/plugin-shell
+        yarn add -D @tauri-apps/cli
+        ```
+      </TabItem>
+      <TabItem label="bun">
+        ```sh
+        bun add @tauri-apps/api @tauri-apps/plugin-deep-link @tauri-apps/plugin-os @tauri-apps/plugin-shell
+        bun add -D @tauri-apps/cli
+        ```
+      </TabItem>
+      <TabItem label="ni">
+        ```sh
+        ni @tauri-apps/api @tauri-apps/plugin-deep-link @tauri-apps/plugin-os @tauri-apps/plugin-shell
+        ni -D @tauri-apps/cli
+        ```
+      </TabItem>
+    </Tabs>
+
+2. **Initialize Tauri**
+
+   If you haven't already, initialize Tauri in your project. This will create a `src-tauri` directory.
+
+    <Tabs syncKey="pkg">
+      <TabItem label="npm">
+        ```sh
+        npx tauri init
+        ```
+      </TabItem>
+      <TabItem label="pnpm">
+        ```sh
+        pnpm tauri init
+        ```
+      </TabItem>
+      <TabItem label="yarn">
+        ```sh
+        yarn tauri init
+        ```
+      </TabItem>
+      <TabItem label="bun">
+        ```sh
+        bun tauri init
+        ```
+      </TabItem>
+      <TabItem label="ni">
+        ```sh
+        nlx tauri init
+        ```
+      </TabItem>
+    </Tabs>
+
+    Also set up the `build` config in `tauri.conf.json`, and follow other Tauri setup steps specific to your frontend framework.
+
+3. **Configure Deep Linking**
+
+   To handle OAuth callbacks, you need to configure a custom URL scheme. After the auth flow is done, the browser will open your app again with the URL you set (`gau://...`).
+   
+   In `src-tauri/tauri.conf.json`, add the `deep-link` plugin and define a scheme. The client helpers default to `gau`, but you can configure it. **Set this to something unique to your app.**
+
+   ```json title="src-tauri/tauri.conf.json"
+   {
+     // ...
+     "plugins": {
+       "deep-link": {
+         "desktop": {
+           "schemes": [
+             "gau"
+           ]
+         }
+       }
+     }
+   }
+   ```
+
+4. **Set up Rust Backend**
+
+    Add the Tauri plugins to your `src-tauri/Cargo.toml`.
+
+    ```toml title="src-tauri/Cargo.toml"
+    [dependencies]
+    # ...
+    tauri-plugin-deep-link = "2.4.0"
+    tauri-plugin-log = "2"
+    tauri-plugin-os = "2.3.0"
+    tauri-plugin-shell = "2.3.0"
+
+    [target."cfg(any(target_os = \"macos\", windows, target_os = \"linux\"))".dependencies]
+    tauri-plugin-single-instance = { version = "2.2.0", features = [ "deep-link" ] }
+
+    [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+    tauri-plugin-single-instance = "2"
+    ```
+
+    Then, modify `src-tauri/src/lib.rs` (or `main.rs`) to initialize the deep link plugin and listen for incoming URLs. The listener forwards the URL to the frontend via an event.
+
+    ```rust title="src-tauri/src/lib.rs"
+    use tauri::{Manager, Emitter};
+    use tauri_plugin_deep_link::DeepLinkExt;
+
+    #[cfg_attr(mobile, tauri::mobile_entry_point)]
+    pub fn run() {
+        let mut builder = tauri::Builder::default();
+
+        #[cfg(desktop)]
+        {
+            builder = builder.plugin(tauri_plugin_single_instance::init(
+                |app, _argv, _cwd| {
+                    if let Some(window) = app.get_webview_window("main") {
+                        let _ = window.unminimize();
+                        let _ = window.set_focus();
+                    }
+                },
+            ));
+        }
+
+        builder
+            .plugin(tauri_plugin_deep_link::init())
+            .plugin(tauri_plugin_os::init())
+            .plugin(tauri_plugin_shell::init())
+            .setup(|app| {
+                #[cfg(any(windows, target_os = "linux"))]
+                #[cfg(debug_assertions)]
+                {
+                    use tauri_plugin_deep_link::DeepLinkExt;
+                    let _ = app.deep_link().register_all();
+                }
+
+                let handle = app.handle().clone();
+                let handle_for_closure = handle.clone();
+                handle.deep_link().on_open_url(move |event| {
+                    if let Some(window) = handle_for_closure.get_webview_window("main") {
+                        if let Some(url) = event.urls().first() {
+                            let _ = window.emit("deep-link", url.to_string());
+                        }
+                    }
+                });
+                Ok(())
+            })
+            .run(tauri::generate_context!())
+            .expect("error while running tauri application");
+    }
+    ```
+
+5. **Configure the Frontend**
+
+   The frontend needs to be configured to build as a static single-page app for Tauri, listen for the deep link event, and handle the sign-in flow. If you are building a full-stack app, you can still host your backend, and the Tauri app will communicate with it as well.
+
+    <Tabs syncKey="framework">
+        <TabItem label="SvelteKit">
+            First, update `svelte.config.js` to use `@sveltejs/adapter-static` when building for Tauri.
+
+            ```js title="svelte.config.js"
+            import process from 'node:process'
+            import Auto from '@sveltejs/adapter-auto'
+            import Static from '@sveltejs/adapter-static'
+            import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'
+
+            const isTauri = !!process.env.TAURI_ENV_PLATFORM
+
+            /** @type {import('@sveltejs/kit').Config} */
+            const config = {
+              preprocess: vitePreprocess(),
+              kit: {
+                adapter: isTauri
+                  ? Static({ fallback: 'index.html' })
+                  : Auto(),
+              },
+            }
+
+            export default config
+            ```
+
+            Configure Vite to use a different port for Tauri. This way you can run your app on localhost:5173 (which serves as the backend) and the Tauri app on localhost:4173.
+
+            ```ts title="vite.config.ts"
+            import process from 'node:process'
+            import { sveltekit } from '@sveltejs/kit/vite'
+            import { defineConfig } from 'vite'
+
+            const isTauri = !!process.env.TAURI_ENV_PLATFORM
+
+            export default defineConfig({
+              plugins: [sveltekit()],
+              server: {
+                port: isTauri ? 4173 : 5173,
+                strictPort: true,
+              },
+            })
+            ```
+
+            Your Tauri development URL in `tauri.conf.json` should match this port (e.g., `http://localhost:4173`).
+
+            Create a root layout that disables SSR, as Tauri apps are client-side rendered.
+
+            ```ts title="src/routes/+layout.ts"
+            export const ssr = false
+            ```
+
+            The `@rttnd/gau/client/svelte` package automatically handles the Tauri-specific logic. Your `auth.svelte.ts` file remains the same.
+            
+            Remember that your Tauri app is a static frontend and needs to communicate with your deployed backend.
+
+            ```ts title="src/lib/auth.svelte.ts"
+            import { clientEnv } from '$lib/env/client'
+            import { createSvelteAuth } from '@rttnd/gau/client/svelte'
+
+            export const auth = createSvelteAuth({
+              baseUrl: clientEnv.PUBLIC_API_URL, // for dev, use http://localhost:5173/api/auth
+            })
+            ```
+
+            Finally, you can use the `auth` store in your components. The `signIn` method will automatically open the browser for OAuth and the app will receive the token via the deep link.
+
+            ```svelte title="src/routes/+page.svelte"
+            <script>
+              import { auth } from '$lib/auth.svelte'
+            </script>
+
+            {#if auth.session?.user}
+              <p>Welcome, {auth.session.user.name}!</p>
+              <button onclick={() => auth.signOut()}>Sign Out</button>
+            {:else}
+              <button onclick={() => auth.signIn('github')}>Sign in with GitHub</button>
+            {/if}
+            ```
+        </TabItem>
+        <TabItem label="SolidStart">
+          Coming soon.
+        </TabItem>
+    </Tabs>
+
+6. **Configure the Backend**
+
+   When using Tauri, the request to your authentication backend might not have a standard `Origin` header. `gau`'s CSRF protection checks this header for `POST` requests. You should configure `trustHosts` in your `createAuth` options to allow requests from your Tauri app.
+
+   ```ts title="src/lib/server/auth.ts"
+   import { createAuth } from '@rttnd/gau/core'
+
+   export const auth = createAuth({
+     // ... other options
+     trustHosts: 'all', // or ['tauri.localhost']
+   })
+   ```
+
+</Steps> 
+
+Your application is now configured for desktop authentication with Tauri! When a user clicks a sign-in button, `gau` will open the system browser for the OAuth flow. After authorization, the provider redirects to a page that triggers the `gau://` deep link, sending the session token back to your Tauri app securely.
+
+This setup allows you to deploy the app on the web and build a desktop app too, with the same codebase.
