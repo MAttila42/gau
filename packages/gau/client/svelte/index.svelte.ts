@@ -15,8 +15,10 @@ export interface Session {
   user: User | null
 }
 
-export function createSvelteAuth(options: { baseUrl?: string, scheme?: string }) {
-  const { baseUrl = '/api/auth', scheme = 'gau' } = options
+export function createSvelteAuth({
+  baseUrl = '/api/auth',
+  scheme = 'gau',
+}: { baseUrl?: string, scheme?: string } = {}) {
   let session = $state<Session | null>(null)
 
   async function fetchSession() {

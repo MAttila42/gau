@@ -1,6 +1,6 @@
 # TODO
 
-- [ ] when editing only svelte nr dev deletes all files in dist but svelte files, entries delete each other's work
+- [ ] dev: when editing only svelte nr dev deletes all files in dist but svelte files, entries delete each other's work
 - [ ] client/solid async reactivity issue
 - [ ] more tests
 - [ ] extract tauri specific stuff from client/svelte and client/solid

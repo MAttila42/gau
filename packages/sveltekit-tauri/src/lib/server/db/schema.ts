@@ -1,8 +1,8 @@
+import { uuidV7Base64url } from '$lib/index'
 import { integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core'
-import { uuidV4Base64url } from './../../index'
 
 export const Users = sqliteTable('users', {
-  id: text().primaryKey().$defaultFn(() => uuidV4Base64url()),
+  id: text().primaryKey().$defaultFn(() => uuidV7Base64url()),
   name: text(),
   email: text().unique(),
   emailVerified: integer({ mode: 'boolean' }),
@@ -10,9 +10,6 @@ export const Users = sqliteTable('users', {
   createdAt: integer({ mode: 'timestamp' }).$defaultFn(() => new Date()),
   updatedAt: integer({ mode: 'timestamp' }).$defaultFn(() => new Date()),
 })
-
-export type User = typeof Users.$inferSelect
-export type UserNew = typeof Users.$inferInsert
 
 export const Accounts = sqliteTable('accounts', {
   userId: text().notNull().references(() => Users.id, { onDelete: 'cascade' }),
@@ -32,6 +29,9 @@ export const Accounts = sqliteTable('accounts', {
     columns: [account.provider, account.providerAccountId],
   }),
 ])
+
+export type User = typeof Users.$inferSelect
+export type UserNew = typeof Users.$inferInsert
 
 export type Account = typeof Accounts.$inferSelect
 export type AccountNew = typeof Accounts.$inferInsert

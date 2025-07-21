@@ -16,7 +16,8 @@
   "dependencies": {
     "@libsql/client": "^0.14.0",
     "@rttnd/gau": "workspace:*",
-    "drizzle-orm": "^0.44.2"
+    "drizzle-orm": "^0.44.2",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@iconify-json/mdi": "^1.2.3",

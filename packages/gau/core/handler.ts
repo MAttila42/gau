@@ -190,7 +190,7 @@ async function handleCallback(request: RequestLike, auth: Auth, providerId: stri
   const sessionToken = await auth.createSession(user.id)
 
   const requestUrl = new URL(request.url)
-  const redirectUrl = new URL(redirectTo)
+  const redirectUrl = new URL(redirectTo, request.url)
 
   const isDesktopRedirect = redirectUrl.protocol === 'gau:'
   const isMobileRedirect = requestUrl.host !== redirectUrl.host
@@ -200,7 +200,7 @@ async function handleCallback(request: RequestLike, auth: Auth, providerId: stri
   // that immediately navigates to the deep-link and attempts to close the window,
   // so the external OAuth tab does not stay open.
   if (isDesktopRedirect || isMobileRedirect) {
-    const destination = new URL(redirectTo)
+    const destination = new URL(redirectUrl)
     destination.searchParams.set('token', sessionToken)
 
     const html = `<!DOCTYPE html>
