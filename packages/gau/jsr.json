@@ -1,6 +1,6 @@
 {
   "name": "@rttnd/gau",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "exports": "./index.ts",
   "license": "MIT",
   "publish": {
