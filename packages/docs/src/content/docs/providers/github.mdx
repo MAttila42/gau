@@ -1,5 +1,43 @@
 ---
 title: GitHub
+description: How to set up GitHub as an OAuth provider with gau.
 ---
 
-Coming soon. 
+### Resources
+
+- [GitHub OAuth App Docs](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app)
+- [GitHub OAuth App Settings](https://github.com/settings/developers)
+
+### Environment variables
+
+```env title=".env"
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+```
+
+### Callback URL
+
+GitHub doesn't allow configuring multiple callback URLs for an OAuth App, so create multiple OAuth Apps for development and production.
+
+```
+/api/auth/github/callback
+```
+
+### Config
+
+The `user:email` scope is requested by default to retrieve the user's email address.
+
+```ts title="auth.ts"
+import process from 'node:process'
+import { createAuth } from '@rttnd/gau/core'
+import { GitHub } from '@rttnd/gau/oauth';
+
+export const auth = createAuth({
+  providers: [
+    GitHub({
+      clientId: process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    }),
+  ],
+});
+```

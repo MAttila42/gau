@@ -229,11 +229,11 @@ This guide assumes you have already completed the setup for your web framework (
             Remember that your Tauri app is a static frontend and needs to communicate with your deployed backend.
 
             ```ts title="src/lib/auth.svelte.ts"
-            import { clientEnv } from '$lib/env/client'
+            import { PUBLIC_API_URL } from '$env/static/public'
             import { createSvelteAuth } from '@rttnd/gau/client/svelte'
 
             export const auth = createSvelteAuth({
-              baseUrl: clientEnv.PUBLIC_API_URL, // for dev, use http://localhost:5173/api/auth
+              baseUrl: PUBLIC_API_URL, // for dev, use http://localhost:5173/api/auth
             })
             ```
 

@@ -16,7 +16,7 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'gau',
-      social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/rttnd/gau' }],
+      social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/Rettend/gau' }],
       customCss: ['@fontsource/inter/400.css', '@fontsource/inter/600.css', './src/styles/custom.css'],
       components: {
         Header: './src/components/Header.astro',

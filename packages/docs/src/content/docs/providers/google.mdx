@@ -1,5 +1,39 @@
 ---
 title: Google
+description: How to set up Google as an OAuth provider with gau.
 ---
 
-Coming soon. 
+### Resources
+
+- [Google OAuth 2.0 Docs](https://developers.google.com/identity/protocols/oauth2/web-server)
+- [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+
+### Environment variables
+
+```env title=".env"
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+```
+
+### Callback URL
+
+In your Google Cloud project, under "Authorized redirect URIs", you need to add the callback URL. For local development, this is typically `http://localhost:5173/api/auth/google/callback`. For production, it should be your public domain: `https://example.com/api/auth/google/callback`.
+
+### Config
+
+The `openid`, `email`, and `profile` scopes are requested by default.
+
+```ts title="auth.ts"
+import process from 'node:process'
+import { createAuth } from '@rttnd/gau/core'
+import { Google } from '@rttnd/gau/oauth';
+
+export const auth = createAuth({
+  providers: [
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
+  ],
+});
+```

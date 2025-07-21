@@ -70,3 +70,7 @@ html[data-theme='light'] {
   flex-wrap: wrap;
   gap: 1rem;
 }
+
+code {
+  white-space: nowrap;
+}

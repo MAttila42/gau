@@ -1,5 +1,51 @@
 ---
 title: Microsoft Entra ID
+description: How to set up Microsoft Entra ID as an OAuth provider with gau.
 ---
 
-Coming soon. 
+import { Aside } from '@astrojs/starlight/components'
+
+### Resources
+
+- [Microsoft Entra ID Docs](https://learn.microsoft.com/en-us/entra/identity-platform/v2-protocols-oidc)
+- [Microsoft Entra admin center](https://entra.microsoft.com/)
+
+### Environment variables
+
+```env title=".env"
+MICROSOFT_CLIENT_ID=
+MICROSOFT_CLIENT_SECRET=
+```
+
+### Callback URL
+
+Under your app registration's "Authentication" settings, you need to add a "Web" platform and configure the redirect URI. For local development, this is typically `http://localhost:5173/api/auth/microsoft-entra-id/callback`. For production, it should be your public domain: `https://example.com/api/auth/microsoft-entra-id/callback`.
+
+### Config
+
+The `openid`, `profile`, `email`, and `User.Read` scopes are requested by default.
+
+<Aside type="note">
+  If you plan to accept work and school accounts too, make sure to request the `verified_primary_email` optional claim. It's under your app registration's "Token configuration" settings.
+</Aside>
+
+```ts title="auth.ts"
+import process from 'node:process'
+import { createAuth } from '@rttnd/gau/core'
+import { MicrosoftEntraId } from '@rttnd/gau/oauth';
+
+export const auth = createAuth({
+  providers: [
+    MicrosoftEntraId({
+      clientId: process.env.MICROSOFT_CLIENT_ID,
+      clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
+    }),
+  ],
+});
+```
+
+### Extra config
+
+| Property | Type     | Default    | Description |
+|:---------|:---------|:-----------|:------------|
+| tenant   | `string` | `"common"` | The Microsoft Entra ID tenant to use. `"common"` works with both personal and work/school accounts. Other options include `"organizations"` (work/school accounts only) or a specific tenant ID. |
