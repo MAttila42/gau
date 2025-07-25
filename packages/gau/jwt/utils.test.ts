@@ -46,7 +46,7 @@ describe('jWT utils', () => {
       const invalidSecret = 'not-a-valid-key'
       await expect(deriveKeysFromSecret(invalidSecret))
         .rejects
-        .toThrow('Invalid AUTH_SECRET. Must be a base64url-encoded PKCS#8 private key for ES256.')
+        .toThrow('Invalid secret. Must be a base64url-encoded PKCS#8 private key for ES256.')
     })
   })
 

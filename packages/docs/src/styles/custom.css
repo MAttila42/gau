@@ -71,6 +71,6 @@ html[data-theme='light'] {
   gap: 1rem;
 }
 
-code {
+code[dir="auto"] {
   white-space: nowrap;
 }

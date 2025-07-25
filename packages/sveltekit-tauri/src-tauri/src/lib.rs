@@ -1,4 +1,4 @@
-use tauri::{Manager, Emitter};
+use tauri::{Emitter, Manager};
 use tauri_plugin_deep_link::DeepLinkExt;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -7,14 +7,12 @@ pub fn run() {
 
     #[cfg(desktop)]
     {
-        builder = builder.plugin(tauri_plugin_single_instance::init(
-            |app, _argv, _cwd| {
-                if let Some(window) = app.get_webview_window("main") {
-                    let _ = window.unminimize();
-                    let _ = window.set_focus();
-                }
-            },
-        ));
+        builder = builder.plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.unminimize();
+                let _ = window.set_focus();
+            }
+        }));
     }
 
     builder
@@ -25,7 +23,6 @@ pub fn run() {
             #[cfg(any(windows, target_os = "linux"))]
             #[cfg(debug_assertions)]
             {
-                use tauri_plugin_deep_link::DeepLinkExt;
                 let _ = app.deep_link().register_all();
             }
 

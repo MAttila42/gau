@@ -107,6 +107,9 @@ import { Steps, Tabs, TabItem } from '@astrojs/starlight/components'
               updatedAt: integer({ mode: 'timestamp' }).$defaultFn(() => new Date()),
             })
 
+            export type SelectUser = typeof Users.$inferSelect
+            export type InsertUser = typeof Users.$inferInsert
+
             export const Accounts = sqliteTable('accounts', {
               userId: text().notNull().references(() => Users.id, { onDelete: 'cascade' }),
               type: text().notNull(),
@@ -125,9 +128,6 @@ import { Steps, Tabs, TabItem } from '@astrojs/starlight/components'
                 columns: [account.provider, account.providerAccountId],
               }),
             ])
-
-            export type SelectUser = typeof Users.$inferSelect
-            export type InsertUser = typeof Users.$inferInsert
 
             export type SelectAccount = typeof Accounts.$inferSelect
             export type InsertAccount = typeof Accounts.$inferInsert
@@ -185,8 +185,8 @@ import { Steps, Tabs, TabItem } from '@astrojs/starlight/components'
             import * as schema from './schema'
 
             const client = createClient({
-              url: env.TURSO_DB_URL,
-              authToken: env.TURSO_AUTH_TOKEN,
+              url: env.TURSO_DB_URL!,
+              authToken: env.TURSO_AUTH_TOKEN!,
             })
 
             export const db = drizzle(client, { schema, casing: 'snake_case' })
@@ -227,8 +227,8 @@ import { Steps, Tabs, TabItem } from '@astrojs/starlight/components'
               adapter: DrizzleAdapter(db, Users, Accounts),
               providers: [
                 GitHub({
-                  clientId: env.GITHUB_CLIENT_ID,
-                  clientSecret: env.GITHUB_CLIENT_SECRET,
+                  clientId: env.GITHUB_CLIENT_ID!,
+                  clientSecret: env.GITHUB_CLIENT_SECRET!,
                 }),
               ],
               jwt: {

@@ -1,4 +1,3 @@
-import { Buffer } from 'node:buffer'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { sign, verify } from '.'
 
@@ -22,7 +21,6 @@ describe('jWT module', () => {
 
   afterEach(() => {
     vi.useRealTimers()
-    delete process.env.AUTH_SECRET
   })
 
   describe('hS256 algorithm', () => {
@@ -145,34 +143,32 @@ describe('jWT module', () => {
     })
   })
 
-  describe('environment variable handling (AUTH_SECRET)', () => {
-    it('throws if AUTH_SECRET is missing for HS256', async () => {
+  describe('secret handling', () => {
+    it('throws if secret is missing for HS256 signing', async () => {
       await expect(sign({}, { algorithm: 'HS256' }))
         .rejects
-        .toThrow('Missing secret or AUTH_SECRET for HS256 signing')
+        .toThrow('Missing secret for HS256 signing')
     })
 
-    it('throws if AUTH_SECRET is missing for ES256', async () => {
+    it('throws if secret is missing for ES256 signing without a private key', async () => {
       await expect(sign({}, { algorithm: 'ES256' }))
         .rejects
-        .toThrow('Missing AUTH_SECRET for ES256 signing')
+        .toThrow('Missing secret for ES256 signing. It must be a base64url-encoded string.')
     })
 
-    it('uses AUTH_SECRET for HS256 if secret is not provided', async () => {
-      process.env.AUTH_SECRET = 'env-secret'
-      const token = await sign({ a: 1 }, { algorithm: 'HS256' })
-      const payload = await verify(token, { algorithm: 'HS256' })
-      expect((payload as any).a).toBe(1)
+    it('throws if secret is missing for HS256 verification', async () => {
+      const token = await sign({ a: 1 }, { algorithm: 'HS256', secret: 'a-secret' })
+      await expect(verify(token, { algorithm: 'HS256' }))
+        .rejects
+        .toThrow('Missing secret for HS256 verification')
     })
 
-    it('uses AUTH_SECRET for ES256 if privateKey is not provided', async () => {
-      // This requires a valid base64url PKCS8 key in AUTH_SECRET
-      const exportedPrivateKey = await crypto.subtle.exportKey('pkcs8', es256Keys.privateKey)
-      process.env.AUTH_SECRET = Buffer.from(exportedPrivateKey).toString('base64url')
-
-      const token = await sign({ b: 2 }, { algorithm: 'ES256' })
-      const payload = await verify(token, { algorithm: 'ES256' }) // verify also uses AUTH_SECRET
-      expect((payload as any).b).toBe(2)
+    it('throws if secret is missing for ES256 verification without a public key', async () => {
+      const { privateKey } = es256Keys
+      const token = await sign({ b: 2 }, { algorithm: 'ES256', privateKey })
+      await expect(verify(token, { algorithm: 'ES256' }))
+        .rejects
+        .toThrow('Missing secret for ES256 verification. Must be a base64url-encoded string.')
     })
   })
 })

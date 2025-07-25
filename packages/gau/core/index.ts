@@ -27,6 +27,12 @@ export interface User {
   image?: string | null
 }
 
+export interface Session {
+  id: string
+  sub: string
+  [key: string]: unknown
+}
+
 export interface NewUser extends Omit<User, 'id'> {
   id?: string
 }

@@ -1,7 +1,7 @@
 import type { SerializeOptions } from 'cookie'
 import type { SignOptions, VerifyOptions } from '../jwt'
 import type { OAuthProvider } from '../oauth'
-import type { Adapter, User } from './index'
+import type { Adapter, Session, User } from './index'
 import { sign, verify } from '../jwt'
 import { DEFAULT_COOKIE_SERIALIZE_OPTIONS } from './cookies'
 import { AuthError } from './index'
@@ -45,17 +45,23 @@ export type Auth = Adapter & {
   verifyJWT: <T = Record<string, unknown>>(token: string, customOptions?: Partial<VerifyOptions>) => Promise<T | null>
   createSession: (userId: string, data?: Record<string, unknown>, ttl?: number) => Promise<string>
   validateSession: (token: string) => Promise<{
-    user: User | null
-    session: { id: string, sub: string, [key: string]: any } | null
-  }>
+    user: User
+    session: Session
+  } | null>
   trustHosts: 'all' | string[]
   autoLink: 'verifiedEmail' | 'always' | false
 }
 
-export function createAuth(options: CreateAuthOptions): Auth {
-  const { adapter, providers, basePath = '/api/auth', jwt: jwtConfig = {}, cookies: cookieConfig = {}, trustHosts = options.trustHosts ?? [], autoLink = 'verifiedEmail' } = options
+export function createAuth({
+  adapter,
+  providers,
+  basePath = '/api/auth',
+  jwt: jwtConfig = {},
+  cookies: cookieConfig = {},
+  trustHosts = [],
+  autoLink = 'verifiedEmail',
+}: CreateAuthOptions): Auth {
   const { algorithm = 'ES256', secret, iss, aud, ttl: defaultTTL = 3600 * 24 } = jwtConfig
-
   const cookieOptions = { ...DEFAULT_COOKIE_SERIALIZE_OPTIONS, ...cookieConfig }
 
   const providerMap = new Map(providers.map(p => [p.id, p]))
@@ -104,11 +110,13 @@ export function createAuth(options: CreateAuthOptions): Auth {
     return signJWT(payload, { ttl })
   }
 
-  async function validateSession(token: string): Promise<{ user: User | null, session: { id: string, sub: string, [key: string]: unknown } | null }> {
+  async function validateSession(token: string): Promise<{ user: User, session: Session } | null> {
     const payload = await verifyJWT<{ sub: string } & Record<string, unknown>>(token)
     if (!payload)
-      return { user: null, session: null }
+      return null
     const user = await adapter.getUser(payload.sub)
+    if (!user)
+      return null
     return { user, session: { id: token, ...payload } }
   }
 

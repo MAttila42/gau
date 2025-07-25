@@ -1,5 +1,4 @@
 /// <reference types="node" />
-import process from 'node:process'
 import {
   createJWTSignatureMessage,
   encodeJWT,
@@ -30,21 +29,16 @@ export type SignOptions
 export async function sign<T extends Record<string, unknown>>(payload: T, options: SignOptions = {}): Promise<string> {
   let { algorithm = 'ES256', ttl, iss, aud, sub, privateKey, secret } = options
 
-  if (algorithm === 'ES256' && !privateKey) {
-    if (secret !== undefined && typeof secret !== 'string')
-      throw new AuthError('Invalid secret for ES256. Must be a base64url-encoded string.')
+  if (algorithm === 'ES256') {
+    if (!privateKey) {
+      if (typeof secret !== 'string')
+        throw new AuthError('Missing secret for ES256 signing. It must be a base64url-encoded string.');
 
-    const authSecret = typeof secret === 'string' ? secret : process.env.AUTH_SECRET
-
-    if (!authSecret)
-      throw new AuthError('Missing AUTH_SECRET for ES256 signing');
-
-    ({ privateKey } = await deriveKeysFromSecret(authSecret))
+      ({ privateKey } = await deriveKeysFromSecret(secret))
+    }
   }
   else if (algorithm === 'HS256' && !secret) {
-    secret = options.secret ?? process.env.AUTH_SECRET
-    if (!secret)
-      throw new AuthError('Missing secret or AUTH_SECRET for HS256 signing')
+    throw new AuthError('Missing secret for HS256 signing')
   }
 
   const now = Math.floor(Date.now() / 1000)
@@ -107,23 +101,17 @@ export type VerifyOptions
 export async function verify<T = Record<string, unknown>>(token: string, options: VerifyOptions): Promise<T> {
   let { algorithm = 'ES256', publicKey, secret, iss, aud } = options
 
-  if (algorithm === 'ES256' && !publicKey) {
-    if (secret !== undefined && typeof secret !== 'string')
-      throw new AuthError('Invalid secret for ES256. Must be a base64url-encoded string.')
+  if (algorithm === 'ES256') {
+    if (!publicKey) {
+      if (typeof secret !== 'string')
+        throw new AuthError('Missing secret for ES256 verification. Must be a base64url-encoded string.');
 
-    const authSecret = typeof secret === 'string' ? secret : process.env.AUTH_SECRET
-
-    if (!authSecret)
-      throw new AuthError('Missing AUTH_SECRET for ES256 verification');
-
-    ({ publicKey } = await deriveKeysFromSecret(authSecret))
+      ({ publicKey } = await deriveKeysFromSecret(secret))
+    }
   }
 
-  if (algorithm === 'HS256' && !secret) {
-    secret = options.secret ?? process.env.AUTH_SECRET
-    if (!secret)
-      throw new AuthError('Missing secret or AUTH_SECRET for HS256 verification')
-  }
+  if (algorithm === 'HS256' && !secret)
+    throw new AuthError('Missing secret for HS256 verification')
 
   const [header, payload, signature, signatureMessage] = parseJWT(token)
 

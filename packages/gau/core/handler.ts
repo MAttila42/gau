@@ -302,15 +302,15 @@ async function handleSession(request: RequestLike, auth: Auth): Promise<Response
   }
 
   if (!sessionToken)
-    return json({ user: null, session: null }, { status: 401 })
+    return json({ user: null, session: null })
 
   try {
-    const { user, session } = await auth.validateSession(sessionToken)
+    const sessionData = await auth.validateSession(sessionToken)
 
-    if (!user || !session)
+    if (!sessionData)
       return json({ user: null, session: null }, { status: 401 })
 
-    return json({ user, session })
+    return json(sessionData)
   }
   catch (error) {
     console.error('Error validating session:', error)

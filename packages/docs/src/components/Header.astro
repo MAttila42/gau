@@ -16,9 +16,11 @@ import DefaultHeader from '@astrojs/starlight/components/Header.astro'
 <DefaultHeader {...Astro.props} />
 
 <style>
-:global(header) {
-  backdrop-filter: url(#pixelate) blur(1px);
-  background: linear-gradient(to top, transparent, var(--sl-color-bg-nav));
-  border-bottom: none;
+@media (min-width: 72rem) {
+  :global(header) {
+    backdrop-filter: url(#pixelate) blur(1px);
+    background: linear-gradient(to top, transparent, var(--sl-color-bg-nav));
+    border-bottom: none;
+  }
 }
 </style>
