@@ -7,79 +7,81 @@ import { Tabs, TabItem, Steps, Card, CardGrid, LinkCard } from '@astrojs/starlig
 
 This guide shows how to integrate `gau` with SvelteKit, using Drizzle (SQLite) and GitHub as examples.
 
+<br />
+
 <Steps>
-1. **Follow the basic setup**
+1. ##### Follow the basic setup
 
-   Complete the [Getting Started](/guides/getting-started) guide for installation, environment variables, and the auth configuration with the database setup.
+    Complete the [Getting Started](/guides/getting-started) guide for installation, environment variables, and the auth configuration with the database setup.
 
-2. **Set up API Route**
+2. ##### Set up API Route
 
-   Create a catch-all route for auth endpoints on the server.
+    Create a catch-all route for auth endpoints on the server.
 
-   ```ts title="src/routes/api/auth/[...gau]/+server.ts"
-   import { SvelteKitAuth } from '@rttnd/gau/sveltekit'
-   import { auth } from '$lib/server/auth'
+    ```ts title="src/routes/api/auth/[...gau]/+server.ts"
+    import { SvelteKitAuth } from '@rttnd/gau/sveltekit'
+    import { auth } from '$lib/server/auth'
 
-   export const { GET, POST } = SvelteKitAuth(auth)
-   ```
+    export const { GET, POST } = SvelteKitAuth(auth)
+    ```
 
-3. **Add Server Hook**
+3. ##### Add Server Hook
 
-   Add the SvelteKitAuth handle to make sessions available in `event.locals`.
+    Add the SvelteKitAuth handle to make sessions available in `event.locals`.
 
-   ```ts title="src/hooks.server.ts"
-   import { SvelteKitAuth } from '@rttnd/gau/sveltekit'
-   import { auth } from '$lib/server/auth'
+    ```ts title="src/hooks.server.ts"
+    import { SvelteKitAuth } from '@rttnd/gau/sveltekit'
+    import { auth } from '$lib/server/auth'
 
-   export const { handle } = SvelteKitAuth(auth)
-   ```
+    export const { handle } = SvelteKitAuth(auth)
+    ```
 
-   Now, in server routes, you can access `event.locals.getSession()` which returns `{ user, session }` or `null`.
+    Now, in server routes, you can access `event.locals.getSession()` which returns `{ user, session }` or `null`.
 
-   For full type-safety, update your `src/app.d.ts`:
+    For full type-safety, update your `src/app.d.ts`:
 
-   ```ts title="src/app.d.ts"
-   import type { Session, User } from '@rttnd/gau'
+    ```ts title="src/app.d.ts"
+    import type { Session, User } from '@rttnd/gau'
 
-   declare global {
-     namespace App {
-       interface Locals {
-         getSession: () => Promise<{ user: User, session: Session } | null>
-       }
-     }
-   }
+    declare global {
+      namespace App {
+        interface Locals {
+          getSession: () => Promise<{ user: User, session: Session } | null>
+        }
+      }
+    }
 
-   export {}
-   ```
+    export {}
+    ```
 
-4. **Set up the Client**
+4. ##### Set up the Client
 
-   For the client, we create an auth store.
+    For the client, we create an auth store.
 
-   ```ts title="src/lib/auth.svelte.ts"
-   import { createSvelteAuth } from '@rttnd/gau/client/svelte'
+    ```ts title="src/lib/auth.svelte.ts"
+    import { createSvelteAuth } from '@rttnd/gau/client/svelte'
 
-   export const auth = createSvelteAuth()
-   ```
+    export const auth = createSvelteAuth()
+    ```
 
-   Use it in your components:
+    Use it in your components:
 
-   ```svelte title="+page.svelte"
-   <script>
-     import { auth } from '$lib/auth.svelte'
-   </script>
+    ```svelte title="+page.svelte"
+    <script>
+      import { auth } from '$lib/auth.svelte'
+    </script>
 
-   {#if auth.session?.user}
-     <p>Welcome, {auth.session.user.name}!</p>
-     <button onclick={() => auth.signOut()}>Sign Out</button>
-   {:else}
-     <button onclick={() => auth.signIn('github')}>Sign in with GitHub</button>
-   {/if}
-   ```
+    {#if auth.session?.user}
+      <p>Welcome, {auth.session.user.name}!</p>
+      <button onclick={() => auth.signOut()}>Sign Out</button>
+    {:else}
+      <button onclick={() => auth.signIn('github')}>Sign in with GitHub</button>
+    {/if}
+    ```
 
-5. **Next Steps**
+5. ##### Next Steps
 
-   - Explore other [OAuth Providers](/oauth-providers).
-   - See [Deployment](/guides/deployment) for production tips.
-   - Learn about how `gau` works.
+    - Explore other [OAuth Providers](/oauth-providers).
+    - See [Deployment](/guides/deployment) for production tips.
+    - Learn about how `gau` works.
 </Steps> 

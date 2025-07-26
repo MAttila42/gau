@@ -7,8 +7,10 @@ import IconLink from '~/components/IconLink.astro';
 
 This guide will walk you through installing `@rttnd/gau` and setting it up for the first time.
 
+<br />
+
 <Steps>
-1. **Install the package**
+1. ##### Install the package
     <Tabs syncKey="pkg">
       <TabItem label="npm">
         ```sh
@@ -37,7 +39,7 @@ This guide will walk you through installing `@rttnd/gau` and setting it up for t
       </TabItem>
     </Tabs>
 
-2.  **Set up environment variables**
+2. ##### Set up environment variables
 
     `gau` uses `AUTH_SECRET` for signing JWTs. You can generate a secure secret using the CLI:
     <Tabs syncKey="pkg">
@@ -75,7 +77,7 @@ This guide will walk you through installing `@rttnd/gau` and setting it up for t
     GITHUB_CLIENT_SECRET="your-github-client-secret"
     ```
 
-3. **Choose your database adapter**
+3. ##### Choose your database adapter
 
     `gau` uses a database adapter to connect to your database.
 
@@ -83,8 +85,7 @@ This guide will walk you through installing `@rttnd/gau` and setting it up for t
       <IconLink href="/adapters/drizzle/" icon="drizzle" title="Drizzle" />
     </div>
 
-
-4. **Choose your integration**
+4. ##### Choose your integration
 
     <div class="row">
       <IconLink href="/integrations/sveltekit/" icon="svelte" title="SvelteKit" />

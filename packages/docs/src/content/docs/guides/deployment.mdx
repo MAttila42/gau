@@ -1,6 +1,55 @@
 ---
 title: Deployment
-description: How to deploy your application with gau.
+description: How to deploy your application with gau to different platforms.
 ---
+import { Steps } from '@astrojs/starlight/components';
 
-Coming soon. 
+`gau` is designed to be runtime-agnostic and can be deployed to any platform that supports JavaScript, from serverless functions to traditional Node.js servers. While `gau` itself doesn't require much platform-specific configuration, deploying your application securely involves a few key steps.
+
+<Steps>
+1.  **Set Production Environment Variables**
+
+    You must configure your production environment with the same secrets you used in development. Never commit your `.env` file to version control. Use your hosting provider's interface to set these secrets.
+
+    -   `AUTH_SECRET`: The secret for signing JWTs.
+    -   `GITHUB_CLIENT_ID`: Your production GitHub OAuth App's Client ID.
+    -   `GITHUB_CLIENT_SECRET`: Your production GitHub OAuth App's Client Secret.
+    -   (and any other provider credentials)
+
+2.  **Configure Production OAuth Callback URLs**
+
+    Most OAuth providers, including GitHub and Google, require you to pre-register your authorized callback URLs. For production, you must add your production URL to your OAuth App's settings.
+
+    For example, if your app is deployed at `https://my-app.com`, you would add the following URL to your GitHub OAuth App configuration:
+
+    ```
+    https://my-app.com/api/auth/github/callback
+    ```
+
+    It's standard practice to create **separate OAuth applications** for your development (`http://localhost:5173`) and production environments.
+
+3.  **Platform-Specific Considerations**
+
+    ### Vercel / Netlify
+    
+    No special configuration is needed for `gau` on these platforms. Just ensure your environment variables are set correctly in the project settings.
+
+    ### Cloudflare Workers
+    
+    Cloudflare Workers is a fully-supported, first-class deployment target. When initializing `gau` in a Cloudflare Worker, it's recommended to use the `cloudflareAuth` helper:
+
+    ```ts
+    import { cloudflareAuth } from '@rttnd/gau/runtimes/cloudflare';
+
+    export const auth = cloudflareAuth({
+      // your providers and adapter...
+    });
+    ```
+    
+    This helper automatically sets `trustHosts: 'all'`, which is safe to do in the Cloudflare ecosystem as it correctly handles request headers through its trusted proxy infrastructure.
+
+    ### Node.js / Docker
+    
+    When running `gau` in a traditional Node.js server or a Docker container, especially behind a reverse proxy like Nginx, be mindful of how the `Host` and `Origin` headers are being forwarded. If you encounter CSRF errors, you may need to configure your proxy to forward these headers correctly or add your application's public domain to the `trustHosts` array in your `gau` configuration.
+
+</Steps> 

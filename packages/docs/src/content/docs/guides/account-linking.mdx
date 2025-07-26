@@ -1,0 +1,27 @@
+---
+title: Account Linking
+description: How gau can link multiple OAuth providers to a single user account.
+---
+import { Steps } from '@astrojs/starlight/components';
+
+`gau` has an **automatic account linking** feature, configured via the `autoLink` option in `createAuth`.
+
+When multiple OAuth providers are configured and an existing user signs in with a new provider, `gau` will try to link the new account to the existing user.
+
+## How It Works
+
+<Steps>
+1.  **Check for Existing Account**: It first checks if an account already exists for that user with the specific OAuth provider. If so, it logs them in.
+
+2.  **Check for Email to Link**: If no existing account is found, `gau` looks at the email address returned by the new OAuth provider. It then checks if any user in your database already has that email address.
+
+3.  **Link or Create**:
+    -   If a user with that email already exists, `gau` will **link** the new OAuth sign-in to that existing user record.
+    -   If no user with that email is found, a **new user** is created.
+</Steps>
+
+This means a user can sign in with GitHub, sign out, and then sign back in with Google, and they will be logged into the same account, as long as both services use the same verified email address.
+
+## Config
+
+See the [`autoLink`](/guides/configuration#autolink) option in the configuration guide.

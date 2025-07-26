@@ -6,8 +6,10 @@ import { Steps, Tabs, TabItem } from '@astrojs/starlight/components'
 
 `gau` currently only supports the Drizzle ORM adapter and SQLite. The examples use Turso as the database provider.
 
+<br />
+
 <Steps>
-1. **Install Dependencies**
+1. ##### Install Dependencies
 
     <Tabs syncKey="pkg">
       <TabItem label="npm">
@@ -42,7 +44,7 @@ import { Steps, Tabs, TabItem } from '@astrojs/starlight/components'
       </TabItem>
     </Tabs>
 
-2. **Define the Database Schema**
+2. ##### Define the Database Schema
 
    This is the complete schema for `gau`, depending on your OAuth provider you may be able to omit some of the columns, each provider lists its required columns.
 
@@ -60,6 +62,9 @@ import { Steps, Tabs, TabItem } from '@astrojs/starlight/components'
               createdAt: integer({ mode: 'timestamp' }).$defaultFn(() => new Date()),
               updatedAt: integer({ mode: 'timestamp' }).$defaultFn(() => new Date()),
             })
+
+            export type SelectUser = typeof Users.$inferSelect
+            export type InsertUser = typeof Users.$inferInsert
 
             export const Accounts = sqliteTable(
               'accounts',
@@ -85,9 +90,6 @@ import { Steps, Tabs, TabItem } from '@astrojs/starlight/components'
                 }),
               ],
             )
-
-            export type SelectUser = typeof Users.$inferSelect
-            export type InsertUser = typeof Users.$inferInsert
 
             export type SelectAccount = typeof Accounts.$inferSelect
             export type InsertAccount = typeof Accounts.$inferInsert
@@ -135,7 +137,7 @@ import { Steps, Tabs, TabItem } from '@astrojs/starlight/components'
         </TabItem>
     </Tabs>
 
-3. **Configure DrizzleKit**
+3. ##### Configure DrizzleKit
 
    Configure the schema path and database credentials for migrations.
 
@@ -172,7 +174,7 @@ import { Steps, Tabs, TabItem } from '@astrojs/starlight/components'
 
     Now you can run `npx drizzle-kit push` to apply your schema to the database.
 
-4. **Set up the Database Client**
+4. ##### Set up the Database Client
 
    Initialize the Drizzle client with your database connection.
 
@@ -209,7 +211,7 @@ import { Steps, Tabs, TabItem } from '@astrojs/starlight/components'
         </TabItem>
     </Tabs>
 
-5. **Integrate with `createAuth`**
+5. ##### Integrate with `createAuth`
 
    Finally, pass the Drizzle client and schema tables to the `DrizzleAdapter` in your `createAuth` configuration.
 

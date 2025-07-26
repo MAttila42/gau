@@ -1,6 +1,195 @@
 ---
-title: JWT
-description: How to configure JWTs with gau.
+title: JWTs
+description: How to work with JSON Web Tokens in gau.
 ---
+import { Steps, Tabs, TabItem, Card, LinkCard } from '@astrojs/starlight/components';
 
-Coming soon. 
+`gau` uses JSON Web Tokens (JWTs) for session management. By default, it creates a session JWT when a user signs in and stores it in a cookie or passes it to the client for token-based authentication. JWTs are stateless, so there's no need to store them in a database.
+
+## Config
+
+You can configure JWT behavior via the `jwt` object in `createAuth`.
+
+```ts
+export const auth = createAuth({
+  // ...
+  jwt: {
+    secret: process.env.AUTH_SECRET,
+    algorithm: 'ES256',
+    ttl: 3600, // 1 hour
+  },
+})
+```
+
+See the [`jwt`](/guides/configuration#jwt) option in the configuration guide.
+
+## Advanced Usage: Private Beta Invites
+
+`gau` exposes its internal `signJWT` and `verifyJWT` methods on the `auth` object. This allows you to create and validate your own custom JWTs for use cases beyond sessions.
+
+A great example is building a **private beta invite system** where new users can only sign up if they have a valid, single-use invite token. This works seamlessly thanks to automatic [Account Linking](/guides/account-linking).
+
+Here's and example implementation.
+
+<br />
+
+<Steps>
+1. ##### Generate Invite Tokens
+
+    This function can be part of an admin panel or a CLI script. You can use `auth.signJWT` to generate an expiring token. 
+    
+    We add a custom `purpose` claim to distinguish it from session tokens, and a standard `jti` (JWT ID) claim to give it a unique, trackable ID.
+
+    ```ts title="invites.ts"
+    import { auth } from './auth';
+
+    export async function createInviteToken() {
+      const inviteToken = await auth.signJWT(
+        {
+          purpose: 'beta-invite',
+          jti: crypto.randomUUID(),
+        },
+        {
+          ttl: 60 * 60 * 24 * 7, // expires in 7 days
+        },
+      )
+      return inviteToken
+    }
+    ```
+
+2. ##### Store Invite Tokens
+
+    We need a way to prevent tokens from being redeemed multiple times. Let's store them in a database.
+
+    ```ts title="db/schema.ts" ins={3-6}
+    // ... existing Users and Accounts tables
+
+    export const UsedInviteTokens = sqliteTable('used_invite_tokens', {
+      jti: text('jti').primaryKey(),
+      usedAt: integer('used_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+    });
+    ```
+
+3. ##### Create a Redemption API Endpoint
+
+    You'll need an API endpoint (e.g., `POST /api/redeem-invite`) that accepts the token and the user's email. How you get the request body and send a JSON response depends on your backend framework (like Express, Fastify, Hono, or SvelteKit).
+
+    The core logic inside this endpoint, however, is framework-agnostic:
+
+    ```ts
+    // This is conceptual. Your implementation will vary.
+    async function handleRedeemRequest(request: Request) {
+      const { token, email } = await request.json();
+
+      if (!token || !email) {
+        // Return a 400 Bad Request error
+      }
+
+      try {
+        const payload = await auth.verifyJWT<{ purpose?: string, jti?: string }>(token);
+
+        if (payload?.purpose !== 'beta-invite' || !payload.jti) {
+          // Return a 401 Unauthorized error: "Invalid invite token"
+        }
+
+        const isTokenUsed = await db.query.UsedInviteTokens.findFirst({
+          /* ... where jti matches payload.jti ... */
+        });
+
+        if (isTokenUsed) {
+          // Return a 401 Unauthorized error: "Invite has been used"
+        }
+
+        const existingUser = await auth.getUserByEmail(email);
+        if (existingUser) {
+          // Return a 409 Conflict error: "Email already exists"
+        }
+
+        // All checks passed. Redeem the token and create the user.
+        await db.transaction(async (tx) => {
+          await tx.insert(UsedInviteTokens).values({ jti: payload.jti! });
+          await auth.createUser({ email });
+        });
+
+        // Return a 200 OK success response
+      } catch (error) {
+        // Return a 401 Unauthorized or 500 Internal Server error
+      }
+    }
+    ```
+
+4. ##### Build the Frontend
+
+    Create a page for the user to redeem their invite. It can be a simple HTML form that calls your API endpoint. The token can be pre-filled from a URL query parameter (e.g., `/invite?token=...`).
+
+    Here is a plain HTML and JavaScript example:
+
+    ```html
+    <h1>Private Beta Invite</h1>
+    <div id="invite-form">
+      <form>
+        <label>
+          Invite Code
+          <input type="text" id="token" required />
+        </label>
+        <label>
+          Email
+          <input type="email" id="email" required />
+        </label>
+        <button type="submit">Redeem Invite</button>
+      </form>
+      <p id="error-message" style="color: red;"></p>
+    </div>
+
+    <div id="success-message" style="display: none;">
+      <p>Success! Your invite has been redeemed.</p>
+      <p>Please sign in with your preferred provider to finish creating your account.</p>
+      <!-- The signIn() function would come from your client-side auth setup -->
+      <button onclick="auth.signIn('github')">
+        Sign in with GitHub
+      </button>
+    </div>
+
+    <script>
+      const form = document.querySelector("#invite-form form");
+      const tokenInput = document.getElementById("token");
+      const emailInput = document.getElementById("email");
+      const errorP = document.getElementById("error-message");
+
+      // Pre-fill token from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      tokenInput.value = urlParams.get('token') || '';
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        errorP.textContent = "";
+
+        const res = await fetch("/api/redeem-invite", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: tokenInput.value, email: emailInput.value }),
+        });
+
+        if (res.ok) {
+          document.getElementById("invite-form").style.display = "none";
+          document.getElementById("success-message").style.display = "block";
+        } else {
+          const data = await res.json();
+          errorP.textContent = data.error || "Failed to redeem invite.";
+        }
+      });
+    </script>
+    ```
+
+</Steps>
+
+### How It All Connects
+
+This system works because of `gau`'s `autoLink` feature. 
+1. The user's account is created in the database first via your custom API endpoint.
+2. When the user clicks "Sign in with GitHub", they go through the normal `gau` OAuth flow.
+3. On the callback, `gau` receives the user's profile from GitHub, including their verified email.
+4. Instead of creating a new user, `gau` sees that a user with that email already exists (from step 1).
+5. It automatically links their GitHub account to the existing user record and logs them in.
+
+This ensures that only users with a valid invite token can create an account in your application.

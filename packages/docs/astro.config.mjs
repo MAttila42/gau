@@ -21,13 +21,17 @@ export default defineConfig({
       components: {
         Header: './src/components/Header.astro',
       },
+      tableOfContents: { minHeadingLevel: 2, maxHeadingLevel: 5 },
       sidebar: [
         {
           label: 'Guides',
           items: [
             { label: 'Getting Started', slug: 'guides/getting-started' },
             { label: 'Configuration', slug: 'guides/configuration' },
+            { label: 'Session Management', slug: 'guides/session-management' },
+            { label: 'Account Linking', slug: 'guides/account-linking' },
             { label: 'JWT', slug: 'guides/jwt' },
+            { label: 'Security', slug: 'guides/security' },
             { label: 'Deployment', slug: 'guides/deployment' },
           ],
         },

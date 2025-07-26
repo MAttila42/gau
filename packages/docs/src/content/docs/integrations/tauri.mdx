@@ -9,9 +9,11 @@ import { Steps, Tabs, TabItem, Card, LinkCard } from '@astrojs/starlight/compone
 
 This guide assumes you have already completed the setup for your web framework (e.g., [SvelteKit](/integrations/sveltekit/)).
 
+<br />
+
 <Steps>
 
-1. **Initialize Tauri**
+1. ##### Initialize Tauri
 
    Initialize Tauri in your project. This will create a `src-tauri` directory.
 
@@ -80,7 +82,7 @@ This guide assumes you have already completed the setup for your web framework (
 
     Also set up the `build` config in `tauri.conf.json`, and follow other Tauri setup steps specific to your frontend framework.
 
-2. **Install Tauri Plugins**
+2. ##### Install Tauri Plugins
 
     `gau` requires the following plugins:
 
@@ -137,7 +139,7 @@ This guide assumes you have already completed the setup for your web framework (
     tauri-plugin-single-instance = { version = "2.0.0", features = [ "deep-link" ] }
     ```
 
-3. **Configure Deep Linking**
+3. ##### Configure Deep Linking
 
    To handle OAuth callbacks, you need to configure a custom URL scheme. After the auth flow is done, the browser will open your app again with the URL you set (`gau://...`).
    
@@ -183,7 +185,7 @@ This guide assumes you have already completed the setup for your web framework (
     }
     ```
 
-4. **Set up Rust Backend**
+4. ##### Set up Rust Backend
 
     Here is a working `src-tauri/src/lib.rs` to initialize the deep link plugin and listen for incoming URLs. The listener forwards the URL to the frontend via an event.
 
@@ -235,7 +237,7 @@ This guide assumes you have already completed the setup for your web framework (
     }
     ```
 
-5. **Configure the Frontend**
+5. ##### Configure the Frontend
 
    The frontend needs to be configured to build as a static single-page app for Tauri, listen for the deep link event, and handle the sign-in flow. If you are building a full-stack app, you can still host your backend, and the Tauri app will communicate with it as well.
 
@@ -324,7 +326,7 @@ This guide assumes you have already completed the setup for your web framework (
         </TabItem>
     </Tabs>
 
-6. **Configure the Backend**
+6. ##### Configure the Backend
 
    When using Tauri, the request to your authentication backend might not have a standard `Origin` header. `gau`'s CSRF protection checks this header for `POST` requests. You should configure `trustHosts` in your `createAuth` options to allow requests from your Tauri app.
 
