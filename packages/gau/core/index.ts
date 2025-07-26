@@ -33,6 +33,11 @@ export interface Session {
   [key: string]: unknown
 }
 
+export interface GauSession {
+  user: User | null
+  session: Session | null
+}
+
 export interface NewUser extends Omit<User, 'id'> {
   id?: string
 }

@@ -8,6 +8,7 @@ export type UsersTable = Table & {
   name: AnyColumn
   email: AnyColumn
   image: AnyColumn
+  emailVerified: AnyColumn
   createdAt: AnyColumn
   updatedAt: AnyColumn
 }
@@ -35,7 +36,7 @@ export function SQLiteDrizzleAdapter<
   type DBInsertAccount = InferInsertModel<A>
 
   const toUser = (row: DBUser | undefined | null): User | null =>
-    row ? ({ ...(row as any), emailVerified: null }) : null
+    row ? ({ ...(row as any) }) : null
 
   return {
     async getUser(id) {

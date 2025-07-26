@@ -1,5 +1,5 @@
 import type { Accessor, ParentProps } from 'solid-js'
-import type { User } from '../../core'
+import type { GauSession } from '../../core'
 import { createContext, createResource, onMount, useContext } from 'solid-js'
 import { isServer } from 'solid-js/web'
 
@@ -13,12 +13,8 @@ import {
   storeSessionToken,
 } from '../../runtimes/tauri'
 
-interface Session {
-  user: User | null
-}
-
 interface AuthContextValue {
-  session: Accessor<Session | null>
+  session: Accessor<GauSession | null>
   signIn: (provider: string) => Promise<void>
   signOut: () => Promise<void>
 }
@@ -28,7 +24,7 @@ const AuthContext = createContext<AuthContextValue>()
 export function AuthProvider(props: ParentProps & { baseUrl: string, scheme?: string }) {
   const scheme = props.scheme ?? 'gau'
 
-  const [session, { refetch }] = createResource<Session | null>(
+  const [session, { refetch }] = createResource<GauSession | null>(
     async () => {
       if (isServer)
         return null
@@ -37,13 +33,13 @@ export function AuthProvider(props: ParentProps & { baseUrl: string, scheme?: st
       const headers = token ? { Authorization: `Bearer ${token}` } : undefined
       const res = await fetch(`${props.baseUrl}/session`, token ? { headers } : { credentials: 'include' })
       if (!res.ok)
-        return null
+        return { user: null, session: null }
 
       const contentType = res.headers.get('content-type')
       if (contentType?.includes('application/json'))
         return res.json()
 
-      return null
+      return { user: null, session: null }
     },
     { initialValue: null },
   )

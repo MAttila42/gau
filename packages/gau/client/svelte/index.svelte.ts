@@ -1,4 +1,4 @@
-import type { User } from '../../core'
+import type { GauSession } from '../../core'
 import { BROWSER } from 'esm-env'
 
 import {
@@ -11,15 +11,11 @@ import {
   storeSessionToken,
 } from '../../runtimes/tauri'
 
-export interface Session {
-  user: User | null
-}
-
 export function createSvelteAuth({
   baseUrl = '/api/auth',
   scheme = 'gau',
 }: { baseUrl?: string, scheme?: string } = {}) {
-  let session = $state<Session | null>(null)
+  let session = $state<GauSession | null>(null)
 
   async function fetchSession() {
     if (!BROWSER) {
@@ -32,7 +28,7 @@ export function createSvelteAuth({
     const res = await fetch(`${baseUrl}/session`, token ? { headers } : { credentials: 'include' })
 
     if (!res.ok) {
-      session = { user: null }
+      session = { user: null, session: null }
       return
     }
 
@@ -40,7 +36,7 @@ export function createSvelteAuth({
     if (contentType?.includes('application/json'))
       session = await res.json()
     else
-      session = { user: null }
+      session = { user: null, session: null }
   }
 
   async function signIn(provider: string) {
