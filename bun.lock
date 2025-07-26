@@ -33,11 +33,14 @@
       },
       "devDependencies": {
         "@fontsource/inter": "^5.2.6",
+        "@iconify-json/material-icon-theme": "^1.2.16",
+        "@iconify-json/ph": "^1.2.2",
+        "unocss": "^66.3.3",
       },
     },
     "packages/gau": {
       "name": "@rttnd/gau",
-      "version": "0.2.2",
+      "version": "0.2.5",
       "bin": {
         "gau": "dist/cli/index.js",
       },
@@ -294,6 +297,8 @@
     "@humanwhocodes/module-importer": ["@humanwhocodes/module-importer@1.0.1", "", {}, "sha512-bxveV4V8v5Yb4ncFTT3rPSgZBOpCkjfK0y4oVVVJwIuDVBRMDXrPyXRL988i5ap9m9bnyEEjWfm5WkBmtffLfA=="],
 
     "@humanwhocodes/retry": ["@humanwhocodes/retry@0.4.3", "", {}, "sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ=="],
+
+    "@iconify-json/material-icon-theme": ["@iconify-json/material-icon-theme@1.2.16", "", { "dependencies": { "@iconify/types": "*" } }, "sha512-gEIbGd//lhomwofZdkjgkkhQrKzTZPJgpi8NhCDj0s8EjD610LKCGJFul11rZus+yaPgMi1YDEyrfvN5vRYSIQ=="],
 
     "@iconify-json/mdi": ["@iconify-json/mdi@1.2.3", "", { "dependencies": { "@iconify/types": "*" } }, "sha512-O3cLwbDOK7NNDf2ihaQOH5F9JglnulNDFV7WprU2dSoZu3h3cWH//h74uQAB87brHmvFVxIOkuBX2sZSzYhScg=="],
 

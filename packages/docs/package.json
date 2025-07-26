@@ -20,7 +20,10 @@
     "zod": "3.22.4"
   },
   "devDependencies": {
-    "@fontsource/inter": "^5.2.6"
+    "@fontsource/inter": "^5.2.6",
+    "@iconify-json/material-icon-theme": "^1.2.16",
+    "@iconify-json/ph": "^1.2.2",
+    "unocss": "^66.3.3"
   },
   "prettier": {
     "singleQuote": true,
