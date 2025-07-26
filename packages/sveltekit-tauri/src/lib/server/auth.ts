@@ -1,11 +1,11 @@
 import { serverEnv } from '$lib/env/server'
+import { createAuth } from '@rttnd/gau'
 import { DrizzleAdapter } from '@rttnd/gau/adapters/drizzle'
 import { GitHub, Google, MicrosoftEntraId } from '@rttnd/gau/oauth'
-import { SvelteKitAuth } from '@rttnd/gau/sveltekit'
 import { db } from './db'
 import { Accounts, Users } from './db/schema'
 
-export const { GET, POST, OPTIONS, handle } = SvelteKitAuth({
+export const auth = createAuth({
   adapter: DrizzleAdapter(db, Users, Accounts),
   providers: [
     GitHub({
