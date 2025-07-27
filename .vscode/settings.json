@@ -2,11 +2,10 @@
   "rust-analyzer.linkedProjects": [
     "packages\\sveltekit-tauri\\src-tauri\\Cargo.toml"
   ],
+  "typescript.experimental.useTsgo": true,
   "svelte.enable-ts-plugin": false,
   "svelte.plugin.svelte.enable": false,
   "typescript.tsdk": "node_modules\\typescript\\lib",
-  "eslint.experimental.useFlatConfig": true,
-  "prettier.enable": false,
   "editor.formatOnSave": false,
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit",

@@ -74,3 +74,32 @@ html[data-theme='light'] {
 code[dir="auto"] {
   white-space: nowrap;
 }
+
+.sidebar-icon {
+  font-size: 1.2rem;
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.code-block-icon {
+  font-size: 1.2rem;
+  margin-right: 0.5rem;
+  margin-left: 0.5rem;
+}
+
+.expressive-code figcaption.header {
+  display: flex;
+  align-items: center;
+}
+
+.expressive-code figcaption.header .title {
+  display: flex;
+  padding-left: 0;
+  align-items: center;
+}
+
+.expressive-code figcaption.header .title {
+  display: flex;
+  padding-left: 0;
+  align-items: center;
+}

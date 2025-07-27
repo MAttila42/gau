@@ -33,8 +33,12 @@
       },
       "devDependencies": {
         "@fontsource/inter": "^5.2.6",
+        "@iconify-json/catppuccin": "^1.2.11",
+        "@iconify-json/devicon": "^1.2.34",
+        "@iconify-json/logos": "^1.2.5",
         "@iconify-json/material-icon-theme": "^1.2.16",
         "@iconify-json/ph": "^1.2.2",
+        "@iconify-json/simple-icons": "^1.2.44",
         "unocss": "^66.3.3",
       },
     },
@@ -298,11 +302,19 @@
 
     "@humanwhocodes/retry": ["@humanwhocodes/retry@0.4.3", "", {}, "sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ=="],
 
+    "@iconify-json/catppuccin": ["@iconify-json/catppuccin@1.2.11", "", { "dependencies": { "@iconify/types": "*" } }, "sha512-Hc71/cfLZhb8Hetr+tBb9XRe24DNIBM4EPFoHa6mUJdXTHakPeeGLjEa3owDNcGSwZFJCXnBizDpkCL8UwMR9w=="],
+
+    "@iconify-json/devicon": ["@iconify-json/devicon@1.2.34", "", { "dependencies": { "@iconify/types": "*" } }, "sha512-IAfFQ8wq+n7Kao75JpqAOW9zotSuELMohg/BlO+ul+mgyl0FZe1QKSu9IvwSu0YgWTcj0soiSnRY6P+6vsn9NQ=="],
+
+    "@iconify-json/logos": ["@iconify-json/logos@1.2.5", "", { "dependencies": { "@iconify/types": "*" } }, "sha512-WR8+9kFwx1tIR+hWpKYC+rpVkAuzHyaVxZRfhGGIjqCfgbodK7rS4+OZhktdKtZKKcdmhpLZKvlmRm4IA4dKRg=="],
+
     "@iconify-json/material-icon-theme": ["@iconify-json/material-icon-theme@1.2.16", "", { "dependencies": { "@iconify/types": "*" } }, "sha512-gEIbGd//lhomwofZdkjgkkhQrKzTZPJgpi8NhCDj0s8EjD610LKCGJFul11rZus+yaPgMi1YDEyrfvN5vRYSIQ=="],
 
     "@iconify-json/mdi": ["@iconify-json/mdi@1.2.3", "", { "dependencies": { "@iconify/types": "*" } }, "sha512-O3cLwbDOK7NNDf2ihaQOH5F9JglnulNDFV7WprU2dSoZu3h3cWH//h74uQAB87brHmvFVxIOkuBX2sZSzYhScg=="],
 
     "@iconify-json/ph": ["@iconify-json/ph@1.2.2", "", { "dependencies": { "@iconify/types": "*" } }, "sha512-PgkEZNtqa8hBGjHXQa4pMwZa93hmfu8FUSjs/nv4oUU6yLsgv+gh9nu28Kqi8Fz9CCVu4hj1MZs9/60J57IzFw=="],
+
+    "@iconify-json/simple-icons": ["@iconify-json/simple-icons@1.2.44", "", { "dependencies": { "@iconify/types": "*" } }, "sha512-CdWgSPygwDlDbKtDWjvi3NtUefnkoepXv90n3dQxJerqzD9kI+nEJOiWUBM+eOyMYQKtxBpLWFBrgeotF0IZKw=="],
 
     "@iconify/types": ["@iconify/types@2.0.0", "", {}, "sha512-+wluvCrRhXrhyOmRDJ3q8mux9JkKy5SJ/v8ol2tu4FVjyYvtEzkc/3pK15ET6RKg4b4w4BmTk1+gsCUhf21Ykg=="],
 

@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url'
 import starlight from '@astrojs/starlight'
 import { defineConfig } from 'astro/config'
 import UnoCSS from 'unocss/astro'
+import { pluginIcon } from './src/lib/expressive-code.mjs'
 
 /**
  * @param {any[]} sidebar
@@ -13,9 +14,6 @@ function addIcons(sidebar) {
   return sidebar.map((entry) => {
     if ('items' in entry)
       return { ...entry, items: addIcons(entry.items) }
-
-    if ('autogenerate' in entry)
-      return entry
 
     const icon = entry.attrs?.icon ?? entry.icon
     if (icon) {
@@ -45,6 +43,9 @@ export default defineConfig({
       title: 'gau',
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/Rettend/gau' }],
       customCss: ['@fontsource/inter/400.css', '@fontsource/inter/600.css', './src/styles/custom.css'],
+      expressiveCode: {
+        plugins: [pluginIcon()],
+      },
       components: {
         Header: './src/components/starlight/Header.astro',
         Sidebar: './src/components/starlight/Sidebar.astro',
@@ -65,15 +66,28 @@ export default defineConfig({
         },
         {
           label: 'Integrations',
-          autogenerate: { directory: 'integrations' },
+          items: [
+            { label: 'Integrations', slug: 'integrations', icon: 'i-ph:puzzle-piece-duotone' },
+            { label: 'SvelteKit', slug: 'integrations/sveltekit', icon: 'i-material-icon-theme:svelte' },
+            { label: 'SolidStart', slug: 'integrations/solidstart', icon: 'i-devicon:solidjs', badge: { text: 'Soon', variant: 'default' } },
+            { label: 'Tauri', slug: 'integrations/tauri', icon: 'i-material-icon-theme:tauri' },
+          ],
         },
         {
           label: 'Database Adapters',
-          autogenerate: { directory: 'adapters' },
+          items: [
+            { label: 'Adapters', slug: 'adapters', icon: 'i-ph:database-duotone' },
+            { label: 'Drizzle', slug: 'adapters/drizzle', icon: 'i-icons:drizzle' },
+          ],
         },
         {
           label: 'OAuth Providers',
-          autogenerate: { directory: 'providers' },
+          items: [
+            { label: 'Providers', slug: 'providers', icon: 'i-ph:plugs-duotone' },
+            { label: 'GitHub', slug: 'providers/github', icon: 'i-simple-icons:github' },
+            { label: 'Google', slug: 'providers/google', icon: 'i-logos:google-icon' },
+            { label: 'Microsoft Entra ID', slug: 'providers/microsoft', icon: 'i-logos:microsoft-icon' },
+          ],
         },
         {
           label: 'Reference',

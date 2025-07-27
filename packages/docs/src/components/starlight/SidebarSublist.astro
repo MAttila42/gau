@@ -31,40 +31,31 @@ function flattenSidebar(entries: SidebarEntry[]): SidebarEntry[] {
   return entries.reduce<SidebarEntry[]>((acc, entry) => {
     if (entry.type === 'group')
       acc.push(...flattenSidebar(entry.entries))
-    else
-      acc.push(entry)
+    else acc.push(entry)
     return acc
   }, [])
 }
 ---
 
 <ul class:list={{ 'top-level': !nested }}>
-  {sublist.map(entry => (
-    <li>
-      {entry.type === 'link'
-        ? (
-        <a
-          href={entry.href}
-          aria-current={entry.isCurrent && 'page'}
-          class:list={[{ 'large': !nested, 'flex items-center': entry.attrs['data-icon'] }, entry.attrs.class]}
-          {...entry.attrs}
-        >
-          {entry.attrs['data-icon'] && <span class:list={[entry.attrs['data-icon'], 'size-10', 'mr-2']} />}
-          <span>{entry.label}</span>
-          {entry.badge && (
-            <Badge
-              variant={entry.badge.variant}
-              class={entry.badge.class}
-              text={entry.badge.text}
-            />
-          )}
-        </a>
-          )
-        : (
-        <details open={flattenSidebar(entry.entries).some((i: any) => i.isCurrent) || !entry.collapsed}>
-          <summary>
-            <div class="group-label">
-              <span class="large">{entry.label}</span>
+  {
+    sublist.map(entry => (
+      <li>
+        {entry.type === 'link'
+          ? (
+            <a
+              href={entry.href}
+              aria-current={entry.isCurrent && 'page'}
+              class:list={[
+                { 'large': !nested, 'flex items-center': entry.attrs['data-icon'] },
+                entry.attrs.class,
+              ]}
+              {...entry.attrs}
+            >
+              {entry.attrs['data-icon'] && (
+                <span class:list={[entry.attrs['data-icon'], 'sidebar-icon']} />
+              )}
+              <span>{entry.label}</span>
               {entry.badge && (
                 <Badge
                   variant={entry.badge.variant}
@@ -72,14 +63,31 @@ function flattenSidebar(entries: SidebarEntry[]): SidebarEntry[] {
                   text={entry.badge.text}
                 />
               )}
-            </div>
-            <Icon name="right-caret" class="caret" size="1.25rem" />
-          </summary>
-          <Astro.self sublist={entry.entries} nested />
-        </details>
-          )}
-    </li>
-  ))}
+            </a>
+          )
+          : (
+          <details
+            open={flattenSidebar(entry.entries).some((i: any) => i.isCurrent) || !entry.collapsed}
+          >
+            <summary>
+              <div class="group-label">
+                <span class="large">{entry.label}</span>
+                {entry.badge && (
+                  <Badge
+                    variant={entry.badge.variant}
+                    class={entry.badge.class}
+                    text={entry.badge.text}
+                  />
+                )}
+              </div>
+              <Icon name="right-caret" class="caret" size="1.25rem" />
+            </summary>
+            <Astro.self sublist={entry.entries} nested />
+          </details>
+        )}
+      </li>
+    ))
+  }
 </ul>
 
 <style>
