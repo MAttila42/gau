@@ -17,7 +17,13 @@ GOOGLE_CLIENT_SECRET=
 
 ### Callback URL
 
-In your Google Cloud project, under "Authorized redirect URIs", you need to add the callback URL. For local development, this is typically `http://localhost:5173/api/auth/google/callback`. For production, it should be your public domain: `https://example.com/api/auth/google/callback`.
+In your Google Cloud project, under "Authorized redirect URIs", you need to add the callback URL.
+
+```
+/api/auth/google/callback
+```
+
+Google allows adding multiple redirect URIs, so add both your development and production URLs.
 
 ### Config
 

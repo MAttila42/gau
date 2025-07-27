@@ -41,7 +41,10 @@ export default defineConfig({
     UnoCSS(),
     starlight({
       title: 'gau',
-      social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/Rettend/gau' }],
+      social: [
+        { icon: 'github', label: 'GitHub', href: 'https://github.com/Rettend/gau' },
+        { icon: 'discord', label: 'Discord', href: 'https://discord.gg/FvVaUPhj3t' },
+      ],
       customCss: ['@fontsource/inter/400.css', '@fontsource/inter/600.css', './src/styles/custom.css'],
       expressiveCode: {
         plugins: [pluginIcon()],

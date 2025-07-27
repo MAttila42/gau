@@ -19,7 +19,13 @@ MICROSOFT_CLIENT_SECRET=
 
 ### Callback URL
 
-Under your app registration's "Authentication" settings, you need to add a "Web" platform and configure the redirect URI. For local development, this is typically `http://localhost:5173/api/auth/microsoft-entra-id/callback`. For production, it should be your public domain: `https://example.com/api/auth/microsoft-entra-id/callback`.
+Under your app registration's "Authentication" settings, you need to add a "Web" platform and configure the redirect URI.
+
+```
+/api/auth/microsoft-entra-id/callback
+```
+
+Microsoft allows adding multiple redirect URIs, so add both your development and production URLs.
 
 ### Config
 
