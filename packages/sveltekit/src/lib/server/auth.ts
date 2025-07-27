@@ -24,5 +24,4 @@ export const auth = createAuth({
   jwt: {
     secret: serverEnv.AUTH_SECRET,
   },
-  trustHosts: 'all',
 })

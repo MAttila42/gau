@@ -24,5 +24,5 @@ export const auth = createAuth({
   jwt: {
     secret: serverEnv.AUTH_SECRET,
   },
-  trustHosts: 'all',
+  trustHosts: ['tauri.localhost'],
 })

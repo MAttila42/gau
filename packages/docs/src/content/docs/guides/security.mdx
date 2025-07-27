@@ -3,55 +3,40 @@ title: Security
 description: Security best practices when using gau.
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+This guide explains `gau`'s security features.
 
-`gau` is designed with security as a top priority. It incorporates several key security mechanisms out of the box to protect your application and its users. This guide explains these features and provides recommendations for maintaining a secure setup.
+## CSRF Protection
 
-<CardGrid>
-    <Card title="CSRF Protection" icon="shield">
-        `gau` provides built-in protection against Cross-Site Request Forgery attacks.
-    </Card>
-    <Card title="PKCE Enforcement" icon="shield">
-        All OAuth 2.0 flows use Proof Key for Code Exchange (PKCE) to prevent authorization code interception.
-    </Card>
-    <Card title="Secure Cookies" icon="shield">
-        Session cookies are configured with secure defaults to prevent common cookie-based attacks.
-    </Card>
-</CardGrid>
-
----
-
-## CSRF Protection (`trustHosts`)
-
-Cross-Site Request Forgery (CSRF) is an attack that tricks a user into submitting a malicious request. `gau` mitigates this by validating the `Origin` header on all `POST` requests to its API routes (like `/signout`).
+Cross-Site Request Forgery is an attack that tricks a user into submitting a malicious request. `gau` mitigates this by validating the `Origin` header on all `POST` requests to its API routes (like `/signout`).
 
 This is configured via the `trustHosts` option in `createAuth`.
 
--   **Default Behavior**: By default, `trustHosts` is an empty array (`[]`), which means `gau` will only allow requests that originate from the same host as your application. This is the most secure default setting.
--   **Tauri Apps**: When building a desktop app with Tauri, the web content is served from `tauri.localhost`. You **must** add this to your trusted hosts:
+-   **Default behavior**: By default, `trustHosts` is an empty array (`[]`), which means `gau` will only allow requests that originate from the same host as your application. This is the most secure default setting.
+
+-   **Configuring specific hosts**: When your frontend and backend are on different domains, you can set specific hosts that your backend should trust. 
+
     ```ts
-    trustHosts: ['tauri.localhost']
+    trustHosts: [
+      'localhost:3000',   // Development frontend
+      'example.com',      // Production frontend
+      'tauri.localhost',  // Tauri app
+    ]
     ```
--   **Proxied Environments**: If your application is behind a trusted proxy, you might need to add other hosts. For platforms like Cloudflare Workers, you can safely set `trustHosts: 'all'` because the platform's routing infrastructure can be trusted.
+
+-   **Trust all hosts**: This is **not recommended**, although the only `POST` request `gau` uses is for signing out, you probably still don't want to allow any host to tamper with that.
 
 In addition to the `Origin` check, `gau` also uses a temporary state-based CSRF token (`__gau-csrf-token` cookie) during the OAuth flow itself to ensure that the user who starts the authentication process is the same one who finishes it.
 
----
-
-## PKCE (Proof Key for Code Exchange)
+## PKCE
 
 PKCE is a security extension to the OAuth 2.0 protocol. It's designed to prevent an attacker from intercepting the authorization code returned by the OAuth provider and exchanging it for an access token. This is especially critical for public clients like SPAs and mobile/desktop apps.
 
-**`gau` automatically handles the entire PKCE flow for you.**
+**This is built in. `gau` automatically handles the entire PKCE flow for you.**
 
 1.  When a sign-in is initiated, `gau` generates a secret `code_verifier`.
 2.  It creates a `code_challenge` by hashing the verifier and sends this challenge to the authorization server.
 3.  When the authorization code is exchanged for an access token, `gau` sends the original `code_verifier`.
 4.  The authorization server re-applies the hash and ensures it matches the original challenge.
-
-You don't need to configure anything for this to work; it's a built-in part of the library's OAuth implementation.
-
----
 
 ## Secure Cookie Defaults
 

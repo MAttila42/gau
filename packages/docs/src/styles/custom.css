@@ -103,3 +103,11 @@ code[dir="auto"] {
   padding-left: 0;
   align-items: center;
 }
+
+.i-icons\:drizzle {
+  color: #C5F74F !important;
+}
+
+html[data-theme='light'] .i-icons\:drizzle {
+  color: #000000 !important;
+}

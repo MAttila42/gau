@@ -1,9 +1,9 @@
 ---
-title: JWTs
+title: JWT
 description: How to work with JSON Web Tokens in gau.
 ---
 
-import { Steps, Tabs, TabItem, Card, LinkCard } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
 
 `gau` uses JSON Web Tokens (JWTs) for session management. By default, it creates a session JWT when a user signs in and stores it in a cookie or passes it to the client for token-based authentication. JWTs are stateless, so there's no need to store them in a database.
 
@@ -28,7 +28,7 @@ See the [`jwt`](/guides/configuration#jwt) option in the configuration guide.
 
 `gau` exposes its internal `signJWT` and `verifyJWT` methods on the `auth` object. This allows you to create and validate your own custom JWTs for use cases beyond sessions.
 
-A great example is building a **private beta invite system** where new users can only sign up if they have a valid, single-use invite token. This works seamlessly thanks to automatic [Account Linking](/guides/account-linking).
+A great example is building a **private beta invite system** where new users can only sign up if they have a valid, single-use invite token. This [works seamlessly](#how-it-all-connects) thanks to automatic [Account Linking](/guides/account-linking).
 
 Here's and example implementation.
 
@@ -122,4 +122,4 @@ This system works because of `gau`'s `autoLink` feature.
 4. Instead of creating a new user, `gau` sees that a user with that email already exists (from step 1).
 5. It automatically links their account to the existing user record and logs them in.
 
-This ensures that only users with a valid invite token can create an account in your application.
+This ensures that only users with a valid invite token can create an account in your app.

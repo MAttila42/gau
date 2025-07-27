@@ -64,10 +64,6 @@
       "types": "./dist/runtimes/bun/index.d.ts",
       "import": "./dist/runtimes/bun/index.js"
     },
-    "./runtimes/cloudflare": {
-      "types": "./dist/runtimes/cloudflare/index.d.ts",
-      "import": "./dist/runtimes/cloudflare/index.js"
-    },
     "./runtimes/tauri": {
       "types": "./dist/runtimes/tauri/index.d.ts",
       "import": "./dist/runtimes/tauri/index.js"

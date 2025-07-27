@@ -27,7 +27,6 @@ export const auth = createAuth({
   jwt: {
     secret: process.env.AUTH_SECRET,
   },
-  trustHosts: 'all',
 });
 ```
 
@@ -177,8 +176,10 @@ For CSRF protection. It defines which hosts are allowed to make `POST` requests 
 The `Origin` header of incoming requests is checked against this list.
 
 - **`[]` (Default)**: Only requests from the same origin as the app are allowed.
-- **`'all'`**: This is a convenient shortcut for environments like Cloudflare Workers where the proxy infrastructure can be trusted. Use with caution elsewhere.
-- **`['tauri.localhost']`**: For Tauri apps, you must add `tauri.localhost`.
+- **`['tauri.localhost']`**: For Tauri apps, you should add `tauri.localhost`.
+- **`'all'`**: This is a convenient shortcut for development, not recommended for production.
+
+See the [Security](/guides/security) guide for more details.
 
 ## autoLink
 
