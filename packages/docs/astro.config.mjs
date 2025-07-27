@@ -88,7 +88,7 @@ export default defineConfig({
             { icon: 'i-ph:plugs-duotone', label: 'Providers', slug: 'providers' },
             { icon: 'i-simple-icons:github', label: 'GitHub', slug: 'providers/github' },
             { icon: 'i-logos:google-icon', label: 'Google', slug: 'providers/google' },
-            { icon: 'i-logos:microsoft-icon', label: 'Microsoft Entra ID', slug: 'providers/microsoft' },
+            { icon: 'i-logos:microsoft-icon', label: 'Microsoft', slug: 'providers/microsoft' },
           ],
         },
         {

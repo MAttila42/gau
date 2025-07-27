@@ -41,7 +41,7 @@
           </button>
           <button
             class='px-4 py-2 border border-emerald-900/30 rounded bg-zinc-800 flex gap-2 transition-all duration-200 items-center justify-center hover:border-emerald-800/50 hover:bg-zinc-700'
-            onclick={() => auth.signIn('microsoft-entra-id')}
+            onclick={() => auth.signIn('microsoft')}
           >
             <div class='i-mdi:microsoft size-5'></div>
             <p>Microsoft</p>

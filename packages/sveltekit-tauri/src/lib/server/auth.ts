@@ -1,7 +1,7 @@
 import { serverEnv } from '$lib/env/server'
 import { createAuth } from '@rttnd/gau'
 import { DrizzleAdapter } from '@rttnd/gau/adapters/drizzle'
-import { GitHub, Google, MicrosoftEntraId } from '@rttnd/gau/oauth'
+import { GitHub, Google, Microsoft } from '@rttnd/gau/oauth'
 import { db } from './db'
 import { Accounts, Users } from './db/schema'
 
@@ -16,7 +16,7 @@ export const auth = createAuth({
       clientId: serverEnv.AUTH_GOOGLE_ID,
       clientSecret: serverEnv.AUTH_GOOGLE_SECRET,
     }),
-    MicrosoftEntraId({
+    Microsoft({
       clientId: serverEnv.AUTH_MICROSOFT_ID,
       clientSecret: serverEnv.AUTH_MICROSOFT_SECRET,
     }),
@@ -26,3 +26,5 @@ export const auth = createAuth({
   },
   trustHosts: ['tauri.localhost'],
 })
+
+export type Auth = typeof auth

@@ -69,7 +69,7 @@ async function getUser(accessToken: string): Promise<AuthUser> {
   }
 }
 
-export function GitHub(config: OAuthProviderConfig): OAuthProvider {
+export function GitHub(config: OAuthProviderConfig): OAuthProvider<'github'> {
   const defaultClient = new OAuth2Client(config.clientId, config.clientSecret, config.redirectUri ?? null)
 
   function getClient(redirectUri?: string): OAuth2Client {

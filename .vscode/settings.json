@@ -4,7 +4,7 @@
   ],
   "typescript.experimental.useTsgo": true,
   "svelte.enable-ts-plugin": false,
-  "svelte.plugin.svelte.enable": false,
+  "svelte.plugin.svelte.enable": true,
   "typescript.tsdk": "node_modules\\typescript\\lib",
   "editor.formatOnSave": false,
   "editor.codeActionsOnSave": {

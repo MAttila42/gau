@@ -6,11 +6,13 @@ import { sign, verify } from '../jwt'
 import { DEFAULT_COOKIE_SERIALIZE_OPTIONS } from './cookies'
 import { AuthError } from './index'
 
-export interface CreateAuthOptions {
+type ProviderId<P> = P extends OAuthProvider<infer T> ? T : never
+
+export interface CreateAuthOptions<TProviders extends OAuthProvider[]> {
   /** The database adapter to use for storing users and accounts. */
   adapter: Adapter
   /** Array of OAuth providers to support. */
-  providers: OAuthProvider[]
+  providers: TProviders
   /** Base path for authentication routes (defaults to '/api/auth'). */
   basePath?: string
   /** Configuration for JWT signing and verification. */
@@ -34,15 +36,16 @@ export interface CreateAuthOptions {
   autoLink?: 'verifiedEmail' | 'always' | false
 }
 
-export type Auth = Adapter & {
-  providerMap: Map<string, OAuthProvider>
+export type Auth<TProviders extends OAuthProvider[] = any> = Adapter & {
+  providerMap: Map<ProviderId<TProviders[number]>, TProviders[number]>
+  providers: TProviders
   basePath: string
   cookieOptions: SerializeOptions
   jwt: {
     ttl: number
   }
-  signJWT: <T extends Record<string, unknown>>(payload: T, customOptions?: Partial<SignOptions>) => Promise<string>
-  verifyJWT: <T = Record<string, unknown>>(token: string, customOptions?: Partial<VerifyOptions>) => Promise<T | null>
+  signJWT: <U extends Record<string, unknown>>(payload: U, customOptions?: Partial<SignOptions>) => Promise<string>
+  verifyJWT: <U = Record<string, unknown>>(token: string, customOptions?: Partial<VerifyOptions>) => Promise<U | null>
   createSession: (userId: string, data?: Record<string, unknown>, ttl?: number) => Promise<string>
   validateSession: (token: string) => Promise<{
     user: User
@@ -52,7 +55,7 @@ export type Auth = Adapter & {
   autoLink: 'verifiedEmail' | 'always' | false
 }
 
-export function createAuth({
+export function createAuth<const TProviders extends OAuthProvider[]>({
   adapter,
   providers,
   basePath = '/api/auth',
@@ -60,7 +63,7 @@ export function createAuth({
   cookies: cookieConfig = {},
   trustHosts = [],
   autoLink = 'verifiedEmail',
-}: CreateAuthOptions): Auth {
+}: CreateAuthOptions<TProviders>): Auth<TProviders> {
   const { algorithm = 'ES256', secret, iss, aud, ttl: defaultTTL = 3600 * 24 } = jwtConfig
   const cookieOptions = { ...DEFAULT_COOKIE_SERIALIZE_OPTIONS, ...cookieConfig }
 
@@ -92,13 +95,13 @@ export function createAuth({
     }
   }
 
-  async function signJWT<T extends Record<string, unknown>>(payload: T, customOptions: Partial<SignOptions> = {}): Promise<string> {
+  async function signJWT<U extends Record<string, unknown>>(payload: U, customOptions: Partial<SignOptions> = {}): Promise<string> {
     return sign(payload, buildSignOptions(customOptions))
   }
 
-  async function verifyJWT<T = Record<string, unknown>>(token: string, customOptions: Partial<VerifyOptions> = {}): Promise<T | null> {
+  async function verifyJWT<U = Record<string, unknown>>(token: string, customOptions: Partial<VerifyOptions> = {}): Promise<U | null> {
     try {
-      return await verify<T>(token, buildVerifyOptions(customOptions))
+      return await verify<U>(token, buildVerifyOptions(customOptions))
     }
     catch {
       return null
@@ -122,7 +125,8 @@ export function createAuth({
 
   return {
     ...adapter,
-    providerMap,
+    providerMap: providerMap as Map<ProviderId<TProviders[number]>, TProviders[number]>,
+    providers,
     basePath,
     cookieOptions,
     jwt: {

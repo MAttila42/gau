@@ -20,6 +20,26 @@ async function handleSignIn(request: RequestLike, auth: Auth, providerId: string
   const { state: originalState, codeVerifier } = createOAuthUris()
   const url = new URL(request.url)
   const redirectTo = url.searchParams.get('redirectTo')
+
+  if (redirectTo) {
+    let parsedRedirect: URL
+    try {
+      parsedRedirect = new URL(redirectTo, url.origin)
+    }
+    catch {
+      return json({ error: 'Invalid "redirectTo" URL' }, { status: 400 })
+    }
+
+    const redirectHost = parsedRedirect.host
+    const currentHost = new URL(request.url).host
+
+    const isSameHost = redirectHost === currentHost
+    const isTrusted = auth.trustHosts === 'all' || auth.trustHosts.includes(redirectHost)
+
+    if (!isSameHost && !isTrusted)
+      return json({ error: 'Untrusted redirect host' }, { status: 400 })
+  }
+
   const state = redirectTo ? `${originalState}.${btoa(redirectTo)}` : originalState
   let callbackUri = url.searchParams.get('callbackUri')
   if (!callbackUri && provider.requiresRedirectUri)

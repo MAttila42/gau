@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { MicrosoftEntraId } from './microsoft'
+import { Microsoft } from './microsoft'
 
 const mockUser = { id: 'user-id-123', displayName: 'Test User', mail: 'fallback@example.com', userPrincipalName: 'upn@example.com' }
 const mockPhotoBlob = new Blob(['photo-data'], { type: 'image/jpeg' })
@@ -23,8 +23,8 @@ vi.mock('arctic', async (importOriginal) => {
   }
 })
 
-describe('microsoftEntraId Provider', () => {
-  const provider = MicrosoftEntraId({
+describe('microsoft Provider', () => {
+  const provider = Microsoft({
     clientId: 'test-client-id',
     clientSecret: 'test-client-secret',
   })

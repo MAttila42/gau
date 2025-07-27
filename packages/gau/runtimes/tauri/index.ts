@@ -3,7 +3,12 @@ import { BROWSER } from 'esm-env'
 
 export const isTauri = BROWSER && '__TAURI_INTERNALS__' in window
 
-export async function signInWithTauri(provider: string, baseUrl: string, scheme: string = 'gau') {
+export async function signInWithTauri(
+  provider: string,
+  baseUrl: string,
+  scheme: string = 'gau',
+  redirectOverride?: string,
+) {
   if (!isTauri)
     return
 
@@ -12,8 +17,13 @@ export async function signInWithTauri(provider: string, baseUrl: string, scheme:
 
   const currentPlatform = platform()
   let redirectTo: string
-  if (currentPlatform === 'android' || currentPlatform === 'ios')
+
+  if (redirectOverride)
+    redirectTo = redirectOverride
+
+  else if (currentPlatform === 'android' || currentPlatform === 'ios')
     redirectTo = new URL(baseUrl).origin
+
   else
     redirectTo = `${scheme}://oauth/callback`
 

@@ -7,7 +7,7 @@ const MICROSOFT_USER_INFO_URL = 'https://graph.microsoft.com/v1.0/me'
 // https://learn.microsoft.com/en-us/graph/api/profilephoto-get?view=graph-rest-1.0
 const MICROSOFT_USER_PHOTO_URL = 'https://graph.microsoft.com/v1.0/me/photo/$value'
 
-interface MicrosoftEntraIdConfig extends OAuthProviderConfig {
+interface MicrosoftConfig extends OAuthProviderConfig {
   tenant?: 'common' | 'organizations' | 'consumers' | string
 }
 
@@ -106,7 +106,7 @@ async function getUser(accessToken: string, idToken: string | null): Promise<Aut
   }
 }
 
-export function MicrosoftEntraId(config: MicrosoftEntraIdConfig): OAuthProvider {
+export function Microsoft(config: MicrosoftConfig): OAuthProvider<'microsoft'> {
   const tenant = config.tenant ?? 'common'
 
   const authURL = `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/authorize`
@@ -122,7 +122,7 @@ export function MicrosoftEntraId(config: MicrosoftEntraIdConfig): OAuthProvider 
   }
 
   return {
-    id: 'microsoft-entra-id',
+    id: 'microsoft',
     requiresRedirectUri: true,
 
     async getAuthorizationUrl(state: string, codeVerifier: string, options?: { scopes?: string[], redirectUri?: string }) {

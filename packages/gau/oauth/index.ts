@@ -2,7 +2,7 @@ import type { OAuth2Tokens } from 'arctic'
 
 export { GitHub } from './providers/github'
 export { Google } from './providers/google'
-export { MicrosoftEntraId } from './providers/microsoft'
+export { Microsoft } from './providers/microsoft'
 
 export interface OAuthProviderConfig {
   clientId: string
@@ -20,8 +20,8 @@ export interface AuthUser {
   raw: Record<string, unknown>
 }
 
-export interface OAuthProvider {
-  id: string
+export interface OAuthProvider<T extends string = string> {
+  id: T
   requiresRedirectUri?: boolean
   getAuthorizationUrl: (state: string, codeVerifier: string, options?: { scopes?: string[], redirectUri?: string }) => Promise<URL>
   validateCallback: (code: string, codeVerifier: string, redirectUri?: string) => Promise<{ tokens: OAuth2Tokens, user: AuthUser }>

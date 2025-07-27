@@ -1,5 +1,6 @@
 import type { Accessor, ParentProps } from 'solid-js'
 import type { GauSession } from '../../core'
+import type { OAuthProvider } from '../../oauth'
 import { createContext, createResource, onMount, useContext } from 'solid-js'
 import { isServer } from 'solid-js/web'
 
@@ -13,15 +14,19 @@ import {
   storeSessionToken,
 } from '../../runtimes/tauri'
 
-interface AuthContextValue {
+interface AnyAuth { providers: readonly any[] }
+type ProviderId<P> = P extends OAuthProvider<infer T> ? T : never
+type ProvidersOf<T> = T extends { providers: readonly (infer P)[] } ? P : T extends readonly any[] ? T[number] : never
+
+interface AuthContextValue<TAuth = any> {
   session: Accessor<GauSession | null>
-  signIn: (provider: string) => Promise<void>
+  signIn: (provider: ProviderId<ProvidersOf<TAuth>>, options?: { redirectTo?: string }) => Promise<void>
   signOut: () => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextValue>()
+const AuthContext = createContext<any>()
 
-export function AuthProvider(props: ParentProps & { baseUrl: string, scheme?: string }) {
+export function AuthProvider<const TAuth extends AnyAuth | readonly { id: string }[]>(props: ParentProps & { auth?: TAuth, baseUrl: string, scheme?: string }) {
   const scheme = props.scheme ?? 'gau'
 
   const [session, { refetch }] = createResource<GauSession | null>(
@@ -44,12 +49,13 @@ export function AuthProvider(props: ParentProps & { baseUrl: string, scheme?: st
     { initialValue: null },
   )
 
-  async function signIn(provider: string) {
+  async function signIn(provider: ProviderId<ProvidersOf<TAuth>>, { redirectTo }: { redirectTo?: string } = {}) {
     if (isTauri) {
-      await signInWithTauri(provider, props.baseUrl, scheme)
+      await signInWithTauri(provider as string, props.baseUrl, scheme, redirectTo)
     }
     else {
-      const authUrl = `${props.baseUrl}/${provider}`
+      const query = redirectTo ? `?redirectTo=${encodeURIComponent(redirectTo)}` : ''
+      const authUrl = `${props.baseUrl}/${provider as string}${query}`
       window.location.href = authUrl
     }
   }
@@ -81,9 +87,9 @@ export function AuthProvider(props: ParentProps & { baseUrl: string, scheme?: st
   )
 }
 
-export function useAuth(): AuthContextValue {
+export function useAuth<const TAuth extends AnyAuth | readonly { id: string }[] = any>(): AuthContextValue<TAuth> {
   const context = useContext(AuthContext)
   if (!context)
     throw new Error('useAuth must be used within an AuthProvider')
-  return context
+  return context as AuthContextValue<TAuth>
 }

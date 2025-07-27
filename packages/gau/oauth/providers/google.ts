@@ -33,7 +33,7 @@ async function getUser(accessToken: string): Promise<AuthUser> {
   }
 }
 
-export function Google(config: OAuthProviderConfig): OAuthProvider {
+export function Google(config: OAuthProviderConfig): OAuthProvider<'google'> {
   const defaultClient = new OAuth2Client(config.clientId, config.clientSecret, config.redirectUri ?? null)
 
   function getClient(redirectUri?: string): OAuth2Client {
