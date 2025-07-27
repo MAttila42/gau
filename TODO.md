@@ -13,3 +13,5 @@
 
 - [ ] manual account linking
 - [ ] drizzle drivers for mysql, postgres
+- [ ] refresh-token rotation
+- [ ] Passkeys/WebAuthn
