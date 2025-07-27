@@ -109,5 +109,9 @@ code[dir="auto"] {
 }
 
 html[data-theme='light'] .i-icons\:drizzle {
-  color: #000000 !important;
+  color: var(--sl-color-white) !important;
+}
+
+a[aria-current="page"]>.i-icons\:drizzle {
+  color: var(--sl-color-text-invert) !important;
 }
