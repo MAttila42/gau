@@ -238,6 +238,8 @@ import { Steps, Tabs, TabItem } from '@astrojs/starlight/components'
                 secret: env.AUTH_SECRET,
               },
             })
+
+            export type Auth = typeof auth
             ```
         </TabItem>
         <TabItem label="SolidStart">
@@ -261,6 +263,8 @@ import { Steps, Tabs, TabItem } from '@astrojs/starlight/components'
                 secret: process.env.AUTH_SECRET!,
               },
             })
+
+            export type Auth = typeof auth
             ```
         </TabItem>
     </Tabs>

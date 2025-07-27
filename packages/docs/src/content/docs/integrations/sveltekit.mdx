@@ -3,7 +3,7 @@ title: SvelteKit
 description: How to integrate gau with SvelteKit.
 ---
 
-import { Tabs, TabItem, Steps, Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Tabs, TabItem, Steps, Card, CardGrid, LinkCard, Aside } from '@astrojs/starlight/components';
 
 This guide shows how to integrate `gau` with SvelteKit, using Drizzle (SQLite) and GitHub as examples.
 
@@ -58,10 +58,16 @@ This guide shows how to integrate `gau` with SvelteKit, using Drizzle (SQLite) a
 
     For the client, we create an auth store.
 
+    <Aside variant="note">
+    Exporting and importing the `Auth` type is optional, but it gives better types for the `auth.signIn` method.
+    By default, the `provider` param is `string`, but with the `Auth` type, it will be a union of string literals of the configured providers.
+    </Aside>
+
     ```ts title="src/lib/auth.svelte.ts"
+    import type { Auth } from '$lib/server/auth'
     import { createSvelteAuth } from '@rttnd/gau/client/svelte'
 
-    export const auth = createSvelteAuth()
+    export const auth = createSvelteAuth<Auth>()
     ```
 
     Use it in your components:

@@ -1,5 +1,4 @@
-import type { GauSession } from '../../core'
-import type { OAuthProvider } from '../../oauth'
+import type { GauSession, ProviderIds } from '../../core'
 import { BROWSER } from 'esm-env'
 
 import {
@@ -12,11 +11,7 @@ import {
   storeSessionToken,
 } from '../../runtimes/tauri'
 
-interface AnyAuth { providers: readonly any[] }
-type ProviderId<P> = P extends OAuthProvider<infer T> ? T : never
-type ProvidersOf<T> = T extends { providers: readonly (infer P)[] } ? P : T extends readonly any[] ? T[number] : never
-
-export function createSvelteAuth<const TAuth extends AnyAuth | readonly { id: string }[] = any>({
+export function createSvelteAuth<const TAuth = unknown>({
   baseUrl = '/api/auth',
   scheme = 'gau',
 }: { baseUrl?: string, scheme?: string } = {}) {
@@ -44,7 +39,7 @@ export function createSvelteAuth<const TAuth extends AnyAuth | readonly { id: st
       session = { user: null, session: null }
   }
 
-  async function signIn(provider: ProviderId<ProvidersOf<TAuth>>, { redirectTo }: { redirectTo?: string } = {}) {
+  async function signIn(provider: ProviderIds<TAuth>, { redirectTo }: { redirectTo?: string } = {}) {
     if (isTauri) {
       await signInWithTauri(provider as string, baseUrl, scheme, redirectTo)
     }
@@ -78,7 +73,7 @@ export function createSvelteAuth<const TAuth extends AnyAuth | readonly { id: st
     get session() {
       return session
     },
-    signIn: signIn as (provider: ProviderId<ProvidersOf<TAuth>>, options?: { redirectTo?: string }) => Promise<void>,
+    signIn: signIn as (provider: ProviderIds<TAuth>, options?: { redirectTo?: string }) => Promise<void>,
     signOut,
   }
 }

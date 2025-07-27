@@ -7,6 +7,7 @@ import { DEFAULT_COOKIE_SERIALIZE_OPTIONS } from './cookies'
 import { AuthError } from './index'
 
 type ProviderId<P> = P extends OAuthProvider<infer T> ? T : never
+export type ProviderIds<T> = T extends { providerMap: Map<infer K, any> } ? K : string
 
 export interface CreateAuthOptions<TProviders extends OAuthProvider[]> {
   /** The database adapter to use for storing users and accounts. */
@@ -38,7 +39,6 @@ export interface CreateAuthOptions<TProviders extends OAuthProvider[]> {
 
 export type Auth<TProviders extends OAuthProvider[] = any> = Adapter & {
   providerMap: Map<ProviderId<TProviders[number]>, TProviders[number]>
-  providers: TProviders
   basePath: string
   cookieOptions: SerializeOptions
   jwt: {
@@ -126,7 +126,6 @@ export function createAuth<const TProviders extends OAuthProvider[]>({
   return {
     ...adapter,
     providerMap: providerMap as Map<ProviderId<TProviders[number]>, TProviders[number]>,
-    providers,
     basePath,
     cookieOptions,
     jwt: {

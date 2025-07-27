@@ -1,6 +1,5 @@
 import type { Accessor, ParentProps } from 'solid-js'
-import type { GauSession } from '../../core'
-import type { OAuthProvider } from '../../oauth'
+import type { GauSession, ProviderIds } from '../../core'
 import { createContext, createResource, onMount, useContext } from 'solid-js'
 import { isServer } from 'solid-js/web'
 
@@ -14,19 +13,15 @@ import {
   storeSessionToken,
 } from '../../runtimes/tauri'
 
-interface AnyAuth { providers: readonly any[] }
-type ProviderId<P> = P extends OAuthProvider<infer T> ? T : never
-type ProvidersOf<T> = T extends { providers: readonly (infer P)[] } ? P : T extends readonly any[] ? T[number] : never
-
-interface AuthContextValue<TAuth = any> {
+interface AuthContextValue<TAuth = unknown> {
   session: Accessor<GauSession | null>
-  signIn: (provider: ProviderId<ProvidersOf<TAuth>>, options?: { redirectTo?: string }) => Promise<void>
+  signIn: (provider: ProviderIds<TAuth>, options?: { redirectTo?: string }) => Promise<void>
   signOut: () => Promise<void>
 }
 
 const AuthContext = createContext<any>()
 
-export function AuthProvider<const TAuth extends AnyAuth | readonly { id: string }[]>(props: ParentProps & { auth?: TAuth, baseUrl: string, scheme?: string }) {
+export function AuthProvider<const TAuth = unknown>(props: ParentProps & { auth?: TAuth, baseUrl: string, scheme?: string }) {
   const scheme = props.scheme ?? 'gau'
 
   const [session, { refetch }] = createResource<GauSession | null>(
@@ -49,7 +44,7 @@ export function AuthProvider<const TAuth extends AnyAuth | readonly { id: string
     { initialValue: null },
   )
 
-  async function signIn(provider: ProviderId<ProvidersOf<TAuth>>, { redirectTo }: { redirectTo?: string } = {}) {
+  async function signIn(provider: ProviderIds<TAuth>, { redirectTo }: { redirectTo?: string } = {}) {
     if (isTauri) {
       await signInWithTauri(provider as string, props.baseUrl, scheme, redirectTo)
     }
@@ -87,7 +82,7 @@ export function AuthProvider<const TAuth extends AnyAuth | readonly { id: string
   )
 }
 
-export function useAuth<const TAuth extends AnyAuth | readonly { id: string }[] = any>(): AuthContextValue<TAuth> {
+export function useAuth<const TAuth = unknown>(): AuthContextValue<TAuth> {
   const context = useContext(AuthContext)
   if (!context)
     throw new Error('useAuth must be used within an AuthProvider')
