@@ -1,5 +1,6 @@
 import type { GauSession, ProviderIds } from '../../core'
 import { BROWSER } from 'esm-env'
+import { getContext, setContext } from 'svelte'
 
 import {
   clearSessionToken,
@@ -11,11 +12,23 @@ import {
   storeSessionToken,
 } from '../../runtimes/tauri'
 
+interface AuthContextValue<TAuth = unknown> {
+  session: GauSession | null
+  signIn: (provider: ProviderIds<TAuth>, options?: { redirectTo?: string }) => Promise<void>
+  signOut: () => Promise<void>
+}
+
+const AUTH_CONTEXT_KEY = Symbol('gau-auth')
+
 export function createSvelteAuth<const TAuth = unknown>({
   baseUrl = '/api/auth',
   scheme = 'gau',
   redirectTo: defaultRedirectTo,
-}: { baseUrl?: string, scheme?: string, redirectTo?: string } = {}) {
+}: {
+  baseUrl?: string
+  scheme?: string
+  redirectTo?: string
+}) {
   let session = $state<GauSession | null>(null)
 
   async function fetchSession() {
@@ -66,27 +79,50 @@ export function createSvelteAuth<const TAuth = unknown>({
     const hash = new URL(window.location.href).hash.substring(1)
     const params = new URLSearchParams(hash)
     const tokenFromUrl = params.get('token')
+
     if (tokenFromUrl) {
       storeSessionToken(tokenFromUrl)
-      window.history.replaceState(null, '', window.location.pathname + window.location.search)
+      void (async () => {
+        try {
+          // @ts-expect-error - SvelteKit-only
+          const { replaceState } = await import('$app/navigation')
+          await replaceState(window.location.pathname + window.location.search, {})
+        }
+        catch {
+          window.history.replaceState(null, '', window.location.pathname + window.location.search)
+        }
+        await fetchSession()
+      })()
+    }
+    else {
+      fetchSession()
     }
 
-    fetchSession()
     if (isTauri) {
       setupTauriListener(async (url) => {
-        handleTauriDeepLink(url, baseUrl, scheme, (token) => {
+        handleTauriDeepLink(url, baseUrl, scheme, async (token) => {
           storeSessionToken(token)
-          fetchSession()
+          await fetchSession()
         })
       })
     }
   }
 
-  return {
+  const contextValue: AuthContextValue<TAuth> = {
     get session() {
       return session
     },
     signIn: signIn as (provider: ProviderIds<TAuth>, options?: { redirectTo?: string }) => Promise<void>,
     signOut,
   }
+
+  setContext(AUTH_CONTEXT_KEY, contextValue)
+}
+
+export function useAuth<const TAuth = unknown>(): AuthContextValue<TAuth> {
+  const context = getContext<AuthContextValue<TAuth>>(AUTH_CONTEXT_KEY)
+  if (!context)
+    throw new Error('useAuth must be used within an AuthProvider')
+
+  return context
 }

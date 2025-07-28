@@ -1,6 +1,8 @@
 /* eslint-disable no-console */
 import type { Options } from 'tsup'
-import { $, Glob } from 'bun'
+import { mkdir } from 'node:fs/promises'
+import { dirname } from 'node:path'
+import { $, Glob, write } from 'bun'
 import { defineConfig } from 'tsup'
 
 const commonConfig = {
@@ -9,27 +11,37 @@ const commonConfig = {
   splitting: true,
   sourcemap: true,
   dts: false,
-  minify: true,
   clean: true,
   outDir: 'dist',
+  minify: 'terser',
+  terserOptions: {
+    mangle: {
+      reserved: ['$'],
+    },
+  },
 } satisfies Options
 
 function toEntryObject(paths: string[]) {
   return paths.reduce<Record<string, string>>((acc, path) => {
-    const entryName = path.replace(/\.(ts|tsx|svelte\.ts)$/, '')
+    const entryName = path.replace(/\.(ts|tsx|svelte|svelte\.ts)$/, '')
     acc[entryName] = path
     return acc
   }, {})
 }
 
 export default defineConfig(async () => {
-  const glob = new Glob('**/index.{ts,tsx,svelte.ts}')
-  const allEntries = await Array.fromAsync(glob.scan('.'))
+  const glob = new Glob('src/**/index.{ts,tsx,svelte,svelte.ts}')
+  let allEntries = await Array.fromAsync(glob.scan('.'))
 
-  const solidEntry = allEntries.find(e => /client[\\/]solid[\\/]index\.(?:ts|tsx)$/.test(e))!
-  const svelteEntry = allEntries.find(e => /client[\\/]svelte[\\/]index\.svelte\.ts$/.test(e))!
+  allEntries = allEntries.filter(e => !/\.test\.(?:ts|tsx|svelte|svelte\.ts)$/.test(e))
 
-  const otherEntries = allEntries.filter(e => e !== solidEntry && e !== svelteEntry)
+  const solidEntries = allEntries.filter(e => /src[\\/]client[\\/]solid[\\/]index\.(?:ts|tsx)$/.test(e))
+  const svelteTsEntries = allEntries.filter(e => /src[\\/]client[\\/]svelte[\\/].*\.svelte\.ts$/.test(e))
+  const svelteComponentEntries = allEntries.filter(e => /src[\\/]client[\\/]svelte[\\/].*\.svelte$/.test(e))
+
+  const otherEntries = allEntries.filter(
+    e => !solidEntries.includes(e) && !svelteTsEntries.includes(e) && !svelteComponentEntries.includes(e),
+  )
 
   return [
     {
@@ -38,23 +50,29 @@ export default defineConfig(async () => {
       async onSuccess() {
         console.log('⚡️ Generating .d.ts files with tsgo...')
         await Promise.all([
-          $`bun tsgo --project tsconfig.json`,
-          $`bun tsgo --project client/solid/tsconfig.json`,
-          $`bun tsgo --project client/svelte/tsconfig.json`,
+          $`bun tsgo --project tsconfig.json --outDir dist/src`,
+          $`bun tsgo --project src/client/solid/tsconfig.json`,
+          $`bun tsgo --project src/client/svelte/tsconfig.json`,
         ])
         console.log('✅ Successfully generated .d.ts files.')
+        for (const path of svelteComponentEntries) {
+          const file = Bun.file(path)
+          const outPath = path.replace(/^src/, 'dist/src')
+          await mkdir(dirname(outPath), { recursive: true })
+          await write(outPath, await file.text())
+        }
       },
     },
     {
       ...commonConfig,
-      entry: toEntryObject([solidEntry]),
-      tsconfig: 'client/solid/tsconfig.json',
+      entry: toEntryObject(solidEntries),
+      tsconfig: 'src/client/solid/tsconfig.json',
     },
     {
       ...commonConfig,
       splitting: false,
-      entry: toEntryObject([svelteEntry]),
-      tsconfig: 'client/svelte/tsconfig.json',
+      entry: toEntryObject(svelteTsEntries),
+      tsconfig: 'src/client/svelte/tsconfig.json',
       outExtension() {
         return { js: '.svelte.js' }
       },

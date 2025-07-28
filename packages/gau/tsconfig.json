@@ -29,7 +29,7 @@
   "exclude": [
     "**/*.test.ts",
     "**/*.test.tsx",
-    "client",
+    "src/client",
     "dist",
     "node_modules",
     "tsup.config.ts"

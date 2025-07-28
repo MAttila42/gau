@@ -25,56 +25,60 @@
   ],
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
     },
     "./adapters/drizzle": {
-      "types": "./dist/adapters/drizzle/index.d.ts",
-      "import": "./dist/adapters/drizzle/index.js"
+      "types": "./dist/src/adapters/drizzle/index.d.ts",
+      "import": "./dist/src/adapters/drizzle/index.js"
     },
     "./adapters/memory": {
-      "types": "./dist/adapters/memory/index.d.ts",
-      "import": "./dist/adapters/memory/index.js"
+      "types": "./dist/src/adapters/memory/index.d.ts",
+      "import": "./dist/src/adapters/memory/index.js"
     },
     "./cli": {
-      "types": "./dist/cli/index.d.ts",
-      "import": "./dist/cli/index.js"
+      "types": "./dist/src/cli/index.d.ts",
+      "import": "./dist/src/cli/index.js"
     },
     "./client/solid": {
-      "types": "./dist/client/solid/index.d.ts",
-      "import": "./dist/client/solid/index.js"
+      "types": "./dist/src/client/solid/index.d.ts",
+      "import": "./dist/src/client/solid/index.js"
     },
     "./client/svelte": {
-      "types": "./dist/client/svelte/index.svelte.d.ts",
-      "import": "./dist/client/svelte/index.svelte.js"
+      "types": "./dist/src/client/svelte/index.svelte.d.ts",
+      "import": "./dist/src/client/svelte/index.svelte.js"
+    },
+    "./client/svelte/AuthProvider.svelte": {
+      "types": "./dist/src/client/svelte/AuthProvider/index.svelte",
+      "import": "./dist/src/client/svelte/AuthProvider/index.svelte"
     },
     "./core": {
-      "types": "./dist/core/index.d.ts",
-      "import": "./dist/core/index.js"
+      "types": "./dist/src/core/index.d.ts",
+      "import": "./dist/src/core/index.js"
     },
     "./jwt": {
-      "types": "./dist/jwt/index.d.ts",
-      "import": "./dist/jwt/index.js"
+      "types": "./dist/src/jwt/index.d.ts",
+      "import": "./dist/src/jwt/index.js"
     },
     "./oauth": {
-      "types": "./dist/oauth/index.d.ts",
-      "import": "./dist/oauth/index.js"
+      "types": "./dist/src/oauth/index.d.ts",
+      "import": "./dist/src/oauth/index.js"
     },
     "./runtimes/bun": {
-      "types": "./dist/runtimes/bun/index.d.ts",
-      "import": "./dist/runtimes/bun/index.js"
+      "types": "./dist/src/runtimes/bun/index.d.ts",
+      "import": "./dist/src/runtimes/bun/index.js"
     },
     "./runtimes/tauri": {
-      "types": "./dist/runtimes/tauri/index.d.ts",
-      "import": "./dist/runtimes/tauri/index.js"
+      "types": "./dist/src/runtimes/tauri/index.d.ts",
+      "import": "./dist/src/runtimes/tauri/index.js"
     },
     "./solidstart": {
-      "types": "./dist/solidstart/index.d.ts",
-      "import": "./dist/solidstart/index.js"
+      "types": "./dist/src/solidstart/index.d.ts",
+      "import": "./dist/src/solidstart/index.js"
     },
     "./sveltekit": {
-      "types": "./dist/sveltekit/index.d.ts",
-      "import": "./dist/sveltekit/index.js"
+      "types": "./dist/src/sveltekit/index.d.ts",
+      "import": "./dist/src/sveltekit/index.js"
     }
   },
   "bin": {
