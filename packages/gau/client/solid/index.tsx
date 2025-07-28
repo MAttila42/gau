@@ -21,7 +21,7 @@ interface AuthContextValue<TAuth = unknown> {
 
 const AuthContext = createContext<any>()
 
-export function AuthProvider<const TAuth = unknown>(props: ParentProps & { auth?: TAuth, baseUrl: string, scheme?: string }) {
+export function AuthProvider<const TAuth = unknown>(props: ParentProps & { auth?: TAuth, baseUrl: string, scheme?: string, redirectTo?: string }) {
   const scheme = props.scheme ?? 'gau'
 
   const [session, { refetch }] = createResource<GauSession | null>(
@@ -45,11 +45,12 @@ export function AuthProvider<const TAuth = unknown>(props: ParentProps & { auth?
   )
 
   async function signIn(provider: ProviderIds<TAuth>, { redirectTo }: { redirectTo?: string } = {}) {
+    const finalRedirectTo = redirectTo ?? props.redirectTo
     if (isTauri) {
-      await signInWithTauri(provider as string, props.baseUrl, scheme, redirectTo)
+      await signInWithTauri(provider as string, props.baseUrl, scheme, finalRedirectTo)
     }
     else {
-      const query = redirectTo ? `?redirectTo=${encodeURIComponent(redirectTo)}` : ''
+      const query = finalRedirectTo ? `?redirectTo=${encodeURIComponent(finalRedirectTo)}` : ''
       const authUrl = `${props.baseUrl}/${provider as string}${query}`
       window.location.href = authUrl
     }

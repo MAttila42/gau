@@ -14,7 +14,8 @@ import {
 export function createSvelteAuth<const TAuth = unknown>({
   baseUrl = '/api/auth',
   scheme = 'gau',
-}: { baseUrl?: string, scheme?: string } = {}) {
+  redirectTo: defaultRedirectTo,
+}: { baseUrl?: string, scheme?: string, redirectTo?: string } = {}) {
   let session = $state<GauSession | null>(null)
 
   async function fetchSession() {
@@ -40,11 +41,12 @@ export function createSvelteAuth<const TAuth = unknown>({
   }
 
   async function signIn(provider: ProviderIds<TAuth>, { redirectTo }: { redirectTo?: string } = {}) {
+    const finalRedirectTo = redirectTo ?? defaultRedirectTo
     if (isTauri) {
-      await signInWithTauri(provider as string, baseUrl, scheme, redirectTo)
+      await signInWithTauri(provider as string, baseUrl, scheme, finalRedirectTo)
     }
     else {
-      const query = redirectTo ? `?redirectTo=${encodeURIComponent(redirectTo)}` : ''
+      const query = finalRedirectTo ? `?redirectTo=${encodeURIComponent(finalRedirectTo)}` : ''
       window.location.href = `${baseUrl}/${provider as string}${query}`
     }
   }

@@ -5,4 +5,5 @@ import { createSvelteAuth } from '@rttnd/gau/client/svelte'
 export const auth = createSvelteAuth<Auth>({
   baseUrl: clientEnv.PUBLIC_API_URL,
   scheme: 'gau',
+  redirectTo: 'http://127.0.0.1:8787',
 })

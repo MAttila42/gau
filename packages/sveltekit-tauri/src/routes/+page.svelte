@@ -27,7 +27,7 @@
         <div class='flex gap-4 justify-center'>
           <button
             class='px-4 py-2 border border-emerald-900/30 rounded bg-zinc-800 flex gap-2 transition-all duration-200 items-center justify-center hover:border-emerald-800/50 hover:bg-zinc-700'
-            onclick={() => auth.signIn('github', { redirectTo: 'http://localhost:5173' })}
+            onclick={() => auth.signIn('github')}
           >
             <div class='i-ph:github-logo size-5'></div>
             <p>GitHub</p>
