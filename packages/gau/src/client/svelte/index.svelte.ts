@@ -28,7 +28,7 @@ export function createSvelteAuth<const TAuth = unknown>({
   baseUrl?: string
   scheme?: string
   redirectTo?: string
-}) {
+} = {}) {
   let session = $state<GauSession | null>(null)
 
   async function fetchSession() {
