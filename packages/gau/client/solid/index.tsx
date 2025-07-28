@@ -45,11 +45,14 @@ export function AuthProvider<const TAuth = unknown>(props: ParentProps & { auth?
   )
 
   async function signIn(provider: ProviderIds<TAuth>, { redirectTo }: { redirectTo?: string } = {}) {
-    const finalRedirectTo = redirectTo ?? props.redirectTo
+    let finalRedirectTo = redirectTo ?? props.redirectTo
     if (isTauri) {
       await signInWithTauri(provider as string, props.baseUrl, scheme, finalRedirectTo)
     }
     else {
+      if (!finalRedirectTo && !isServer)
+        finalRedirectTo = window.location.origin
+
       const query = finalRedirectTo ? `?redirectTo=${encodeURIComponent(finalRedirectTo)}` : ''
       const authUrl = `${props.baseUrl}/${provider as string}${query}`
       window.location.href = authUrl
@@ -65,6 +68,17 @@ export function AuthProvider<const TAuth = unknown>(props: ParentProps & { auth?
   }
 
   onMount(() => {
+    if (!isTauri) {
+      const hash = new URL(window.location.href).hash.substring(1)
+      const params = new URLSearchParams(hash)
+      const tokenParam = params.get('token')
+      if (tokenParam) {
+        storeSessionToken(tokenParam)
+        refetch()
+        window.history.replaceState(null, '', window.location.pathname + window.location.search)
+      }
+    }
+
     if (!isTauri)
       return
 

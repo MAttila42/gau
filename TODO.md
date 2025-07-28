@@ -1,10 +1,16 @@
 # TODO
 
+## docs
+
+- [ ] add same-origin - cross-origin differences
+- [ ] jwt token based spa section (cross origin)
+- [ ] expand trustHosts config, redirectTo in signIn and client auth
+
 ## fix
 
 - [ ] dev: when editing only svelte nr dev deletes all files in dist but svelte files, entries delete each other's work
 - [ ] client/solid async reactivity issue
-- [ ] more tests
+- [ ] more tests, MORE TESTS
 - [x] sveltekit tauri dev/build
 - [ ] sveltekit tauri android dev/build
 - [ ] refinements

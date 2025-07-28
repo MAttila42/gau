@@ -45,7 +45,8 @@ export function handleTauriDeepLink(url: string, baseUrl: string, scheme: string
   if (parsed.protocol !== `${scheme}:` && parsed.origin !== new URL(baseUrl).origin)
     return
 
-  const token = parsed.searchParams.get('token')
+  const params = new URLSearchParams(parsed.hash.substring(1))
+  const token = params.get('token')
   if (token)
     onToken(token)
 }

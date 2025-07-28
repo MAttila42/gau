@@ -221,7 +221,8 @@ async function handleCallback(request: RequestLike, auth: Auth, providerId: stri
   // so the external OAuth tab does not stay open.
   if (isDesktopRedirect || isMobileRedirect) {
     const destination = new URL(redirectUrl)
-    destination.searchParams.set('token', sessionToken)
+    // Use hash instead of query param for security. The hash is not sent to the server.
+    destination.hash = `token=${sessionToken}`
 
     const html = `<!DOCTYPE html>
 <html lang="en">

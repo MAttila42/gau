@@ -41,11 +41,14 @@ export function createSvelteAuth<const TAuth = unknown>({
   }
 
   async function signIn(provider: ProviderIds<TAuth>, { redirectTo }: { redirectTo?: string } = {}) {
-    const finalRedirectTo = redirectTo ?? defaultRedirectTo
+    let finalRedirectTo = redirectTo ?? defaultRedirectTo
     if (isTauri) {
       await signInWithTauri(provider as string, baseUrl, scheme, finalRedirectTo)
     }
     else {
+      if (!finalRedirectTo && BROWSER)
+        finalRedirectTo = window.location.origin
+
       const query = finalRedirectTo ? `?redirectTo=${encodeURIComponent(finalRedirectTo)}` : ''
       window.location.href = `${baseUrl}/${provider as string}${query}`
     }
@@ -60,6 +63,14 @@ export function createSvelteAuth<const TAuth = unknown>({
   }
 
   if (BROWSER) {
+    const hash = new URL(window.location.href).hash.substring(1)
+    const params = new URLSearchParams(hash)
+    const tokenFromUrl = params.get('token')
+    if (tokenFromUrl) {
+      storeSessionToken(tokenFromUrl)
+      window.history.replaceState(null, '', window.location.pathname + window.location.search)
+    }
+
     fetchSession()
     if (isTauri) {
       setupTauriListener(async (url) => {
