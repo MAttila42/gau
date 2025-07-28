@@ -2,6 +2,7 @@
 
 ## docs
 
+- [ ] !!! changed svelte client to provider
 - [ ] add same-origin - cross-origin differences
 - [ ] jwt token based spa section (cross origin)
 - [ ] expand trustHosts config, redirectTo in signIn and client auth
@@ -15,7 +16,7 @@
 - [ ] sveltekit tauri android dev/build
 - [ ] refinements
 
-## v0.3.0
+## v0.4.0
 
 - [ ] manual account linking
 - [ ] drizzle drivers for mysql, postgres

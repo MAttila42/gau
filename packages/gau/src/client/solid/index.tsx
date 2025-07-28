@@ -21,8 +21,9 @@ interface AuthContextValue<TAuth = unknown> {
 
 const AuthContext = createContext<any>()
 
-export function AuthProvider<const TAuth = unknown>(props: ParentProps & { auth?: TAuth, baseUrl: string, scheme?: string, redirectTo?: string }) {
+export function AuthProvider<const TAuth = unknown>(props: ParentProps & { auth?: TAuth, baseUrl?: string, scheme?: string, redirectTo?: string }) {
   const scheme = props.scheme ?? 'gau'
+  const baseUrl = props.baseUrl ?? '/api/auth'
 
   const [session, { refetch }] = createResource<GauSession | null>(
     async () => {
@@ -31,7 +32,7 @@ export function AuthProvider<const TAuth = unknown>(props: ParentProps & { auth?
 
       const token = getSessionToken()
       const headers = token ? { Authorization: `Bearer ${token}` } : undefined
-      const res = await fetch(`${props.baseUrl}/session`, token ? { headers } : { credentials: 'include' })
+      const res = await fetch(`${baseUrl}/session`, token ? { headers } : { credentials: 'include' })
       if (!res.ok)
         return { user: null, session: null }
 
@@ -47,14 +48,14 @@ export function AuthProvider<const TAuth = unknown>(props: ParentProps & { auth?
   async function signIn(provider: ProviderIds<TAuth>, { redirectTo }: { redirectTo?: string } = {}) {
     let finalRedirectTo = redirectTo ?? props.redirectTo
     if (isTauri) {
-      await signInWithTauri(provider as string, props.baseUrl, scheme, finalRedirectTo)
+      await signInWithTauri(provider as string, baseUrl, scheme, finalRedirectTo)
     }
     else {
       if (!finalRedirectTo && !isServer)
         finalRedirectTo = window.location.origin
 
       const query = finalRedirectTo ? `?redirectTo=${encodeURIComponent(finalRedirectTo)}` : ''
-      const authUrl = `${props.baseUrl}/${provider as string}${query}`
+      const authUrl = `${baseUrl}/${provider as string}${query}`
       window.location.href = authUrl
     }
   }
@@ -63,7 +64,7 @@ export function AuthProvider<const TAuth = unknown>(props: ParentProps & { auth?
     clearSessionToken()
     const token = getSessionToken()
     const headers = token ? { Authorization: `Bearer ${token}` } : undefined
-    await fetch(`${props.baseUrl}/signout`, token ? { method: 'POST', headers } : { method: 'POST', credentials: 'include' })
+    await fetch(`${baseUrl}/signout`, token ? { method: 'POST', headers } : { method: 'POST', credentials: 'include' })
     refetch()
   }
 
@@ -83,7 +84,7 @@ export function AuthProvider<const TAuth = unknown>(props: ParentProps & { auth?
       return
 
     setupTauriListener(async (url) => {
-      handleTauriDeepLink(url, props.baseUrl, scheme, (token) => {
+      handleTauriDeepLink(url, baseUrl, scheme, (token) => {
         storeSessionToken(token)
         refetch()
       })
