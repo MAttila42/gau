@@ -1,6 +1,6 @@
 <script lang='ts'>
   import { clientEnv } from '$lib/env/client'
-  import { AuthProvider } from '@rttnd/gau/client/svelte'
+  import AuthProvider from '@rttnd/gau/client/svelte/AuthProvider.svelte'
 
   const { children } = $props()
 </script>
