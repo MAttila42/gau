@@ -1,17 +1,21 @@
 {
   "name": "@rttnd/gau",
   "version": "0.3.0",
-  "exports": "./index.ts",
+  "exports": "./src/index.ts",
   "license": "MIT",
   "publish": {
     "include": [
       "README.md",
       "package.json",
       "**/*.ts",
+      "**/*.svelte",
+      "**/*.svelte.ts",
       "**/*.tsx"
     ],
     "exclude": [
       "**/*.test.ts",
+      "**/*.test.svelte",
+      "**/*.test.svelte.ts",
       "**/*.test.tsx"
     ]
   }
