@@ -2,7 +2,7 @@
 
 ## docs
 
-- [ ] !!! changed svelte client to provider
+- [ ] !!! changed svelte client to provider, can we use both provider and createSvelteAuth?
 - [ ] add same-origin - cross-origin differences
 - [ ] jwt token based spa section (cross origin)
 - [ ] expand trustHosts config, redirectTo in signIn and client auth

@@ -22,7 +22,7 @@ MICROSOFT_CLIENT_SECRET=
 Under your app registration's "Authentication" settings, you need to add a "Web" platform and configure the redirect URI.
 
 ```
-/api/auth/microsoft-entra-id/callback
+/api/auth/microsoft/callback
 ```
 
 Microsoft allows adding multiple redirect URIs, so add both your development and production URLs.
@@ -38,11 +38,11 @@ The `openid`, `profile`, `email`, and `User.Read` scopes are requested by defaul
 ```ts title="auth.ts"
 import process from 'node:process'
 import { createAuth } from '@rttnd/gau/core'
-import { MicrosoftEntraId } from '@rttnd/gau/oauth';
+import { Microsoft } from '@rttnd/gau/oauth';
 
 export const auth = createAuth({
   providers: [
-    MicrosoftEntraId({
+    Microsoft({
       clientId: process.env.MICROSOFT_CLIENT_ID,
       clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
     }),
