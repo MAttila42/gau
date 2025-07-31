@@ -19,26 +19,6 @@ This guide shows how to integrate `gau` with SvelteKit, using Drizzle (SQLite) a
 
     Create a catch-all route for auth endpoints on the server.
 
-    <FileTree>
-    - src
-      - routes
-        - api
-          - auth
-            - [...gau]
-              - +server.ts
-        - +page.svelte
-      - hooks.server.ts
-      - lib
-        - server
-          - **auth.ts**
-        - auth.svelte.ts
-      - app.d.ts
-      - app.html
-      - package.json
-      - svelte.config.js
-      - empty_folder/
-    </FileTree>
-
     ```ts title="src/routes/api/auth/[...gau]/+server.ts"
     import { SvelteKitAuth } from '@rttnd/gau/sveltekit'
     import { auth } from '$lib/server/auth'
@@ -106,7 +86,27 @@ This guide shows how to integrate `gau` with SvelteKit, using Drizzle (SQLite) a
     {/if}
     ```
 
-5. ##### Next Steps
+5. ##### File Structure
+
+    <FileTree>
+    - routes
+      - api
+        - auth
+          - [...gau]
+            - +server.ts
+      - +page.svelte
+    - hooks.server.ts
+    - lib
+      - server
+        - auth.ts
+      - auth.svelte.ts
+    - app.d.ts
+    - app.html
+    - package.json
+    - svelte.config.js
+    </FileTree>
+
+6. ##### Next Steps
 
     - Explore other [OAuth Providers](/oauth-providers).
     - See [Deployment](/guides/deployment) for production tips.
