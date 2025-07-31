@@ -4,6 +4,7 @@ description: How to integrate gau with SvelteKit.
 ---
 
 import { Tabs, TabItem, Steps, Card, CardGrid, LinkCard, Aside } from '@astrojs/starlight/components';
+import FileTree from '~/components/starlight/FileTree.astro';
 
 This guide shows how to integrate `gau` with SvelteKit, using Drizzle (SQLite) and GitHub as examples.
 
@@ -17,6 +18,26 @@ This guide shows how to integrate `gau` with SvelteKit, using Drizzle (SQLite) a
 2. ##### Set up API Route
 
     Create a catch-all route for auth endpoints on the server.
+
+    <FileTree>
+    - src
+      - routes
+        - api
+          - auth
+            - [...gau]
+              - +server.ts
+        - +page.svelte
+      - hooks.server.ts
+      - lib
+        - server
+          - **auth.ts**
+        - auth.svelte.ts
+      - app.d.ts
+      - app.html
+      - package.json
+      - svelte.config.js
+      - empty_folder/
+    </FileTree>
 
     ```ts title="src/routes/api/auth/[...gau]/+server.ts"
     import { SvelteKitAuth } from '@rttnd/gau/sveltekit'
@@ -90,4 +111,4 @@ This guide shows how to integrate `gau` with SvelteKit, using Drizzle (SQLite) a
     - Explore other [OAuth Providers](/oauth-providers).
     - See [Deployment](/guides/deployment) for production tips.
     - Learn about how `gau` works.
-</Steps> 
+</Steps>

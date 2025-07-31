@@ -20,6 +20,8 @@ export default defineConfig({
           'drizzle': () => fs.readFile('./src/assets/adapters/drizzle.svg', 'utf-8'),
           'svelte-ts': () => fs.readFile('./src/assets/svelte-ts.svg', 'utf-8'),
           'svelte-js': () => fs.readFile('./src/assets/svelte-js.svg', 'utf-8'),
+          'folder': () => fs.readFile('./src/assets/folder.svg', 'utf-8'),
+          'folder-open': () => fs.readFile('./src/assets/folder-open.svg', 'utf-8'),
         },
       },
       extraProperties: {

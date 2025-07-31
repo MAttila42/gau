@@ -119,20 +119,6 @@ export async function getIconDetails(title, language) {
   if (language === 'sh')
     return null
 
-  if (title?.endsWith('.svelte.js')) {
-    return {
-      iconClass: 'i-icons:svelte-js',
-      language: 'svelte',
-    }
-  }
-
-  if (title?.endsWith('.svelte.ts')) {
-    return {
-      iconClass: 'i-icons:svelte-ts',
-      language: 'svelte',
-    }
-  }
-
   const resolver = resolveIcon(title, language)
   const iconClass = await resolver()
 
@@ -142,12 +128,33 @@ export async function getIconDetails(title, language) {
   }
 }
 
+export function resolveFolderIcon(folderName, isOpen) {
+  return async function () {
+    const { materialIcons } = await getMaterialIconsData()
+    const lowerFolderName = folderName.toLowerCase()
+
+    const iconName = isOpen
+      ? materialIcons.folderNamesExpanded[lowerFolderName]
+      : materialIcons.folderNames[lowerFolderName]
+
+    if (iconName && materialIcons.iconDefinitions[iconName])
+      return `i-material-icon-theme:${iconName}`
+
+    return isOpen ? 'i-icons:folder-open' : 'i-icons:folder'
+  }
+}
+
 export function resolveIcon(fileName, language) {
   return async function () {
     const { languageMap, materialIcons } = await getMaterialIconsData()
 
     if (!fileName && !language)
       return null
+
+    if (fileName?.endsWith('.svelte.js'))
+      return 'i-icons:svelte-js'
+    if (fileName?.endsWith('.svelte.ts'))
+      return 'i-icons:svelte-ts'
 
     function getIconClass(pairs) {
       for (const pair of pairs) {
