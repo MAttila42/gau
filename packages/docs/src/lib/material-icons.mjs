@@ -161,7 +161,8 @@ export function resolveIcon(fileName, language) {
     }
 
     if (fileName) {
-      const lowerFileName = fileName.toLowerCase()
+      const justFileName = fileName.includes('/') ? fileName.split('/').pop() : fileName
+      const lowerFileName = justFileName.toLowerCase()
       const longExtension = lowerFileName.split('.').slice(1).join('.')
       const shortExtension = lowerFileName.split('.').pop() || ''
 
