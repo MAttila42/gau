@@ -125,27 +125,6 @@ describe('tauri runtime helpers', () => {
         expect(onToken).not.toHaveBeenCalled()
       })
     })
-
-    describe('token storage', () => {
-      it('storeSessionToken should set localStorage and cookie', () => {
-        tauriHelpers.storeSessionToken('my-secret-token')
-        expect(localStorageMock.getItem('gau-token')).toBe('my-secret-token')
-        expect(document.cookie).toBe('__gau-session-token=my-secret-token; path=/; max-age=31536000; samesite=lax')
-      })
-
-      it('getSessionToken should retrieve from localStorage', () => {
-        localStorageMock.setItem('gau-token', 'my-retrieved-token')
-        expect(tauriHelpers.getSessionToken()).toBe('my-retrieved-token')
-      })
-
-      it('clearSessionToken should remove from localStorage and expire cookie', () => {
-        localStorageMock.setItem('gau-token', 'token-to-clear')
-        document.cookie = '__gau-session-token=token-to-clear'
-        tauriHelpers.clearSessionToken()
-        expect(localStorageMock.getItem('gau-token')).toBeNull()
-        expect(document.cookie).toBe('__gau-session-token=; path=/; max-age=0')
-      })
-    })
   })
 
   describe('without Tauri environment', () => {

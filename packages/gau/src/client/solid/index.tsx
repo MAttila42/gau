@@ -2,16 +2,8 @@ import type { Accessor, ParentProps } from 'solid-js'
 import type { GauSession, ProviderIds } from '../../core'
 import { createContext, createResource, onMount, useContext } from 'solid-js'
 import { isServer } from 'solid-js/web'
-
-import {
-  clearSessionToken,
-  getSessionToken,
-  handleTauriDeepLink,
-  isTauri,
-  setupTauriListener,
-  signInWithTauri,
-  storeSessionToken,
-} from '../../runtimes/tauri'
+import { handleTauriDeepLink, isTauri, setupTauriListener, signInWithTauri } from '../../runtimes/tauri'
+import { clearSessionToken, getSessionToken, storeSessionToken } from '../token'
 
 interface AuthContextValue<TAuth = unknown> {
   session: Accessor<GauSession | null>

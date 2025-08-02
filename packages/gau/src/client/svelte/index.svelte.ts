@@ -1,16 +1,8 @@
 import type { GauSession, ProviderIds } from '../../core'
 import { BROWSER } from 'esm-env'
 import { getContext, setContext } from 'svelte'
-
-import {
-  clearSessionToken,
-  getSessionToken,
-  handleTauriDeepLink,
-  isTauri,
-  setupTauriListener,
-  signInWithTauri,
-  storeSessionToken,
-} from '../../runtimes/tauri'
+import { handleTauriDeepLink, isTauri, setupTauriListener, signInWithTauri } from '../../runtimes/tauri'
+import { clearSessionToken, getSessionToken, storeSessionToken } from '../token'
 
 interface AuthContextValue<TAuth = unknown> {
   session: GauSession | null
