@@ -145,25 +145,34 @@ export async function verify<T = Record<string, unknown>>(token: string, options
     if (headerAlg !== 'ES256')
       throw new AuthError(`JWT algorithm is "${headerAlg}", but verifier was configured for "ES256"`)
 
-    const rawSignature = new Uint8Array(signature)
+    const signatureBytes = new Uint8Array(signature)
 
-    // Try verification with raw signature first (some runtimes accept it directly)
+    // Runtimes like Node.js return DER-encoded signatures. Others (Bun) return raw (r||s).
+    // We try DER first, as it's more common in Node environments.
     validSignature = await crypto.subtle.verify(
       { name: 'ECDSA', hash: 'SHA-256' },
       publicKey!,
-      rawSignature as BufferSource,
+      signatureBytes as BufferSource,
       signatureMessage as BufferSource,
     )
 
-    if (!validSignature) {
-      // Fall back to DER-encoded signature if raw form was rejected
-      const derSig = rawToDer(rawSignature)
-      validSignature = await crypto.subtle.verify(
-        { name: 'ECDSA', hash: 'SHA-256' },
-        publicKey!,
-        derSig as BufferSource,
-        signatureMessage as BufferSource,
-      )
+    if (!validSignature && signatureBytes.length === 64) {
+      // If DER verification fails and the signature is 64 bytes, it might be a raw signature.
+      // Convert it to DER and try again.
+      try {
+        const derSig = rawToDer(signatureBytes)
+        validSignature = await crypto.subtle.verify(
+          { name: 'ECDSA', hash: 'SHA-256' },
+          publicKey!,
+          derSig as BufferSource,
+          signatureMessage as BufferSource,
+        )
+      }
+      catch {
+        // rawToDer can throw if the signature is not 64 bytes, but we already checked.
+        // This catch is for other unexpected errors.
+        validSignature = false
+      }
     }
   }
 

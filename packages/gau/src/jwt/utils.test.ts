@@ -42,6 +42,13 @@ describe('jWT utils', () => {
       expect(valid).toBe(true)
     })
 
+    it('throws AuthError for a malformed base64url secret', async () => {
+      const invalidSecret = 'not-base64-url-$$'
+      await expect(deriveKeysFromSecret(invalidSecret))
+        .rejects
+        .toThrow('Invalid base64url string')
+    })
+
     it('throws AuthError for an invalid secret', async () => {
       const invalidSecret = 'not-a-valid-key'
       await expect(deriveKeysFromSecret(invalidSecret))
@@ -69,6 +76,20 @@ describe('jWT utils', () => {
       expect(derSig[2]).toBe(0x02) // INTEGER (for R)
       expect(derSig[4 + derSig[3]!]).toBe(0x02) // INTEGER (for S)
       expect(derSig.length).toBe(2 + derSig[1]!) // Total length check
+    })
+
+    it('correctly handles r or s values that need padding', () => {
+      // A signature where 'r' starts with a byte >= 0x80, requiring a padding byte.
+      const r = 'f'.repeat(64)
+      const s = '1'.repeat(64)
+      const rawSig = new Uint8Array(Buffer.from(r + s, 'hex'))
+
+      const derSig = rawToDer(rawSig)
+
+      expect(derSig[0]).toBe(0x30) // SEQUENCE
+      expect(derSig[2]).toBe(0x02) // INTEGER (for R)
+      expect(derSig[3]).toBe(33) // Length of R should be 33 (32 + padding)
+      expect(derSig[4]).toBe(0x00) // Padding byte
     })
   })
 })

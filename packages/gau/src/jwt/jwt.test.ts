@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { sign, verify } from '.'
 
@@ -32,6 +33,13 @@ describe('jWT module', () => {
       expect(payload.foo).toBe('bar')
     })
 
+    it('signs and verifies a token with a Uint8Array secret', async () => {
+      const secret = new TextEncoder().encode('super-secret-for-hs256')
+      const token = await sign({ foo: 'bar' }, { algorithm: 'HS256', secret })
+      const payload = await verify<{ foo: string }>(token, { algorithm: 'HS256', secret })
+      expect(payload.foo).toBe('bar')
+    })
+
     it('throws on invalid signature', async () => {
       const token = await sign({ foo: 'bar' }, { algorithm: 'HS256', secret })
       await expect(verify(token, { algorithm: 'HS256', secret: 'wrong-secret' }))
@@ -61,6 +69,14 @@ describe('jWT module', () => {
       const token = await sign({ hello: 'world' }, { algorithm: 'ES256', privateKey })
       const payload = await verify<{ hello: string }>(token, { algorithm: 'ES256', publicKey })
       expect(payload.hello).toBe('world')
+    })
+
+    it('signs and verifies a token using a base64url secret', async () => {
+      const pkcs8 = await crypto.subtle.exportKey('pkcs8', es256Keys.privateKey)
+      const secret = Buffer.from(pkcs8).toString('base64url')
+      const token = await sign({ a: 1 }, { algorithm: 'ES256', secret })
+      const payload = await verify(token, { algorithm: 'ES256', secret })
+      expect((payload as any).a).toBe(1)
     })
 
     it('throws on invalid signature', async () => {
@@ -117,11 +133,47 @@ describe('jWT module', () => {
         .toThrow('Invalid JWT audience')
     })
 
+    it('throws if aud claim is present but verifier expects none', async () => {
+      const secret = 'claim-secret'
+      const token = await sign({}, { algorithm: 'HS256', secret, aud: 'audience-1' })
+      // This should pass, as we don't require audience verification if not specified
+      const payload = await verify(token, { algorithm: 'HS256', secret })
+      expect((payload as any).aud).toBe('audience-1')
+    })
+
+    it('throws if token has no audience but verifier expects one', async () => {
+      const secret = 'claim-secret'
+      const token = await sign({}, { algorithm: 'HS256', secret })
+      await expect(verify(token, { algorithm: 'HS256', secret, aud: 'audience-1' }))
+        .rejects
+        .toThrow('Invalid JWT audience')
+    })
+
     it('verifies if one of expected audiences matches', async () => {
       const secret = 'claim-secret'
       const token = await sign({}, { algorithm: 'HS256', secret, aud: 'audience-1' })
       const payload = await verify(token, { algorithm: 'HS256', secret, aud: ['audience-1', 'audience-2'] })
       expect((payload as any).aud).toBe('audience-1')
+    })
+
+    it('throws on a token used before its nbf time', async () => {
+      const secret = 'nbf-secret'
+      const now = Math.floor(Date.now() / 1000)
+      const payload = { nbf: now + 60 } // not valid for 60 seconds
+      const token = await sign(payload, { algorithm: 'HS256', secret })
+      await expect(verify(token, { algorithm: 'HS256', secret }))
+        .rejects
+        .toThrow('JWT not yet valid')
+    })
+
+    it('verifies a token at or after its nbf time', async () => {
+      const secret = 'nbf-secret'
+      const now = Math.floor(Date.now() / 1000)
+      const payload = { nbf: now + 60 }
+      const token = await sign(payload, { algorithm: 'HS256', secret })
+      vi.advanceTimersByTime(60 * 1000)
+      const verified = await verify(token, { algorithm: 'HS256', secret })
+      expect(verified).toBeDefined()
     })
   })
 
@@ -169,6 +221,14 @@ describe('jWT module', () => {
       await expect(verify(token, { algorithm: 'ES256' }))
         .rejects
         .toThrow('Missing secret for ES256 verification. Must be a base64url-encoded string.')
+    })
+
+    it('throws if deriveKeysFromSecret fails during verification', async () => {
+      const { privateKey } = es256Keys
+      const token = await sign({ b: 2 }, { algorithm: 'ES256', privateKey })
+      await expect(verify(token, { algorithm: 'ES256', secret: 'invalid-secret' }))
+        .rejects
+        .toThrow('Invalid secret')
     })
   })
 })

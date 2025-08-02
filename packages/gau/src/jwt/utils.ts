@@ -13,13 +13,18 @@ function base64UrlToArray(base64Url: string): Uint8Array {
   const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
   const padLength = (4 - (base64.length % 4)) % 4
   const padded = base64.padEnd(base64.length + padLength, '=')
-  const binary_string = atob(padded)
-  const len = binary_string.length
-  const bytes = new Uint8Array(len)
-  for (let i = 0; i < len; i++)
-    bytes[i] = binary_string.charCodeAt(i)
+  try {
+    const binary_string = atob(padded)
+    const len = binary_string.length
+    const bytes = new Uint8Array(len)
+    for (let i = 0; i < len; i++)
+      bytes[i] = binary_string.charCodeAt(i)
 
-  return bytes
+    return bytes
+  }
+  catch {
+    throw new AuthError('Invalid base64url string')
+  }
 }
 
 export async function deriveKeysFromSecret(secret: string): Promise<{ privateKey: CryptoKey, publicKey: CryptoKey }> {
@@ -47,6 +52,8 @@ export async function deriveKeysFromSecret(secret: string): Promise<{ privateKey
     return { privateKey, publicKey }
   }
   catch (error) {
+    if (error instanceof AuthError)
+      throw error
     throw new AuthError('Invalid secret. Must be a base64url-encoded PKCS#8 private key for ES256. Use `bunx gau secret` to generate one.', error)
   }
 }
