@@ -1,9 +1,10 @@
 ---
-title: Integrations
+title: Framework Integrations
 description: How to integrate gau with your favorite framework.
 ---
 
 import IconLink from '~/components/IconLink.astro';
+import { Aside } from '@astrojs/starlight/components';
 
 `gau` is designed to be framework-agnostic. It can run anywhere, but official support makes it easier.
 
@@ -14,8 +15,66 @@ It has support for full-stack frameworks:
   <IconLink href="/integrations/solidstart/" icon="i-devicon:solidjs" title="SolidStart" />
 </div> 
 
-And supports these runtimes:
+`gau` provides client-side components and hooks for frameworks. This section covers the common features and options available across all client integrations.
 
-<div class="row">
-  <IconLink href="/integrations/tauri/" icon="i-material-icon-theme:tauri" title="Tauri" />
-</div> 
+## AuthProvider
+
+To get started, you need to wrap your application's root component with the `AuthProvider`. This component manages the authentication state and makes it available throughout your app.
+
+### Props
+
+You can configure the `AuthProvider` with the following props:
+
+#### `baseUrl`
+
+> **Type**: `string`
+> **Default**: `'/api/auth'`
+
+The base URL for the authentication API endpoints. This should match the `basePath` configured in your `createAuth` setup on the server. If your frontend and backend are on different domains, you'll need to set this to the full URL of your backend's auth API.
+
+#### `scheme`
+
+> **Type**: `string`
+> **Default**: `'gau'`
+
+The URL scheme used for deep linking in desktop applications (e.g., Tauri). This is used to redirect the user back to your app after they have authenticated with an OAuth provider.
+
+#### `redirectTo`
+
+> **Type**: `string`
+> **Default**: The current host URL
+
+A default URL to redirect to after a successful sign-in. This can be overridden by passing a `redirectTo` option to the `signIn` function.
+
+## useAuth
+
+The `useAuth` hook is the primary way to access authentication state and methods in your components.
+
+### Return Values
+
+The `useAuth` hook returns an object with the following properties:
+
+#### `session`
+
+> **Type**: `{ user: User | null, session: Session | null } | null`
+
+An object containing the current user and session information. It's `null` if the user is not authenticated. The shape of the `user` and `session` objects is defined by the `Adapter` and your `createAuth` configuration.
+
+#### `signIn`
+
+> **Type**: `(provider: string, options?: { redirectTo?: string }) => Promise<void>`
+
+A function to initiate the sign-in process with a specific OAuth provider.
+
+- `provider`: The ID of the provider to use (e.g., `'github'`, `'google'`).
+- `options.redirectTo`: A URL to redirect to after a successful sign-in, overriding the default `redirectTo` prop on the `AuthProvider`.
+
+<Aside variant="note">
+  You can get full TypeScript support for your provider IDs by creating a typed `useAuth` hook. See the framework integration guides for examples.
+</Aside>
+
+#### `signOut`
+
+> **Type**: `() => Promise<void>`
+
+A function to sign the user out, clearing their session.

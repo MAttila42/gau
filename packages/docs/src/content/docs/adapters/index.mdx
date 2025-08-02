@@ -7,9 +7,56 @@ import IconLink from '~/components/IconLink.astro';
 
 `gau` can work with any database, though currently no databases are supported directly.
 
-It's adviced to use an ORM, which abstracts the database away.
-`gau` currently only supports Drizzle and the SQLite driver.
+It's adviced to use an ORM, which abstracts the database away. `gau` currently only supports Drizzle and the SQLite driver.
 
 <div class="row">
   <IconLink href="/adapters/drizzle/" icon="i-icons:drizzle" title="Drizzle" />
 </div> 
+
+The `createAuth` function not only sets up your authentication logic but also returns a set of database methods from your adapter, allowing you to interact with your user data directly.
+
+## Database Methods
+
+Here are the methods returned by `createAuth`, which you can use in your application's server-side logic:
+
+### `getUser`
+
+> **Type**: `(id: string) => Promise<User | null>`
+
+Retrieves a user by their unique ID.
+
+### `getUserByEmail`
+
+> **Type**: `(email: string) => Promise<User | null>`
+
+Finds a user by their email address.
+
+### `getUserByAccount`
+
+> **Type**: `(provider: string, providerAccountId: string) => Promise<User | null>`
+
+Fetches a user based on their linked OAuth account.
+
+### `createUser`
+
+> **Type**: `(data: NewUser) => Promise<User>`
+
+Creates a new user in the database.
+
+### `linkAccount`
+
+> **Type**: `(data: NewAccount) => Promise<void>`
+
+Links an OAuth account to an existing user.
+
+### `updateUser`
+
+> **Type**: `(data: Partial<User> & { id: string }) => Promise<User>`
+
+Updates a user's information.
+
+### `deleteUser`
+
+> **Type**: `(id: string) => Promise<void>`
+
+Deletes a user from the database.

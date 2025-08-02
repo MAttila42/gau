@@ -59,7 +59,7 @@ export default defineConfig({
           label: 'Guides',
           items: [
             { icon: 'i-ph:rocket-launch-duotone', label: 'Getting Started', slug: 'guides/getting-started' },
-            { icon: 'i-ph:gear-duotone', label: 'Configuration', slug: 'guides/configuration' },
+            { icon: 'i-ph:lego-duotone', label: 'Configuration', slug: 'guides/configuration' },
             { icon: 'i-ph:cookie-duotone', label: 'Session Management', slug: 'guides/session-management' },
             { icon: 'i-ph:plugs-connected-duotone', label: 'Account Linking', slug: 'guides/account-linking' },
             { icon: 'i-ph:key-duotone', label: 'JWT', slug: 'guides/jwt' },
@@ -67,12 +67,11 @@ export default defineConfig({
           ],
         },
         {
-          label: 'Integrations',
+          label: 'Framework Integrations',
           items: [
             { icon: 'i-ph:puzzle-piece-duotone', label: 'Integrations', slug: 'integrations' },
             { icon: 'i-material-icon-theme:svelte', label: 'SvelteKit', slug: 'integrations/sveltekit' },
             { icon: 'i-devicon:solidjs', label: 'SolidStart', slug: 'integrations/solidstart', badge: { text: 'Soon', variant: 'default' } },
-            { icon: 'i-material-icon-theme:tauri', label: 'Tauri', slug: 'integrations/tauri' },
           ],
         },
         {
@@ -80,6 +79,13 @@ export default defineConfig({
           items: [
             { icon: 'i-ph:database-duotone', label: 'Adapters', slug: 'adapters' },
             { icon: 'i-icons:drizzle', label: 'Drizzle', slug: 'adapters/drizzle' },
+          ],
+        },
+        {
+          label: 'Runtimes',
+          items: [
+            { icon: 'i-ph:cpu-duotone', label: 'Runtimes', slug: 'runtimes' },
+            { icon: 'i-material-icon-theme:tauri', label: 'Tauri', slug: 'runtimes/tauri' },
           ],
         },
         {
