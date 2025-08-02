@@ -57,25 +57,43 @@ This guide shows how to integrate `gau` with SvelteKit, using Drizzle (SQLite) a
 
 4. ##### Set up the Client
 
-    For the client, we create an auth store.
+    To use `gau` on the client-side, you'll need to wrap your application in an `AuthProvider` and use the `useAuth` hook to access session data.
+
+    First, wrap your root layout in the `AuthProvider`. This makes the auth state available to all your components.
+
+    ```svelte title="src/routes/+layout.svelte"
+    <script lang="ts">
+      import { clientEnv } from '$lib/env/client'
+      import AuthProvider from '@rttnd/gau/client/svelte/AuthProvider.svelte'
+
+      const { children } = $props()
+    </script>
+
+    <AuthProvider baseUrl={clientEnv.PUBLIC_API_URL}>
+      {@render children()}
+    </AuthProvider>
+    ```
+
+    Next, to get full TypeScript support for your provider IDs, create a typed `useAuth` hook. This is a great practice as you only have to type it once.
+
+    ```ts title="src/lib/auth.ts"
+    import { useAuth as useGauAuth } from '@rttnd/gau/client/svelte'
+    import type { Auth as ServerAuth } from '$lib/server/auth'
+
+    export const useAuth = () => useGauAuth<ServerAuth>()
+    ```
 
     <Aside variant="note">
     Exporting and importing the `Auth` type is optional, but it gives better types for the `auth.signIn` method.
     By default, the `provider` param is `string`, but with the `Auth` type, it will be a union of string literals of the configured providers.
     </Aside>
 
-    ```ts title="src/lib/auth.svelte.ts"
-    import type { Auth } from '$lib/server/auth'
-    import { createSvelteAuth } from '@rttnd/gau/client/svelte'
+    Now you can use your custom `useAuth` hook in any component to access the session and authentication methods.
 
-    export const auth = createSvelteAuth<Auth>()
-    ```
-
-    Use it in your components:
-
-    ```svelte title="+page.svelte"
+    ```svelte title="src/routes/+page.svelte"
     <script>
-      import { auth } from '$lib/auth.svelte'
+      import { useAuth } from '$lib/auth'
+      const auth = useAuth()
     </script>
 
     {#if auth.session?.user}
@@ -94,14 +112,14 @@ This guide shows how to integrate `gau` with SvelteKit, using Drizzle (SQLite) a
         - auth
           - [...gau]
             - +server.ts
+      - +layout.svelte
       - +page.svelte
     - hooks.server.ts
     - lib
       - server
         - auth.ts
-      - auth.svelte.ts
+      - auth.ts
     - app.d.ts
-    - app.html
     - package.json
     - svelte.config.js
     </FileTree>

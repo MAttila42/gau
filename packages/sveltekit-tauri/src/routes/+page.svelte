@@ -1,10 +1,9 @@
 <script lang='ts'>
-  import type { Auth } from '$lib/server/auth'
-  import { useAuth } from '@rttnd/gau/client/svelte'
+  import { useAuth } from '$lib/auth'
   import '@unocss/reset/tailwind.css'
   import 'virtual:uno.css'
 
-  const auth = useAuth<Auth>()
+  const auth = useAuth()
 </script>
 
 <main class='text-emerald-100 font-mono p-6 bg-zinc-900 min-h-screen relative'>

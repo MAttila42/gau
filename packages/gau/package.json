@@ -102,7 +102,7 @@
     "@tauri-apps/api": "^2.6.0",
     "@tauri-apps/plugin-os": "^2.3.0",
     "@tauri-apps/plugin-shell": "^2.3.0",
-    "drizzle-orm": "^0.44.4",
+    "drizzle-orm": "^0.44.3",
     "solid-js": "^1.9.7",
     "svelte": "^5.36.10",
     "typescript": "^5.8.3"
@@ -141,7 +141,7 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^5.1.0",
-    "@libsql/client": "^0.15.10",
+    "@libsql/client": "^0.14.0",
     "@types/better-sqlite3": "^7.6.13",
     "@types/bun": "^1.2.19",
     "@types/node": "^24.1.0",
