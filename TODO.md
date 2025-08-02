@@ -1,5 +1,7 @@
 # TODO
 
+- [ ] how to test svelte 5 runes..........
+
 ## docs
 
 - [ ] !!! changed svelte client to provider, can we use both provider and createSvelteAuth?
