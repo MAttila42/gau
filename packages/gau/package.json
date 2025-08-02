@@ -102,10 +102,36 @@
     "@tauri-apps/api": "^2.6.0",
     "@tauri-apps/plugin-os": "^2.3.0",
     "@tauri-apps/plugin-shell": "^2.3.0",
-    "drizzle-orm": "^0.44.3",
+    "drizzle-orm": "^0.44.4",
     "solid-js": "^1.9.7",
     "svelte": "^5.36.10",
     "typescript": "^5.8.3"
+  },
+  "peerDependenciesMeta": {
+    "@sveltejs/kit": {
+      "optional": true
+    },
+    "@tauri-apps/api": {
+      "optional": true
+    },
+    "@tauri-apps/plugin-os": {
+      "optional": true
+    },
+    "@tauri-apps/plugin-shell": {
+      "optional": true
+    },
+    "drizzle-orm": {
+      "optional": true
+    },
+    "solid-js": {
+      "optional": true
+    },
+    "svelte": {
+      "optional": true
+    },
+    "typescript": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@oslojs/jwt": "^0.3.0",
@@ -114,13 +140,17 @@
     "esm-env": "^1.2.2"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^4.17.0",
+    "@antfu/eslint-config": "^5.1.0",
+    "@libsql/client": "^0.15.10",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/bun": "^1.2.19",
-    "@types/node": "^24.0.15",
+    "@types/node": "^24.1.0",
     "@vitest/coverage-v8": "^3.2.4",
     "@vitest/ui": "^3.2.4",
-    "bumpp": "^10.2.0",
-    "eslint": "^9.31.0",
+    "better-sqlite3": "^12.2.0",
+    "bumpp": "^10.2.2",
+    "drizzle-kit": "^0.31.4",
+    "eslint": "^9.32.0",
     "vitest": "^3.2.4"
   }
 }

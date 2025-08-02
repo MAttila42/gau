@@ -62,5 +62,15 @@ export function MemoryAdapter(): Adapter {
         usersByEmail.set(updated.email, updated.id)
       return updated
     },
+    async deleteUser(id) {
+      const user = users.get(id)
+      if (user?.email)
+        usersByEmail.delete(user.email)
+      users.delete(id)
+      for (const [key, userId] of accounts.entries()) {
+        if (userId === id)
+          accounts.delete(key)
+      }
+    },
   }
 }

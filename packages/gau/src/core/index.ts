@@ -67,6 +67,7 @@ export interface Adapter {
   createUser: (data: NewUser) => Promise<User>
   linkAccount: (data: NewAccount) => Promise<void>
   updateUser: (data: Partial<User> & { id: string }) => Promise<User>
+  deleteUser: (id: string) => Promise<void>
 }
 
 export class AuthError extends Error {

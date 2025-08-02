@@ -16,30 +16,30 @@
     "tauri": "tauri"
   },
   "dependencies": {
-    "@libsql/client": "^0.14.0",
+    "@libsql/client": "^0.15.10",
     "@rttnd/gau": "workspace:*",
-    "@tauri-apps/plugin-deep-link": "^2.4.0",
+    "@tauri-apps/plugin-deep-link": "^2.4.1",
     "@tauri-apps/plugin-os": "2",
     "@tauri-apps/plugin-shell": "2",
-    "drizzle-orm": "^0.44.2",
+    "drizzle-orm": "^0.44.4",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@iconify-json/mdi": "^1.2.3",
     "@iconify-json/ph": "^1.2.2",
-    "@sveltejs/adapter-cloudflare": "^7.0.5",
+    "@sveltejs/adapter-cloudflare": "^7.1.2",
     "@sveltejs/adapter-static": "^3.0.8",
-    "@sveltejs/kit": "^2.22.5",
-    "@sveltejs/vite-plugin-svelte": "^6.0.0",
-    "@tauri-apps/cli": "^2.6.2",
-    "@types/node": "^20.19.7",
+    "@sveltejs/kit": "^2.27.0",
+    "@sveltejs/vite-plugin-svelte": "^6.1.0",
+    "@tauri-apps/cli": "^2.7.1",
+    "@types/node": "^24.1.0",
     "@unocss/preset-icons": "^66.3.3",
-    "drizzle-kit": "^0.30.6",
-    "svelte": "^5.35.6",
-    "svelte-check": "^4.2.2",
-    "typescript": "^5.8.3",
+    "drizzle-kit": "^0.31.4",
+    "svelte": "^5.37.2",
+    "svelte-check": "^4.3.0",
+    "typescript": "^5.9.2",
     "unocss": "^66.3.3",
-    "vite": "^7.0.4",
-    "zod": "^4.0.5"
+    "vite": "^7.0.6",
+    "zod": "^4.0.14"
   }
 }

@@ -3,6 +3,8 @@ import type { BaseSQLiteDatabase } from 'drizzle-orm/sqlite-core'
 import type { Adapter, NewAccount, NewUser, User } from '../../core/index'
 import { and, eq } from 'drizzle-orm'
 
+import { transaction } from './transaction'
+
 export type UsersTable = Table & {
   id: AnyColumn
   name: AnyColumn
@@ -75,7 +77,7 @@ export function SQLiteDrizzleAdapter<
 
     async createUser(data: NewUser) {
       const id = data.id ?? crypto.randomUUID()
-      return await db.transaction(async (tx) => {
+      return await transaction(db, async (tx) => {
         await tx
           .insert(users)
           .values({
@@ -105,20 +107,26 @@ export function SQLiteDrizzleAdapter<
     },
 
     async updateUser(partial) {
-      await db
-        .update(users)
-        .set({
-          name: partial.name ?? undefined,
-          email: partial.email ?? undefined,
-          image: partial.image ?? undefined,
-          emailVerified: partial.emailVerified ?? undefined,
-          updatedAt: new Date(),
-        } as Partial<DBInsertUser>)
-        .where(eq(users.id, partial.id))
-        .run()
+      return await transaction(db, async (tx) => {
+        await tx
+          .update(users)
+          .set({
+            name: partial.name,
+            email: partial.email,
+            image: partial.image,
+            emailVerified: partial.emailVerified,
+            updatedAt: new Date(),
+          } as Partial<DBInsertUser>)
+          .where(eq(users.id, partial.id))
+          .run()
 
-      const result: DBUser | undefined = await db.select().from(users).where(eq(users.id, partial.id)).get()
-      return toUser(result) as User
+        const result: DBUser | undefined = await tx.select().from(users).where(eq(users.id, partial.id)).get()
+        return toUser(result) as User
+      })
+    },
+
+    async deleteUser(id) {
+      await db.delete(users).where(eq(users.id, id)).run()
     },
   }
 }
