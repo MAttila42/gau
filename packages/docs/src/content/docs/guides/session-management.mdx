@@ -30,21 +30,29 @@ The session cookie is named `__gau-session-token` by default and its attributes 
 
 For environments where cookies are not ideal or feasible - like desktop apps, mobile apps, or SPAs that are decoupled from their backend - `gau` uses a token-based flow.
 
-### SPAs
+### How It Works
 
-TODO
-
-### Tauri
-
-This flow relies on deep linking (custom URL schemes) to securely transfer the session token from the OAuth provider back to the app.
+This flow relies on a URL hash to transfer the session token from the OAuth provider back to the app. For Tauri, it uses deep linking (custom URL schemes).
 
 <Steps>
-1.  **Sign-In**: The client-side `signIn` function (e.g., from `@rttnd/gau/client/svelte`) opens the system's web browser to the OAuth provider's authorization URL. A `redirectTo` parameter is included, pointing to a custom URL scheme (e.g., `gau://oauth/callback`).
-2.  **Callback & Redirect**: After the user approves, the provider redirects to a special page hosted by your backend. This page receives the token, then immediately performs an HTML redirect to the custom URL scheme, embedding the session token as a query parameter (e.g., `gau://oauth/callback?token=...`).
-3.  **Deep Link Handling**: The operating system captures this custom URL and re-opens your Tauri app. The app's deep link handler receives the URL, extracts the session token, and stores it in `localStorage`.
-4.  **Authenticated Requests**: The client is now responsible for including this token in the `Authorization` header for all subsequent API requests.
+1.  **Sign-In**: The client-side `signIn` function (e.g., from `@rttnd/gau/client/svelte`) opens the system's web browser to the OAuth provider's authorization URL. A `redirectTo` parameter is included, pointing to a custom URL scheme (e.g., `my-app://oauth/callback`).
+2.  **Callback & Redirect**: After the user approves, the provider redirects to a special page hosted by your backend. This page receives the token, then immediately performs an HTML redirect to the custom URL scheme, embedding the session token in the URL's hash (e.g., `my-app://oauth/callback#token=...`).
+3.  **Deep Link Handling**: The operating system captures this custom URL and re-opens your native app. The app's deep link handler receives the URL, extracts the session token.
+4.  **Token Storage**: The client library then stores the token in two places:
+    -   **`localStorage`**: For the client to attach it to subsequent API requests in the `Authorization: Bearer <token>` header.
+    -   **A non-`HttpOnly` cookie**: This allows server-side rendering logic (e.g., in a SvelteKit `handle` hook) to access the session on the initial page load, preventing a "logged-out" flash.
+5.  **Authenticated Requests**: The client is now responsible for including this token in the `Authorization` header for all subsequent API requests.
 </Steps>
 
 This is entirely managed by `gau`. The client libraries automatically handle storing the token and including it in requests, while the backend is designed to render the necessary redirect page.
 
-See the [Tauri integration guide](/integrations/tauri).
+See the [Tauri integration guide](/integrations/tauri) for a practical example.
+
+## Session Strategy
+
+You can control this behavior using the `session.strategy` option in `createAuth`.
+
+-   `'auto'` (Default): `gau` automatically switches between cookie-based and token-based sessions. It uses cookies by default but will switch to the token flow if it detects a redirect to a different host or a custom URL scheme.
+-   `'cookie'`: Forces cookie-based sessions, even for cross-origin redirects (as long as the host is trusted).
+-   `'token'`: Forces token-based sessions, even for same-origin redirects.
+

@@ -5,7 +5,7 @@ export function storeSessionToken(token: string) {
     return
   try {
     localStorage.setItem('gau-token', token)
-    document.cookie = `__gau-session-token=${token}; path=/; max-age=31536000; samesite=lax`
+    document.cookie = `__gau-session-token=${token}; path=/; max-age=31536000; samesite=lax; secure`
   }
   catch {}
 }

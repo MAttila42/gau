@@ -467,4 +467,47 @@ describe('createHandler', () => {
       expect(data.message).toBe('Signed out')
     })
   })
+
+  describe('session strategy', () => {
+    it('should force token strategy for same-origin when strategy is "token"', async () => {
+      auth = createAuth({
+        adapter: MemoryAdapter(),
+        providers: [mockProvider],
+        jwt: { secret: 'test-secret', algorithm: 'HS256', ttl: 3600 },
+        session: { strategy: 'token' },
+      })
+      handler = createHandler(auth)
+
+      const state = `state123.${btoa('/dashboard')}`
+      const request = new Request(`http://localhost/api/auth/mock/callback?code=c&state=${state}`)
+      request.headers.set('Cookie', `${CSRF_COOKIE_NAME}=state123; ${PKCE_COOKIE_NAME}=pkce`)
+
+      const response = await handler(request)
+      expect(response.status).toBe(200)
+      expect(response.headers.get('Content-Type')).toContain('text/html')
+      const html = await response.text()
+      expect(html).toContain('const url = "http://localhost/dashboard#token=')
+    })
+
+    it('should force cookie strategy for cross-origin when strategy is "cookie"', async () => {
+      auth = createAuth({
+        adapter: MemoryAdapter(),
+        providers: [mockProvider],
+        jwt: { secret: 'test-secret', algorithm: 'HS256', ttl: 3600 },
+        session: { strategy: 'cookie' },
+        trustHosts: ['trusted.app.com'],
+      })
+      handler = createHandler(auth)
+
+      const state = `state123.${btoa('https://trusted.app.com/callback')}`
+      const request = new Request(`http://localhost/api/auth/mock/callback?code=c&state=${state}`)
+      request.headers.set('Cookie', `${CSRF_COOKIE_NAME}=state123; ${PKCE_COOKIE_NAME}=pkce`)
+
+      const response = await handler(request)
+      expect(response.status).toBe(302)
+      expect(response.headers.get('Location')).toBe('https://trusted.app.com/callback')
+      const cookies = response.headers.getSetCookie()
+      expect(cookies.some(c => c.startsWith(SESSION_COOKIE_NAME))).toBe(true)
+    })
+  })
 })

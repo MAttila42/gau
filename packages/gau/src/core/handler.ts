@@ -224,6 +224,9 @@ async function handleCallback(request: RequestLike, auth: Auth, providerId: stri
   const requestUrl = new URL(request.url)
   const redirectUrl = new URL(redirectTo, request.url)
 
+  const forceToken = auth.sessionStrategy === 'token'
+  const forceCookie = auth.sessionStrategy === 'cookie'
+
   const isDesktopRedirect = redirectUrl.protocol === 'gau:'
   const isMobileRedirect = requestUrl.host !== redirectUrl.host
 
@@ -231,7 +234,7 @@ async function handleCallback(request: RequestLike, auth: Auth, providerId: stri
   // so we pass the token in the URL. Additionally, return a small HTML page
   // that immediately navigates to the deep-link and attempts to close the window,
   // so the external OAuth tab does not stay open.
-  if (isDesktopRedirect || isMobileRedirect) {
+  if (forceToken || (!forceCookie && (isDesktopRedirect || isMobileRedirect))) {
     const destination = new URL(redirectUrl)
     // Use hash instead of query param for security. The hash is not sent to the server.
     destination.hash = `token=${sessionToken}`

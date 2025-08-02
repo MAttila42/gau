@@ -52,6 +52,7 @@ export class Cookies {
 
 export const CSRF_COOKIE_NAME = '__gau-csrf-token'
 export const SESSION_COOKIE_NAME = '__gau-session-token'
+export const SESSION_STRATEGY_COOKIE_NAME = '__gau-session-strategy'
 export const PKCE_COOKIE_NAME = '__gau-pkce-code-verifier'
 export const CALLBACK_URI_COOKIE_NAME = '__gau-callback-uri'
 

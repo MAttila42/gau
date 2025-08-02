@@ -16,6 +16,11 @@ export interface CreateAuthOptions<TProviders extends OAuthProvider[]> {
   providers: TProviders
   /** Base path for authentication routes (defaults to '/api/auth'). */
   basePath?: string
+  /** Session management options */
+  session?: {
+    /** Strategy to use for sessions: 'auto' (default), 'cookie', or 'token'. */
+    strategy?: 'auto' | 'cookie' | 'token'
+  }
   /** Configuration for JWT signing and verification. */
   jwt?: {
     /** Signing algorithm: 'ES256' (default) or 'HS256'. */
@@ -53,6 +58,7 @@ export type Auth<TProviders extends OAuthProvider[] = any> = Adapter & {
   } | null>
   trustHosts: 'all' | string[]
   autoLink: 'verifiedEmail' | 'always' | false
+  sessionStrategy: 'auto' | 'cookie' | 'token'
 }
 
 export function createAuth<const TProviders extends OAuthProvider[]>({
@@ -60,12 +66,15 @@ export function createAuth<const TProviders extends OAuthProvider[]>({
   providers,
   basePath = '/api/auth',
   jwt: jwtConfig = {},
+  session: sessionConfig = {},
   cookies: cookieConfig = {},
   trustHosts = [],
   autoLink = 'verifiedEmail',
 }: CreateAuthOptions<TProviders>): Auth<TProviders> {
   const { algorithm = 'ES256', secret, iss, aud, ttl: defaultTTL = 3600 * 24 } = jwtConfig
   const cookieOptions = { ...DEFAULT_COOKIE_SERIALIZE_OPTIONS, ...cookieConfig }
+
+  const sessionStrategy: 'auto' | 'cookie' | 'token' = sessionConfig.strategy ?? 'auto'
 
   if (algorithm === 'ES256' && secret !== undefined && typeof secret !== 'string')
     throw new AuthError('For ES256, the secret option must be a string.')
@@ -141,5 +150,6 @@ export function createAuth<const TProviders extends OAuthProvider[]>({
     validateSession,
     trustHosts,
     autoLink,
+    sessionStrategy,
   }
 }

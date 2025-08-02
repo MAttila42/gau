@@ -36,7 +36,7 @@ describe('token helpers', () => {
     it('storeSessionToken should set localStorage and cookie', () => {
       tokenHelpers.storeSessionToken('my-secret-token')
       expect(localStorageMock.getItem('gau-token')).toBe('my-secret-token')
-      expect(document.cookie).toBe('__gau-session-token=my-secret-token; path=/; max-age=31536000; samesite=lax')
+      expect(document.cookie).toBe('__gau-session-token=my-secret-token; path=/; max-age=31536000; samesite=lax; secure')
     })
 
     it('getSessionToken should retrieve from localStorage', () => {

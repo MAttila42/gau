@@ -77,6 +77,24 @@ The resulting URL is `{baseURL}/{basePath}/{provider}`.
 
 If your frontend and backend are on different hosts, look for the `baseURL` config in the framework specific guides.
 
+## session
+
+> **Type**: `object`,
+> **Default**: `{}`
+
+This object allows you to configure session management.
+
+### session.strategy
+
+> **Type**: `'auto' | 'cookie' | 'token'`,
+> **Default**: `'auto'`
+
+Determines how sessions are handled. See the [Session Management](/guides/session-management#session-strategy) guide for a detailed explanation of the different strategies.
+
+- **`'auto'` (Default)**: Automatically switches between `cookie` and `token` strategies based on the redirect URL.
+- **`'cookie'`**: Always use cookies.
+- **`'token'`**: Always use tokens passed in the URL.
+
 ## jwt
 
 > **Type**: `object`,
