@@ -67,6 +67,9 @@ export function createAuth<const TProviders extends OAuthProvider[]>({
   const { algorithm = 'ES256', secret, iss, aud, ttl: defaultTTL = 3600 * 24 } = jwtConfig
   const cookieOptions = { ...DEFAULT_COOKIE_SERIALIZE_OPTIONS, ...cookieConfig }
 
+  if (algorithm === 'ES256' && secret !== undefined && typeof secret !== 'string')
+    throw new AuthError('For ES256, the secret option must be a string.')
+
   const providerMap = new Map(providers.map(p => [p.id, p]))
 
   function buildSignOptions(custom: Partial<SignOptions> = {}): SignOptions {
@@ -75,9 +78,9 @@ export function createAuth<const TProviders extends OAuthProvider[]>({
       return { algorithm, secret: custom.secret ?? secret, ...base }
     }
     else {
-      const esSecret = custom.secret ?? secret
-      if (esSecret !== undefined && typeof esSecret !== 'string')
+      if (custom.secret !== undefined && typeof custom.secret !== 'string')
         throw new AuthError('For ES256, the secret option must be a string.')
+      const esSecret = custom.secret ?? secret
       return { algorithm, privateKey: custom.privateKey, secret: esSecret, ...base }
     }
   }
@@ -88,9 +91,9 @@ export function createAuth<const TProviders extends OAuthProvider[]>({
       return { algorithm, secret: custom.secret ?? secret, ...base }
     }
     else {
-      const esSecret = custom.secret ?? secret
-      if (esSecret !== undefined && typeof esSecret !== 'string')
+      if (custom.secret !== undefined && typeof custom.secret !== 'string')
         throw new AuthError('For ES256, the secret option must be a string.')
+      const esSecret = custom.secret ?? secret
       return { algorithm, publicKey: custom.publicKey, secret: esSecret, ...base }
     }
   }
@@ -100,8 +103,9 @@ export function createAuth<const TProviders extends OAuthProvider[]>({
   }
 
   async function verifyJWT<U = Record<string, unknown>>(token: string, customOptions: Partial<VerifyOptions> = {}): Promise<U | null> {
+    const options = buildVerifyOptions(customOptions)
     try {
-      return await verify<U>(token, buildVerifyOptions(customOptions))
+      return await verify<U>(token, options)
     }
     catch {
       return null

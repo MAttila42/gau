@@ -24,6 +24,8 @@ async function handleSignIn(request: RequestLike, auth: Auth, providerId: string
   if (redirectTo) {
     let parsedRedirect: URL
     try {
+      if (redirectTo.startsWith('//'))
+        throw new Error('Protocol-relative URL not allowed')
       parsedRedirect = new URL(redirectTo, url.origin)
     }
     catch {
@@ -45,9 +47,19 @@ async function handleSignIn(request: RequestLike, auth: Auth, providerId: string
   if (!callbackUri && provider.requiresRedirectUri)
     callbackUri = `${url.origin}${auth.basePath}/${providerId}/callback`
 
-  const authUrl = await provider.getAuthorizationUrl(state, codeVerifier, {
-    redirectUri: callbackUri ?? undefined,
-  })
+  let authUrl: URL | null
+  try {
+    authUrl = await provider.getAuthorizationUrl(state, codeVerifier, {
+      redirectUri: callbackUri ?? undefined,
+    })
+  }
+  catch (error) {
+    console.error('Error getting authorization URL:', error)
+    authUrl = null
+  }
+
+  if (!authUrl)
+    return json({ error: 'Could not create authorization URL' }, { status: 500 })
 
   const requestCookies = parseCookies(request.headers.get('Cookie'))
   const cookies = new Cookies(requestCookies, auth.cookieOptions)
@@ -353,7 +365,7 @@ async function handleSignOut(request: RequestLike, auth: Auth): Promise<Response
 }
 
 export function createHandler(auth: Auth): (request: RequestLike) => Promise<ResponseLike> {
-  const { providerMap, basePath } = auth
+  const { basePath } = auth
 
   function applyCors(request: RequestLike, response: Response): Response {
     const origin = request.headers.get('Origin') || request.headers.get('origin')
@@ -400,20 +412,17 @@ export function createHandler(auth: Auth): (request: RequestLike) => Promise<Res
     let response: ResponseLike
 
     if (request.method === 'GET') {
-      if (providerMap.has(action)) {
-        if (parts.length === 2 && parts[1] === 'callback')
-          response = await handleCallback(request, auth, action)
-        else if (parts.length === 1)
-          response = await handleSignIn(request, auth, action)
-        else
-          response = json({ error: 'Not Found' }, { status: 404 })
-      }
-      else if (parts.length === 1 && action === 'session') {
+      if (action === 'session')
         response = await handleSession(request, auth)
-      }
-      else {
+
+      else if (parts.length === 2 && parts[1] === 'callback')
+        response = await handleCallback(request, auth, action)
+
+      else if (parts.length === 1)
+        response = await handleSignIn(request, auth, action)
+
+      else
         response = json({ error: 'Not Found' }, { status: 404 })
-      }
     }
     else if (request.method === 'POST') {
       if (parts.length === 1 && action === 'signout')

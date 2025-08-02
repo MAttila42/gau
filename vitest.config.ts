@@ -15,7 +15,12 @@ export default defineConfig({
       include: [
         'packages/gau/**/*.ts',
       ],
-      exclude: ['**/dist/**', '**/build/**', '**/migrations/**'],
+      exclude: [
+        '**/dist/**',
+        '**/build/**',
+        '**/migrations/**',
+        '**/*.config.ts',
+      ],
     },
     typecheck: {
       tsconfig: './tsconfig.json',

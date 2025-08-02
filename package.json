@@ -8,7 +8,8 @@
     "build": "bun --bun --cwd packages/gau tsup",
     "dev": "bun --bun --cwd packages/gau tsup --watch",
     "lint": "eslint . --fix",
-    "test": "vitest",
+    "lint:test": "eslint coverage.json --fix",
+    "test": "vitest && bun run lint:test",
     "test:ui": "vitest --ui",
     "release": "bumpp packages/gau/package.json packages/gau/jsr.json && bun run build && npm publish --workspace @rttnd/gau --access public"
   },

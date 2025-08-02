@@ -17,6 +17,8 @@ export interface ResponseLike {
   readonly status: number
   readonly headers: Headers
   readonly body?: BodyInit | null
+  json: <T = unknown>() => Promise<T>
+  text: () => Promise<string>
 }
 
 export interface User {
