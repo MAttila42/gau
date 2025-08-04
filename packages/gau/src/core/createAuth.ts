@@ -1,13 +1,13 @@
 import type { SerializeOptions } from 'cookie'
 import type { SignOptions, VerifyOptions } from '../jwt'
 import type { OAuthProvider } from '../oauth'
-import type { Adapter, Session, User } from './index'
+import type { Adapter, GauSession } from './index'
 import { sign, verify } from '../jwt'
 import { DEFAULT_COOKIE_SERIALIZE_OPTIONS } from './cookies'
 import { AuthError } from './index'
 
 type ProviderId<P> = P extends OAuthProvider<infer T> ? T : never
-export type ProviderIds<T> = T extends { providerMap: Map<infer K, any> } ? K : string
+export type ProviderIds<T> = T extends { providerMap: Map<infer K extends string, any> } ? K : string
 
 export interface CreateAuthOptions<TProviders extends OAuthProvider[]> {
   /** The database adapter to use for storing users and accounts. */
@@ -52,13 +52,11 @@ export type Auth<TProviders extends OAuthProvider[] = any> = Adapter & {
   signJWT: <U extends Record<string, unknown>>(payload: U, customOptions?: Partial<SignOptions>) => Promise<string>
   verifyJWT: <U = Record<string, unknown>>(token: string, customOptions?: Partial<VerifyOptions>) => Promise<U | null>
   createSession: (userId: string, data?: Record<string, unknown>, ttl?: number) => Promise<string>
-  validateSession: (token: string) => Promise<{
-    user: User
-    session: Session
-  } | null>
+  validateSession: (token: string) => Promise<GauSession | null>
   trustHosts: 'all' | string[]
   autoLink: 'verifiedEmail' | 'always' | false
   sessionStrategy: 'auto' | 'cookie' | 'token'
+  development: boolean
 }
 
 export function createAuth<const TProviders extends OAuthProvider[]>({
@@ -126,14 +124,17 @@ export function createAuth<const TProviders extends OAuthProvider[]>({
     return signJWT(payload, { ttl })
   }
 
-  async function validateSession(token: string): Promise<{ user: User, session: Session } | null> {
+  async function validateSession(token: string): Promise<GauSession | null> {
     const payload = await verifyJWT<{ sub: string } & Record<string, unknown>>(token)
     if (!payload)
       return null
-    const user = await adapter.getUser(payload.sub)
-    if (!user)
+
+    const userAndAccounts = await adapter.getUserAndAccounts(payload.sub)
+    if (!userAndAccounts)
       return null
-    return { user, session: { id: token, ...payload } }
+
+    const { user, accounts } = userAndAccounts
+    return { user, session: { id: token, ...payload }, accounts }
   }
 
   return {
@@ -151,5 +152,6 @@ export function createAuth<const TProviders extends OAuthProvider[]>({
     trustHosts,
     autoLink,
     sessionStrategy,
+    development: false,
   }
 }

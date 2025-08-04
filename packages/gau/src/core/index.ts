@@ -35,12 +35,14 @@ export interface Session {
   [key: string]: unknown
 }
 
-export interface GauSession {
+export interface GauSession<TProviders extends string = string> {
   user: User | null
   session: Session | null
+  accounts?: Account[] | null
+  providers?: TProviders[]
 }
 
-export interface NewUser extends Omit<User, 'id'> {
+export interface NewUser extends Omit<User, 'id' | 'accounts'> {
   id?: string
 }
 
@@ -64,8 +66,11 @@ export interface Adapter {
   getUser: (id: string) => Promise<User | null>
   getUserByEmail: (email: string) => Promise<User | null>
   getUserByAccount: (provider: string, providerAccountId: string) => Promise<User | null>
+  getAccounts: (userId: string) => Promise<Account[]>
+  getUserAndAccounts: (userId: string) => Promise<{ user: User, accounts: Account[] } | null>
   createUser: (data: NewUser) => Promise<User>
   linkAccount: (data: NewAccount) => Promise<void>
+  unlinkAccount: (provider: string, providerAccountId: string) => Promise<void>
   updateUser: (data: Partial<User> & { id: string }) => Promise<User>
   deleteUser: (id: string) => Promise<void>
 }

@@ -1,5 +1,6 @@
 import { listen } from '@tauri-apps/api/event'
 import { BROWSER } from 'esm-env'
+import { getSessionToken } from '../../client/token'
 
 export const isTauri = BROWSER && '__TAURI_INTERNALS__' in window
 
@@ -15,15 +16,13 @@ export async function signInWithTauri(
   const { platform } = await import('@tauri-apps/plugin-os')
   const { open } = await import('@tauri-apps/plugin-shell')
 
-  const currentPlatform = platform()
+  const currentPlatform = platform() // platform is NO LONGER an async function
   let redirectTo: string
 
   if (redirectOverride)
     redirectTo = redirectOverride
-
   else if (currentPlatform === 'android' || currentPlatform === 'ios')
     redirectTo = new URL(baseUrl).origin
-
   else
     redirectTo = `${scheme}://oauth/callback`
 
@@ -49,4 +48,37 @@ export function handleTauriDeepLink(url: string, baseUrl: string, scheme: string
   const token = params.get('token')
   if (token)
     onToken(token)
+}
+
+export async function linkAccountWithTauri(
+  provider: string,
+  baseUrl: string,
+  scheme: string = 'gau',
+  redirectOverride?: string,
+) {
+  if (!isTauri)
+    return
+
+  const { platform } = await import('@tauri-apps/plugin-os')
+  const { open } = await import('@tauri-apps/plugin-shell')
+
+  const currentPlatform = platform()
+  let redirectTo: string
+
+  if (redirectOverride)
+    redirectTo = redirectOverride
+  else if (currentPlatform === 'android' || currentPlatform === 'ios')
+    redirectTo = new URL(baseUrl).origin
+  else
+    redirectTo = `${scheme}://oauth/callback`
+
+  const token = getSessionToken()
+  if (!token) {
+    console.error('No session token found, cannot link account.')
+    return
+  }
+
+  const query = `?redirectTo=${encodeURIComponent(redirectTo)}&token=${encodeURIComponent(token)}`
+  const linkUrl = `${baseUrl}/link/${provider}${query}`
+  await open(linkUrl)
 }

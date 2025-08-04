@@ -2,12 +2,14 @@ import type { Accessor, ParentProps } from 'solid-js'
 import type { GauSession, ProviderIds } from '../../core'
 import { createContext, createResource, onMount, useContext } from 'solid-js'
 import { isServer } from 'solid-js/web'
-import { handleTauriDeepLink, isTauri, setupTauriListener, signInWithTauri } from '../../runtimes/tauri'
+import { handleTauriDeepLink, isTauri, linkAccountWithTauri, setupTauriListener, signInWithTauri } from '../../runtimes/tauri'
 import { clearSessionToken, getSessionToken, storeSessionToken } from '../token'
 
 interface AuthContextValue<TAuth = unknown> {
-  session: Accessor<GauSession | null>
+  session: Accessor<GauSession<ProviderIds<TAuth>> | null>
   signIn: (provider: ProviderIds<TAuth>, options?: { redirectTo?: string }) => Promise<void>
+  linkAccount: (provider: ProviderIds<TAuth>, options?: { redirectTo?: string }) => Promise<void>
+  unlinkAccount: (provider: ProviderIds<TAuth>) => Promise<void>
   signOut: () => Promise<void>
 }
 
@@ -17,7 +19,7 @@ export function AuthProvider<const TAuth = unknown>(props: ParentProps & { auth?
   const scheme = props.scheme ?? 'gau'
   const baseUrl = props.baseUrl ?? '/api/auth'
 
-  const [session, { refetch }] = createResource<GauSession | null>(
+  const [session, { refetch }] = createResource<GauSession<ProviderIds<TAuth>> | null>(
     async () => {
       if (isServer)
         return null
@@ -25,14 +27,12 @@ export function AuthProvider<const TAuth = unknown>(props: ParentProps & { auth?
       const token = getSessionToken()
       const headers = token ? { Authorization: `Bearer ${token}` } : undefined
       const res = await fetch(`${baseUrl}/session`, token ? { headers } : { credentials: 'include' })
-      if (!res.ok)
-        return { user: null, session: null }
 
       const contentType = res.headers.get('content-type')
       if (contentType?.includes('application/json'))
         return res.json()
 
-      return { user: null, session: null }
+      return { user: null, session: null, accounts: null, providers: [] as ProviderIds<TAuth>[] }
     },
     { initialValue: null },
   )
@@ -50,6 +50,53 @@ export function AuthProvider<const TAuth = unknown>(props: ParentProps & { auth?
       const authUrl = `${baseUrl}/${provider as string}${query}`
       window.location.href = authUrl
     }
+  }
+
+  async function linkAccount(provider: ProviderIds<TAuth>, { redirectTo }: { redirectTo?: string } = {}) {
+    if (isTauri) {
+      await linkAccountWithTauri(provider as string, baseUrl, scheme, redirectTo)
+      return
+    }
+
+    let finalRedirectTo = redirectTo ?? props.redirectTo
+    if (!finalRedirectTo && !isServer)
+      finalRedirectTo = window.location.href
+
+    const query = finalRedirectTo ? `?redirectTo=${encodeURIComponent(finalRedirectTo)}` : ''
+    const linkUrl = `${baseUrl}/link/${provider as string}${query}${query ? '&' : '?'}redirect=false`
+
+    const token = getSessionToken()
+
+    const fetchOptions: RequestInit = token
+      ? { headers: { Authorization: `Bearer ${token}` } }
+      : { credentials: 'include' }
+
+    const res = await fetch(linkUrl, fetchOptions)
+    if (res.redirected) {
+      window.location.href = res.url
+    }
+    else {
+      const data = await res.json()
+      if (data.url)
+        window.location.href = data.url
+    }
+  }
+
+  async function unlinkAccount(provider: ProviderIds<TAuth>) {
+    const token = getSessionToken()
+    const fetchOptions: RequestInit = token
+      ? { headers: { Authorization: `Bearer ${token}` } }
+      : { credentials: 'include' }
+
+    const res = await fetch(`${baseUrl}/unlink/${provider as string}`, {
+      method: 'POST',
+      ...fetchOptions,
+    })
+
+    if (res.ok)
+      refetch()
+    else
+      console.error('Failed to unlink account', await res.json())
   }
 
   const signOut = async () => {
@@ -84,7 +131,7 @@ export function AuthProvider<const TAuth = unknown>(props: ParentProps & { auth?
   })
 
   return (
-    <AuthContext.Provider value={{ session, signIn, signOut }}>
+    <AuthContext.Provider value={{ session, signIn, linkAccount, unlinkAccount, signOut }}>
       {props.children}
     </AuthContext.Provider>
   )

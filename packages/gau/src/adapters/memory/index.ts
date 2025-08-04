@@ -1,4 +1,4 @@
-import type { Adapter, NewAccount, NewUser, User } from '../../core/index'
+import type { Account, Adapter, NewAccount, NewUser, User } from '../../core/index'
 
 interface InternalAccountKey {
   provider: string
@@ -33,6 +33,25 @@ export function MemoryAdapter(): Adapter {
       return users.get(id) ?? null
     },
 
+    async getAccounts(userId) {
+      const userAccounts: Account[] = []
+      for (const [key, accUserId] of accounts.entries()) {
+        if (accUserId === userId) {
+          const [provider, providerAccountId] = key.split(':') as [string, string]
+          userAccounts.push({ userId, provider, providerAccountId })
+        }
+      }
+      return userAccounts
+    },
+
+    async getUserAndAccounts(userId) {
+      const user = await this.getUser(userId)
+      if (!user)
+        return null
+      const accounts = await this.getAccounts(userId)
+      return { user, accounts }
+    },
+
     async createUser(data: NewUser) {
       const id = data.id ?? crypto.randomUUID()
       const user: User = {
@@ -50,6 +69,10 @@ export function MemoryAdapter(): Adapter {
 
     async linkAccount(data: NewAccount) {
       accounts.set(accountKey(data), data.userId)
+    },
+
+    async unlinkAccount(provider, providerAccountId) {
+      accounts.delete(accountKey({ provider, providerAccountId }))
     },
 
     async updateUser(partial) {

@@ -1,9 +1,27 @@
 <script lang='ts'>
+  import type { Provider } from '$lib/auth'
   import { useAuth } from '$lib/auth'
   import '@unocss/reset/tailwind.css'
   import 'virtual:uno.css'
 
   const auth = useAuth()
+
+  const { linkedProviders, unlinkedProviders } = $derived.by(() => {
+    if (auth.session?.user) {
+      const linkedProviders = (auth.session.accounts?.map(a => a.provider) ?? []) as Provider[]
+      const all = auth.session.providers ?? []
+      const unlinkedProviders = all.filter(p => !linkedProviders.includes(p))
+
+      return {
+        linkedProviders,
+        unlinkedProviders,
+      }
+    }
+    return {
+      linkedProviders: [] as Provider[],
+      unlinkedProviders: auth.session?.providers ?? [],
+    }
+  })
 </script>
 
 <main class='text-emerald-100 font-mono p-6 bg-zinc-900 min-h-screen relative'>
@@ -22,6 +40,41 @@
         >
           /logout
         </button>
+      </div>
+      <div class='space-y-4'>
+        <div>
+          <h3 class='text-lg tracking-wider mb-2'>Linked Accounts</h3>
+          <div class='flex gap-4'>
+            {#each linkedProviders as provider}
+              <div class='px-4 py-2 border border-emerald-900/30 rounded bg-zinc-800 flex gap-2 items-center justify-center'>
+                <div class:i-ph:github-logo={provider === 'github'} class:i-ph:google-logo-bold={provider === 'google'} class:i-mdi:microsoft={provider === 'microsoft'} class='size-5'></div>
+                <p class='capitalize'>{provider}</p>
+                <button
+                  class='i-ph:x-bold transition-colors hover:text-red-500'
+                  aria-label='Unlink account'
+                  onclick={() => auth.unlinkAccount(provider)}
+                >
+                </button>
+              </div>
+            {/each}
+          </div>
+        </div>
+        {#if unlinkedProviders.length > 0}
+          <div>
+            <h3 class='text-lg tracking-wider mb-2'>Link More Accounts</h3>
+            <div class='flex gap-4'>
+              {#each unlinkedProviders as provider}
+                <button
+                  class='px-4 py-2 border border-emerald-900/30 rounded bg-zinc-800 flex gap-2 transition-all duration-200 items-center justify-center hover:border-emerald-800/50 hover:bg-zinc-700'
+                  onclick={() => auth.linkAccount(provider)}
+                >
+                  <div class:i-ph:github-logo={provider === 'github'} class:i-ph:google-logo-bold={provider === 'google'} class:i-mdi:microsoft={provider === 'microsoft'} class='size-5'></div>
+                  <p class='capitalize'>{provider}</p>
+                </button>
+              {/each}
+            </div>
+          </div>
+        {/if}
       </div>
     {:else}
       <div class='flex flex-col gap-4 items-center'>

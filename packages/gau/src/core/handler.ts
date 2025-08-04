@@ -1,18 +1,24 @@
 import type { Auth } from './createAuth'
-import type { RequestLike, ResponseLike } from './index'
+import type { RequestLike, ResponseLike, User } from './index'
 import { createOAuthUris } from '../oauth/utils'
 import {
   CALLBACK_URI_COOKIE_NAME,
   Cookies,
   CSRF_COOKIE_NAME,
   CSRF_MAX_AGE,
+  LINKING_TOKEN_COOKIE_NAME,
   parseCookies,
   PKCE_COOKIE_NAME,
   SESSION_COOKIE_NAME,
 } from './cookies'
 import { json, redirect } from './index'
 
-async function handleSignIn(request: RequestLike, auth: Auth, providerId: string): Promise<ResponseLike> {
+async function _prepareOAuthRedirect(
+  request: RequestLike,
+  auth: Auth,
+  providerId: string,
+  linkingToken: string | null,
+): Promise<ResponseLike> {
   const provider = auth.providerMap.get(providerId)
   if (!provider)
     return json({ error: 'Provider not found' }, { status: 400 })
@@ -37,8 +43,9 @@ async function handleSignIn(request: RequestLike, auth: Auth, providerId: string
 
     const isSameHost = redirectHost === currentHost
     const isTrusted = auth.trustHosts === 'all' || auth.trustHosts.includes(redirectHost)
+    const isHttp = parsedRedirect.protocol === 'http:' || parsedRedirect.protocol === 'https:'
 
-    if (!isSameHost && !isTrusted)
+    if (isHttp && !isSameHost && !isTrusted)
       return json({ error: 'Untrusted redirect host' }, { status: 400 })
   }
 
@@ -64,10 +71,19 @@ async function handleSignIn(request: RequestLike, auth: Auth, providerId: string
   const requestCookies = parseCookies(request.headers.get('Cookie'))
   const cookies = new Cookies(requestCookies, auth.cookieOptions)
 
-  cookies.set(CSRF_COOKIE_NAME, originalState, { maxAge: CSRF_MAX_AGE, sameSite: 'none' })
-  cookies.set(PKCE_COOKIE_NAME, codeVerifier, { maxAge: CSRF_MAX_AGE, sameSite: 'none' })
+  const temporaryCookieOptions = {
+    maxAge: CSRF_MAX_AGE,
+    sameSite: auth.development ? 'lax' : 'none',
+    secure: !auth.development,
+  } as const
+
+  cookies.set(CSRF_COOKIE_NAME, originalState, temporaryCookieOptions)
+  cookies.set(PKCE_COOKIE_NAME, codeVerifier, temporaryCookieOptions)
+  if (linkingToken)
+    cookies.set(LINKING_TOKEN_COOKIE_NAME, linkingToken, temporaryCookieOptions)
+
   if (callbackUri)
-    cookies.set(CALLBACK_URI_COOKIE_NAME, callbackUri, { maxAge: CSRF_MAX_AGE, sameSite: 'none' })
+    cookies.set(CALLBACK_URI_COOKIE_NAME, callbackUri, temporaryCookieOptions)
 
   const redirectParam = url.searchParams.get('redirect')
 
@@ -85,6 +101,37 @@ async function handleSignIn(request: RequestLike, auth: Auth, providerId: string
   })
 
   return response
+}
+
+async function handleLink(request: RequestLike, auth: Auth, providerId: string): Promise<ResponseLike> {
+  const url = new URL(request.url)
+  const requestCookies = parseCookies(request.headers.get('Cookie'))
+  let sessionToken = requestCookies.get(SESSION_COOKIE_NAME)
+
+  if (!sessionToken) {
+    const authHeader = request.headers.get('Authorization')
+    if (authHeader?.startsWith('Bearer '))
+      sessionToken = authHeader.substring(7)
+  }
+
+  if (!sessionToken)
+    sessionToken = url.searchParams.get('token') ?? undefined
+
+  if (!sessionToken)
+    return json({ error: 'Unauthorized' }, { status: 401 })
+
+  const session = await auth.validateSession(sessionToken)
+  if (!session)
+    return json({ error: 'Unauthorized' }, { status: 401 })
+
+  url.searchParams.delete('token')
+  const cleanRequest = new Request(url.toString(), request as Request)
+
+  return _prepareOAuthRedirect(cleanRequest, auth, providerId, sessionToken)
+}
+
+async function handleSignIn(request: RequestLike, auth: Auth, providerId: string): Promise<ResponseLike> {
+  return _prepareOAuthRedirect(request, auth, providerId, null)
 }
 
 async function handleCallback(request: RequestLike, auth: Auth, providerId: string): Promise<ResponseLike> {
@@ -128,12 +175,45 @@ async function handleCallback(request: RequestLike, auth: Auth, providerId: stri
     return json({ error: 'Missing PKCE code verifier' }, { status: 400 })
 
   const callbackUri = cookies.get(CALLBACK_URI_COOKIE_NAME)
+  const linkingToken = cookies.get(LINKING_TOKEN_COOKIE_NAME)
+
+  if (linkingToken)
+    cookies.delete(LINKING_TOKEN_COOKIE_NAME)
+
+  const isLinking = !!linkingToken
+
+  if (isLinking) {
+    const session = await auth.validateSession(linkingToken!)
+    if (!session) {
+      cookies.delete(CSRF_COOKIE_NAME)
+      cookies.delete(PKCE_COOKIE_NAME)
+      if (callbackUri)
+        cookies.delete(CALLBACK_URI_COOKIE_NAME)
+      const response = redirect(redirectTo)
+      cookies.toHeaders().forEach((value, key) => response.headers.append(key, value))
+      return response
+    }
+  }
 
   const { user: providerUser, tokens } = await provider.validateCallback(code, codeVerifier, callbackUri ?? undefined)
 
+  let user: User | null = null
+
   const userFromAccount = await auth.getUserByAccount(providerId, providerUser.id)
 
-  let user = userFromAccount
+  if (isLinking) {
+    const session = await auth.validateSession(linkingToken!)
+    user = session!.user
+
+    if (!user)
+      return json({ error: 'User not found' }, { status: 404 })
+
+    if (userFromAccount && userFromAccount.id !== user.id)
+      return json({ error: 'Account already linked to another user' }, { status: 409 })
+  }
+  else {
+    user = userFromAccount
+  }
 
   if (!user) {
     const autoLink = auth.autoLink ?? 'verifiedEmail'
@@ -169,6 +249,40 @@ async function handleCallback(request: RequestLike, auth: Auth, providerId: stri
       catch (error) {
         console.error('Failed to create user:', error)
         return json({ error: 'Failed to create user' }, { status: 500 })
+      }
+    }
+  }
+
+  // self-healing: update user's email if it's missing or unverified and the provider returns a verified email
+  if (user && providerUser.email) {
+    const { email: currentEmail, emailVerified: currentEmailVerified } = user
+    const { email: providerEmail, emailVerified: providerEmailVerified } = providerUser
+
+    const update: Partial<User> & { id: string } = { id: user.id }
+    let needsUpdate = false
+
+    // user has no primary email. promote the provider's email.
+    if (!currentEmail) {
+      update.email = providerEmail
+      update.emailVerified = providerEmailVerified ?? false
+      needsUpdate = true
+    }
+    // user has an unverified primary email, and the provider confirms this same email is verified.
+    else if (
+      currentEmail === providerEmail
+      && providerEmailVerified === true
+      && !currentEmailVerified
+    ) {
+      update.emailVerified = true
+      needsUpdate = true
+    }
+
+    if (needsUpdate) {
+      try {
+        user = await auth.updateUser(update)
+      }
+      catch (error) {
+        console.error('Failed to update user after sign-in:', error)
       }
     }
   }
@@ -305,7 +419,11 @@ async function handleCallback(request: RequestLike, auth: Auth, providerId: stri
     return response
   }
 
-  cookies.set(SESSION_COOKIE_NAME, sessionToken, { maxAge: auth.jwt.ttl, sameSite: 'none', secure: true })
+  cookies.set(SESSION_COOKIE_NAME, sessionToken, {
+    maxAge: auth.jwt.ttl,
+    sameSite: auth.development ? 'lax' : 'none',
+    secure: !auth.development,
+  })
   cookies.delete(CSRF_COOKIE_NAME)
   cookies.delete(PKCE_COOKIE_NAME)
   if (callbackUri)
@@ -314,10 +432,13 @@ async function handleCallback(request: RequestLike, auth: Auth, providerId: stri
   const redirectParam = url.searchParams.get('redirect')
 
   let response: Response
-  if (redirectParam === 'false')
-    response = json({ user })
-  else
+  if (redirectParam === 'false') {
+    const accounts = await auth.getAccounts(user.id)
+    response = json({ user: { ...user, accounts } })
+  }
+  else {
     response = redirect(redirectTo)
+  }
 
   cookies.toHeaders().forEach((value, key) => {
     response.headers.append(key, value)
@@ -337,16 +458,18 @@ async function handleSession(request: RequestLike, auth: Auth): Promise<Response
       sessionToken = authHeader.substring(7)
   }
 
+  const providers = Array.from(auth.providerMap.keys())
+
   if (!sessionToken)
-    return json({ user: null, session: null })
+    return json({ user: null, session: null, accounts: null, providers })
 
   try {
     const sessionData = await auth.validateSession(sessionToken)
 
     if (!sessionData)
-      return json({ user: null, session: null }, { status: 401 })
+      return json({ user: null, session: null, accounts: null, providers }, { status: 401 })
 
-    return json(sessionData)
+    return json({ ...sessionData, providers })
   }
   catch (error) {
     console.error('Error validating session:', error)
@@ -354,10 +477,61 @@ async function handleSession(request: RequestLike, auth: Auth): Promise<Response
   }
 }
 
+async function handleUnlink(request: RequestLike, auth: Auth, providerId: string): Promise<ResponseLike> {
+  const requestCookies = parseCookies(request.headers.get('Cookie'))
+  let sessionToken = requestCookies.get(SESSION_COOKIE_NAME)
+
+  if (!sessionToken) {
+    const authHeader = request.headers.get('Authorization')
+    if (authHeader?.startsWith('Bearer '))
+      sessionToken = authHeader.substring(7)
+  }
+
+  if (!sessionToken)
+    return json({ error: 'Unauthorized' }, { status: 401 })
+
+  const session = await auth.validateSession(sessionToken)
+  if (!session || !session.user)
+    return json({ error: 'Unauthorized' }, { status: 401 })
+
+  const accounts = session.accounts ?? []
+
+  if (accounts.length <= 1)
+    return json({ error: 'Cannot unlink the last account' }, { status: 400 })
+
+  const accountToUnlink = accounts.find(a => a.provider === providerId)
+  if (!accountToUnlink)
+    return json({ error: `Provider "${providerId}" not linked to this account` }, { status: 400 })
+
+  await auth.unlinkAccount(providerId, accountToUnlink.providerAccountId)
+
+  const remainingAccounts = await auth.getAccounts(session.user.id)
+
+  // if there are remaining accounts, we need to potentially update the user's primary info
+  // TODO: for now we just clear the email
+  if (remainingAccounts.length > 0 && session.user.email) {
+    try {
+      await auth.updateUser({
+        id: session.user.id,
+        email: null,
+        emailVerified: false,
+      })
+    }
+    catch (error) {
+      console.error('Failed to clear stale email after unlinking:', error)
+    }
+  }
+
+  return json({ message: 'Account unlinked successfully' })
+}
+
 async function handleSignOut(request: RequestLike, auth: Auth): Promise<ResponseLike> {
   const requestCookies = parseCookies(request.headers.get('Cookie'))
   const cookies = new Cookies(requestCookies, auth.cookieOptions)
-  cookies.delete(SESSION_COOKIE_NAME, { sameSite: 'none', secure: true })
+  cookies.delete(SESSION_COOKIE_NAME, {
+    sameSite: auth.development ? 'lax' : 'none',
+    secure: !auth.development,
+  })
 
   const response = json({ message: 'Signed out' })
   cookies.toHeaders().forEach((value, key) => {
@@ -402,8 +576,14 @@ export function createHandler(auth: Auth): (request: RequestLike) => Promise<Res
     if (!url.pathname.startsWith(basePath))
       return applyCors(request, json({ error: 'Not Found' }, { status: 404 }))
 
-    if (request.method === 'POST' && !verifyRequestOrigin(request, auth.trustHosts))
+    if (request.method === 'POST' && !verifyRequestOrigin(request, auth.trustHosts, auth.development)) {
+      if (auth.development) {
+        const origin = request.headers.get('origin') ?? 'N/A'
+        const message = `Untrusted origin: '${origin}'. Add this origin to 'trustHosts' in createAuth() or ensure you are using 'localhost' or '127.0.0.1' for development.`
+        return applyCors(request, json({ error: 'Forbidden', message }, { status: 403 }))
+      }
       return applyCors(request, json({ error: 'Forbidden' }, { status: 403 }))
+    }
 
     const path = url.pathname.substring(basePath.length)
     const parts = path.split('/').filter(Boolean)
@@ -417,19 +597,20 @@ export function createHandler(auth: Auth): (request: RequestLike) => Promise<Res
     if (request.method === 'GET') {
       if (action === 'session')
         response = await handleSession(request, auth)
-
+      else if (parts.length === 2 && parts[0] === 'link')
+        response = await handleLink(request, auth, parts[1] as string)
       else if (parts.length === 2 && parts[1] === 'callback')
         response = await handleCallback(request, auth, action)
-
       else if (parts.length === 1)
         response = await handleSignIn(request, auth, action)
-
       else
         response = json({ error: 'Not Found' }, { status: 404 })
     }
     else if (request.method === 'POST') {
       if (parts.length === 1 && action === 'signout')
         response = await handleSignOut(request, auth)
+      else if (parts.length === 2 && parts[0] === 'unlink')
+        response = await handleUnlink(request, auth, parts[1] as string)
       else
         response = json({ error: 'Not Found' }, { status: 404 })
     }
@@ -441,7 +622,7 @@ export function createHandler(auth: Auth): (request: RequestLike) => Promise<Res
   }
 }
 
-function verifyRequestOrigin(request: RequestLike, trustHosts: 'all' | string[]): boolean {
+function verifyRequestOrigin(request: RequestLike, trustHosts: 'all' | string[], development: boolean): boolean {
   if (trustHosts === 'all')
     return true
 
@@ -456,6 +637,12 @@ function verifyRequestOrigin(request: RequestLike, trustHosts: 'all' | string[])
   }
   catch {
     return false
+  }
+
+  if (development) {
+    const isLocal = originHost.startsWith('localhost') || originHost.startsWith('127.0.0.1')
+    if (isLocal)
+      return true
   }
 
   const requestUrl = new URL(request.url)

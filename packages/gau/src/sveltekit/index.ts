@@ -1,5 +1,5 @@
 import type { Handle, RequestEvent } from '@sveltejs/kit'
-import type { CreateAuthOptions, Session, User } from '../core'
+import type { CreateAuthOptions, GauSession, ProviderIds } from '../core'
 import type { OAuthProvider } from '../oauth'
 import { createAuth, createHandler, parseCookies, SESSION_COOKIE_NAME } from '../core'
 
@@ -25,14 +25,20 @@ export function SvelteKitAuth<const TProviders extends OAuthProvider<any>[]>(opt
     ? (optionsOrAuth as AuthInstance<TProviders>)
     : createAuth(optionsOrAuth as CreateAuthOptions<TProviders>)
 
+  void (async () => {
+    try {
+      auth.development = (await import('$app/environment')).dev
+    }
+    catch {
+      auth.development = false
+    }
+  })()
+
   const handler = createHandler(auth)
   const sveltekitHandler = (event: RequestEvent) => handler(event.request)
 
   const handle: Handle = async ({ event, resolve }) => {
-    (event.locals as any).getSession = async (): Promise<{
-      user: User
-      session: Session
-    } | null> => {
+    (event.locals as any).getSession = async (): Promise<GauSession<ProviderIds<AuthInstance<TProviders>>> | null> => {
       const requestCookies = parseCookies(event.request.headers.get('Cookie'))
       let sessionToken = requestCookies.get(SESSION_COOKIE_NAME)
 
@@ -42,14 +48,20 @@ export function SvelteKitAuth<const TProviders extends OAuthProvider<any>[]>(opt
           sessionToken = authHeader.substring(7)
       }
 
+      const providers = Array.from(auth.providerMap.keys()) as ProviderIds<AuthInstance<TProviders>>[]
+
       if (!sessionToken)
-        return null
+        return { user: null, session: null, accounts: null, providers }
 
       try {
-        return await auth.validateSession(sessionToken)
+        const validated = await auth.validateSession(sessionToken)
+        if (!validated)
+          return { user: null, session: null, accounts: null, providers }
+
+        return { ...validated, providers }
       }
       catch {
-        return null
+        return { user: null, session: null, accounts: null, providers }
       }
     }
     return resolve(event)

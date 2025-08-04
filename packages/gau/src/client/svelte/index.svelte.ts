@@ -1,12 +1,14 @@
 import type { GauSession, ProviderIds } from '../../core'
 import { BROWSER } from 'esm-env'
 import { getContext, setContext } from 'svelte'
-import { handleTauriDeepLink, isTauri, setupTauriListener, signInWithTauri } from '../../runtimes/tauri'
+import { handleTauriDeepLink, isTauri, linkAccountWithTauri, setupTauriListener, signInWithTauri } from '../../runtimes/tauri'
 import { clearSessionToken, getSessionToken, storeSessionToken } from '../token'
 
 interface AuthContextValue<TAuth = unknown> {
-  session: GauSession | null
+  session: GauSession<ProviderIds<TAuth>> | null
   signIn: (provider: ProviderIds<TAuth>, options?: { redirectTo?: string }) => Promise<void>
+  linkAccount: (provider: ProviderIds<TAuth>, options?: { redirectTo?: string }) => Promise<void>
+  unlinkAccount: (provider: ProviderIds<TAuth>) => Promise<void>
   signOut: () => Promise<void>
 }
 
@@ -21,7 +23,8 @@ export function createSvelteAuth<const TAuth = unknown>({
   scheme?: string
   redirectTo?: string
 } = {}) {
-  let session = $state<GauSession | null>(null)
+  type CurrentSession = GauSession<ProviderIds<TAuth>> | null
+  let session = $state<CurrentSession>(null)
 
   async function fetchSession() {
     if (!BROWSER) {
@@ -33,16 +36,11 @@ export function createSvelteAuth<const TAuth = unknown>({
     const headers = token ? { Authorization: `Bearer ${token}` } : undefined
     const res = await fetch(`${baseUrl}/session`, token ? { headers } : { credentials: 'include' })
 
-    if (!res.ok) {
-      session = { user: null, session: null }
-      return
-    }
-
     const contentType = res.headers.get('content-type')
     if (contentType?.includes('application/json'))
       session = await res.json()
     else
-      session = { user: null, session: null }
+      session = { user: null, session: null, accounts: null, providers: [] as ProviderIds<TAuth>[] }
   }
 
   async function signIn(provider: ProviderIds<TAuth>, { redirectTo }: { redirectTo?: string } = {}) {
@@ -57,6 +55,58 @@ export function createSvelteAuth<const TAuth = unknown>({
       const query = finalRedirectTo ? `?redirectTo=${encodeURIComponent(finalRedirectTo)}` : ''
       window.location.href = `${baseUrl}/${provider as string}${query}`
     }
+  }
+
+  async function linkAccount(provider: ProviderIds<TAuth>, { redirectTo }: { redirectTo?: string } = {}) {
+    if (isTauri) {
+      await linkAccountWithTauri(provider as string, baseUrl, scheme, redirectTo)
+      return
+    }
+
+    let finalRedirectTo = redirectTo ?? defaultRedirectTo
+    if (!finalRedirectTo && BROWSER)
+      finalRedirectTo = window.location.href
+
+    const query = finalRedirectTo ? `?redirectTo=${encodeURIComponent(finalRedirectTo)}` : ''
+    const linkUrl = `${baseUrl}/link/${provider as string}${query}${query ? '&' : '?'}redirect=false`
+
+    const token = getSessionToken()
+
+    const fetchOptions: RequestInit = token
+      ? { headers: { Authorization: `Bearer ${token}` } }
+      : { credentials: 'include' }
+
+    const res = await fetch(linkUrl, fetchOptions)
+    if (res.redirected) {
+      window.location.href = res.url
+    }
+    else {
+      try {
+        const data = await res.json()
+        if (data.url)
+          window.location.href = data.url
+      }
+      catch (e) {
+        console.error('Failed to parse response from link endpoint', e)
+      }
+    }
+  }
+
+  async function unlinkAccount(provider: ProviderIds<TAuth>) {
+    const token = getSessionToken()
+    const fetchOptions: RequestInit = token
+      ? { headers: { Authorization: `Bearer ${token}` } }
+      : { credentials: 'include' }
+
+    const res = await fetch(`${baseUrl}/unlink/${provider as string}`, {
+      method: 'POST',
+      ...fetchOptions,
+    })
+
+    if (res.ok)
+      await fetchSession()
+    else
+      console.error('Failed to unlink account', await res.json())
   }
 
   async function signOut() {
@@ -105,6 +155,8 @@ export function createSvelteAuth<const TAuth = unknown>({
       return session
     },
     signIn: signIn as (provider: ProviderIds<TAuth>, options?: { redirectTo?: string }) => Promise<void>,
+    linkAccount: linkAccount as (provider: ProviderIds<TAuth>, options?: { redirectTo?: string }) => Promise<void>,
+    unlinkAccount: unlinkAccount as (provider: ProviderIds<TAuth>) => Promise<void>,
     signOut,
   }
 

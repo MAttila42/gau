@@ -19,7 +19,9 @@
 
 ## v0.4.0
 
-- [ ] manual account linking
+- [x] manual account linking and unlinking
+  - [ ] allowDifferentEmails
+  - [ ] updateUserInfoOnLink or updateUserInfoOnUnlink
 - [ ] drizzle drivers for mysql, postgres
 - [ ] refresh-token rotation
 - [ ] Passkeys/WebAuthn

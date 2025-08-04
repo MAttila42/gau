@@ -1,8 +1,7 @@
 import type { AnyColumn, InferInsertModel, InferSelectModel, Table } from 'drizzle-orm'
 import type { BaseSQLiteDatabase } from 'drizzle-orm/sqlite-core'
-import type { Adapter, NewAccount, NewUser, User } from '../../core/index'
+import type { Account, Adapter, NewAccount, NewUser, User } from '../../core/index'
 import { and, eq } from 'drizzle-orm'
-
 import { transaction } from './transaction'
 
 export type UsersTable = Table & {
@@ -31,7 +30,7 @@ export function SQLiteDrizzleAdapter<
   DB extends BaseSQLiteDatabase<'sync' | 'async', any, any>,
   U extends UsersTable,
   A extends AccountsTable,
->(db: DB, users: U, accounts: A): Adapter {
+>(db: DB, Users: U, Accounts: A): Adapter {
   type DBUser = InferSelectModel<U>
   type DBAccount = InferSelectModel<A>
   type DBInsertUser = InferInsertModel<U>
@@ -44,8 +43,8 @@ export function SQLiteDrizzleAdapter<
     async getUser(id) {
       const user: DBUser | undefined = await db
         .select()
-        .from(users)
-        .where(eq(users.id, id))
+        .from(Users)
+        .where(eq(Users.id, id))
         .get()
       return toUser(user)
     },
@@ -53,33 +52,55 @@ export function SQLiteDrizzleAdapter<
     async getUserByEmail(email) {
       const user: DBUser | undefined = await db
         .select()
-        .from(users)
-        .where(eq(users.email, email))
+        .from(Users)
+        .where(eq(Users.email, email))
         .get()
       return toUser(user)
     },
 
     async getUserByAccount(provider, providerAccountId) {
-      const account: DBAccount | undefined = await db
+      const result: DBUser | undefined = await db
         .select()
-        .from(accounts)
-        .where(and(eq(accounts.provider, provider), eq(accounts.providerAccountId, providerAccountId)))
+        .from(Users)
+        .innerJoin(Accounts, eq(Users.id, Accounts.userId))
+        .where(and(eq(Accounts.provider, provider), eq(Accounts.providerAccountId, providerAccountId)))
         .get()
-      if (!account)
+      return toUser(result?.users)
+    },
+
+    async getAccounts(userId) {
+      const accounts: DBAccount[] = await db
+        .select()
+        .from(Accounts)
+        .where(eq(Accounts.userId, userId))
+        .all()
+      return accounts as Account[]
+    },
+
+    async getUserAndAccounts(userId) {
+      const result = await db
+        .select()
+        .from(Users)
+        .where(eq(Users.id, userId))
+        .leftJoin(Accounts, eq(Users.id, Accounts.userId))
+        .all()
+
+      if (!result.length)
         return null
-      const user: DBUser | undefined = await db
-        .select()
-        .from(users)
-        .where(eq(users.id, account.userId))
-        .get()
-      return toUser(user)
+
+      const user = toUser(result[0]!.users)!
+      const accounts = result
+        .map(row => row.accounts)
+        .filter(Boolean) as Account[]
+
+      return { user, accounts }
     },
 
     async createUser(data: NewUser) {
       const id = data.id ?? crypto.randomUUID()
       return await transaction(db, async (tx) => {
         await tx
-          .insert(users)
+          .insert(Users)
           .values({
             id,
             name: data.name ?? null,
@@ -91,14 +112,14 @@ export function SQLiteDrizzleAdapter<
           } as DBInsertUser)
           .run()
 
-        const result: DBUser | undefined = await tx.select().from(users).where(eq(users.id, id)).get()
+        const result: DBUser | undefined = await tx.select().from(Users).where(eq(Users.id, id)).get()
         return toUser(result) as User
       })
     },
 
     async linkAccount(data: NewAccount) {
       await db
-        .insert(accounts)
+        .insert(Accounts)
         .values({
           type: 'oauth',
           ...data,
@@ -106,10 +127,17 @@ export function SQLiteDrizzleAdapter<
         .run()
     },
 
+    async unlinkAccount(provider, providerAccountId) {
+      await db
+        .delete(Accounts)
+        .where(and(eq(Accounts.provider, provider), eq(Accounts.providerAccountId, providerAccountId)))
+        .run()
+    },
+
     async updateUser(partial) {
       return await transaction(db, async (tx) => {
         await tx
-          .update(users)
+          .update(Users)
           .set({
             name: partial.name,
             email: partial.email,
@@ -117,16 +145,16 @@ export function SQLiteDrizzleAdapter<
             emailVerified: partial.emailVerified,
             updatedAt: new Date(),
           } as Partial<DBInsertUser>)
-          .where(eq(users.id, partial.id))
+          .where(eq(Users.id, partial.id))
           .run()
 
-        const result: DBUser | undefined = await tx.select().from(users).where(eq(users.id, partial.id)).get()
+        const result: DBUser | undefined = await tx.select().from(Users).where(eq(Users.id, partial.id)).get()
         return toUser(result) as User
       })
     },
 
     async deleteUser(id) {
-      await db.delete(users).where(eq(users.id, id)).run()
+      await db.delete(Users).where(eq(Users.id, id)).run()
     },
   }
 }

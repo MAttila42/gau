@@ -11,6 +11,9 @@ export const Users = sqliteTable('users', {
   updatedAt: integer({ mode: 'timestamp' }).$defaultFn(() => new Date()),
 })
 
+export type User = typeof Users.$inferSelect
+export type UserNew = typeof Users.$inferInsert
+
 export const Accounts = sqliteTable('accounts', {
   userId: text().notNull().references(() => Users.id, { onDelete: 'cascade' }),
   type: text().notNull(),
@@ -29,9 +32,6 @@ export const Accounts = sqliteTable('accounts', {
     columns: [account.provider, account.providerAccountId],
   }),
 ])
-
-export type User = typeof Users.$inferSelect
-export type UserNew = typeof Users.$inferInsert
 
 export type Account = typeof Accounts.$inferSelect
 export type AccountNew = typeof Accounts.$inferInsert
