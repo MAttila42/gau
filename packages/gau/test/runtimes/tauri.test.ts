@@ -95,6 +95,40 @@ describe('tauri runtime helpers', () => {
       })
     })
 
+    describe('linkAccountWithTauri', () => {
+      it('should not open URL if session token is missing', async () => {
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+        await tauriHelpers.linkAccountWithTauri('github', 'http://localhost:3000/api/auth')
+        expect(mockOpen).not.toHaveBeenCalled()
+        expect(consoleSpy).toHaveBeenCalledWith('No session token found, cannot link account.')
+        consoleSpy.mockRestore()
+      })
+
+      it('should open the correct link URL on desktop', async () => {
+        localStorageMock.setItem('gau-token', 'test-session-token')
+        mockPlatform.mockReturnValue('windows')
+        await tauriHelpers.linkAccountWithTauri('github', 'http://localhost:3000/api/auth', 'gau')
+        const expectedUrl = 'http://localhost:3000/api/auth/link/github?redirectTo=gau%3A%2F%2Foauth%2Fcallback&token=test-session-token'
+        expect(mockOpen).toHaveBeenCalledWith(expectedUrl)
+      })
+
+      it('should use redirectOverride if provided', async () => {
+        localStorageMock.setItem('gau-token', 'test-session-token')
+        mockPlatform.mockReturnValue('windows')
+        await tauriHelpers.linkAccountWithTauri('github', 'http://localhost:3000/api/auth', 'gau', 'myapp://custom')
+        const expectedUrl = 'http://localhost:3000/api/auth/link/github?redirectTo=myapp%3A%2F%2Fcustom&token=test-session-token'
+        expect(mockOpen).toHaveBeenCalledWith(expectedUrl)
+      })
+
+      it('should use origin for redirect on mobile platforms', async () => {
+        localStorageMock.setItem('gau-token', 'test-session-token')
+        mockPlatform.mockReturnValue('android')
+        await tauriHelpers.linkAccountWithTauri('google', 'https://server.com/api/auth')
+        const expectedUrl = 'https://server.com/api/auth/link/google?redirectTo=https%3A%2F%2Fserver.com&token=test-session-token'
+        expect(mockOpen).toHaveBeenCalledWith(expectedUrl)
+      })
+    })
+
     describe('setupTauriListener', () => {
       it('should set up a listener for deep-links', async () => {
         const handler = vi.fn()
