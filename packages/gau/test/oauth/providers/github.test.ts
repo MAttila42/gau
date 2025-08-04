@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { GitHub } from './github'
+import { GitHub } from '../../../src/oauth/providers/github'
 
 const mockTokens = {
   accessToken: () => 'test_access_token',

@@ -1,6 +1,6 @@
 import { Buffer } from 'node:buffer'
 import { describe, expect, it } from 'vitest'
-import { constantTimeEqual, deriveKeysFromSecret, rawToDer } from './utils'
+import { constantTimeEqual, deriveKeysFromSecret, rawToDer } from '../../src/jwt/utils'
 
 describe('jWT utils', () => {
   describe('constantTimeEqual', () => {

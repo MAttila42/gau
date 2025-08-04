@@ -1,7 +1,7 @@
-import type { Auth } from './createAuth'
+import type { Auth } from '../../src/core/createAuth'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { setup } from '../../../../tests/handler'
-import { createHandler } from './handler'
+import { createHandler } from '../../src/core/handler'
+import { setup } from '../handler'
 
 describe('createHandler', () => {
   let auth: Auth

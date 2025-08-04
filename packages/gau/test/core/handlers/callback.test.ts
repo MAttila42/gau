@@ -1,15 +1,15 @@
-import type { Auth } from '../createAuth'
+import type { Auth } from '../../../src/core/createAuth'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { mockProvider, setup } from '../../../../../tests/handler'
-import { MemoryAdapter } from '../../adapters'
+import { MemoryAdapter } from '../../../src/adapters'
 import {
   CALLBACK_URI_COOKIE_NAME,
   CSRF_COOKIE_NAME,
   PKCE_COOKIE_NAME,
   SESSION_COOKIE_NAME,
-} from '../cookies'
-import { createAuth } from '../createAuth'
-import { handleCallback } from './callback'
+} from '../../../src/core/cookies'
+import { createAuth } from '../../../src/core/createAuth'
+import { handleCallback } from '../../../src/core/handlers/callback'
+import { mockProvider, setup } from '../../handler'
 
 describe('callback handler', () => {
   let auth: Auth

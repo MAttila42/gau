@@ -1,8 +1,8 @@
-import type { Auth } from '../createAuth'
+import type { Auth } from '../../../src/core/createAuth'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { setup } from '../../../../../tests/handler'
-import { SESSION_COOKIE_NAME } from '../cookies'
-import { handleLink, handleUnlink } from './link'
+import { SESSION_COOKIE_NAME } from '../../../src/core/cookies'
+import { handleLink, handleUnlink } from '../../../src/core/handlers/link'
+import { setup } from '../../handler'
 
 describe('link handler', () => {
   let auth: Auth
@@ -79,11 +79,15 @@ describe('link handler', () => {
       const user = await auth.createUser({ name: 'Test User' })
       const sessionToken = await auth.createSession(user.id)
 
-      // Link an account first
       await auth.linkAccount({
         userId: user.id,
         provider: 'mock',
         providerAccountId: 'mock-account-id',
+      })
+      await auth.linkAccount({
+        userId: user.id,
+        provider: 'other-provider',
+        providerAccountId: 'other-account-id',
       })
 
       const request = new Request('http://localhost/api/auth/unlink/mock', {
@@ -97,20 +101,24 @@ describe('link handler', () => {
       const body = await response.json<{ message: string }>()
       expect(body.message).toBe('Account unlinked successfully')
 
-      // Verify account was unlinked
       const accounts = await auth.getAccounts(user.id)
-      expect(accounts).toHaveLength(0)
+      expect(accounts.length).toBe(1)
+      expect(accounts[0]?.provider).toBe('other-provider')
     })
 
     it('should work with Authorization header', async () => {
       const user = await auth.createUser({ name: 'Test User' })
       const sessionToken = await auth.createSession(user.id)
 
-      // Link an account first
       await auth.linkAccount({
         userId: user.id,
         provider: 'mock',
         providerAccountId: 'mock-account-id',
+      })
+      await auth.linkAccount({
+        userId: user.id,
+        provider: 'other-provider',
+        providerAccountId: 'other-account-id',
       })
 
       const request = new Request('http://localhost/api/auth/unlink/mock', {
@@ -152,7 +160,6 @@ describe('link handler', () => {
       const user = await auth.createUser({ name: 'Test User' })
       const sessionToken = await auth.createSession(user.id)
 
-      // Only link one account
       await auth.linkAccount({
         userId: user.id,
         provider: 'mock',
@@ -175,11 +182,15 @@ describe('link handler', () => {
       const user = await auth.createUser({ name: 'Test User' })
       const sessionToken = await auth.createSession(user.id)
 
-      // Link a different provider
       await auth.linkAccount({
         userId: user.id,
         provider: 'other-provider',
         providerAccountId: 'other-account-id',
+      })
+      await auth.linkAccount({
+        userId: user.id,
+        provider: 'another-provider',
+        providerAccountId: 'another-account-id',
       })
 
       const request = new Request('http://localhost/api/auth/unlink/mock', {
@@ -202,7 +213,6 @@ describe('link handler', () => {
       })
       const sessionToken = await auth.createSession(user.id)
 
-      // Link two accounts
       await auth.linkAccount({
         userId: user.id,
         provider: 'mock',
@@ -223,7 +233,6 @@ describe('link handler', () => {
 
       expect(response.status).toBe(200)
 
-      // Verify email was cleared
       const updatedUser = await auth.getUser(user.id)
       expect(updatedUser?.email).toBeNull()
       expect(updatedUser?.emailVerified).toBe(false)

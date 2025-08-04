@@ -1,13 +1,13 @@
-import type { Auth } from '../createAuth'
+import type { Auth } from '../../../src/core/createAuth'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { mockProvider, setup } from '../../../../../tests/handler'
 import {
   CALLBACK_URI_COOKIE_NAME,
   CSRF_COOKIE_NAME,
   PKCE_COOKIE_NAME,
   SESSION_COOKIE_NAME,
-} from '../cookies'
-import { handleSignIn, handleSignOut } from './login'
+} from '../../../src/core/cookies'
+import { handleSignIn, handleSignOut } from '../../../src/core/handlers/login'
+import { mockProvider, setup } from '../../handler'
 
 describe('login handlers', () => {
   let auth: Auth

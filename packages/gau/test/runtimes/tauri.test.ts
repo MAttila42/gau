@@ -32,7 +32,7 @@ Object.defineProperty(globalThis, 'document', {
 })
 
 describe('tauri runtime helpers', () => {
-  let tauriHelpers: typeof import('./index')
+  let tauriHelpers: typeof import('../../src/runtimes/tauri/index')
 
   async function setup(isTauriEnv: boolean) {
     if (isTauriEnv) {
@@ -44,7 +44,7 @@ describe('tauri runtime helpers', () => {
       globalThis.window = {}
     }
     vi.resetModules()
-    tauriHelpers = await import('./index')
+    tauriHelpers = await import('../../src/runtimes/tauri/index')
   }
 
   beforeEach(() => {

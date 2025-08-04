@@ -1,4 +1,4 @@
-import type { Adapter } from '../../core'
+import type { Adapter } from '../../../src/core'
 import { createClient } from '@libsql/client'
 import Database from 'better-sqlite3'
 import { sql } from 'drizzle-orm'
@@ -6,8 +6,8 @@ import { drizzle } from 'drizzle-orm/better-sqlite3'
 import { drizzle as drizzleLibsql } from 'drizzle-orm/libsql'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { SQLiteDrizzleAdapter } from './sqlite'
-import { transaction } from './transaction'
+import { SQLiteDrizzleAdapter } from '../../../src/adapters/drizzle/sqlite'
+import { transaction } from '../../../src/adapters/drizzle/transaction'
 
 const usersTable = sqliteTable('users', {
   id: text('id').primaryKey(),

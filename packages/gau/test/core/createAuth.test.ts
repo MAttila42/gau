@@ -1,8 +1,8 @@
 import { Buffer } from 'node:buffer'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { MemoryAdapter } from '../adapters/memory/index'
-import { createAuth } from './createAuth'
-import { AuthError } from './index'
+import { MemoryAdapter } from '../../src/adapters/memory/index'
+import { createAuth } from '../../src/core/createAuth'
+import { AuthError } from '../../src/core/index'
 
 describe('createAuth', () => {
   const adapter = MemoryAdapter()
@@ -71,8 +71,8 @@ describe('createAuth', () => {
 
     const validated = await auth.validateSession(sessionToken)
     expect(validated).not.toBeNull()
-    expect(validated?.user.id).toBe(user.id)
-    expect(validated?.session.sub).toBe(user.id)
+    expect(validated?.user?.id).toBe(user.id)
+    expect(validated?.session?.sub).toBe(user.id)
   })
 
   it('returns null when validating an expired session', async () => {

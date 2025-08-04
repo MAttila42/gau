@@ -1,10 +1,10 @@
-import type { Auth } from '../createAuth'
-import type { GauSession } from '../index'
+import type { Auth } from '../../../src/core/createAuth'
+import type { GauSession } from '../../../src/core/index'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { setup } from '../../../../../tests/handler'
-import { SESSION_COOKIE_NAME } from '../cookies'
-import { NULL_SESSION } from '../index'
-import { handleSession } from './session'
+import { SESSION_COOKIE_NAME } from '../../../src/core/cookies'
+import { handleSession } from '../../../src/core/handlers/session'
+import { NULL_SESSION } from '../../../src/core/index'
+import { setup } from '../../handler'
 
 describe('session handler', () => {
   let auth: Auth

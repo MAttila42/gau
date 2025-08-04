@@ -3,8 +3,9 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     globals: true,
+    include: ['packages/gau/test/**/*.test.ts'],
     environment: 'node',
-    setupFiles: ['./tests/setup.ts'],
+    setupFiles: ['packages/gau/test/setup.ts'],
     coverage: {
       enabled: true,
       provider: 'v8',
@@ -24,7 +25,7 @@ export default defineConfig({
       ],
     },
     typecheck: {
-      tsconfig: './tsconfig.json',
+      tsconfig: 'packages/gau/tsconfig.json',
     },
   },
 })

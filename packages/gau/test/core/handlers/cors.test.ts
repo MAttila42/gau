@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { applyCors, handlePreflight } from './cors'
+import { applyCors, handlePreflight } from '../../../src/core/handlers/cors'
 
 describe('cors handler', () => {
   describe('handlePreflight', () => {

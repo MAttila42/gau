@@ -19,13 +19,13 @@ Object.defineProperty(globalThis, 'document', {
 })
 
 describe('token helpers', () => {
-  let tokenHelpers: typeof import('./token')
+  let tokenHelpers: typeof import('../../src/client/token')
 
   beforeEach(async () => {
     localStorageMock.clear()
     document.cookie = ''
     vi.resetModules()
-    tokenHelpers = await import('./token')
+    tokenHelpers = await import('../../src/client/token')
   })
 
   afterEach(() => {

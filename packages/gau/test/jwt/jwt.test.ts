@@ -1,6 +1,6 @@
 import { Buffer } from 'node:buffer'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import { sign, verify } from '.'
+import { sign, verify } from '../../src/jwt'
 
 let es256Keys: CryptoKeyPair
 

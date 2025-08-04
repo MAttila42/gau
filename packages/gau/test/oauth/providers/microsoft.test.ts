@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { Microsoft } from './microsoft'
+import { Microsoft } from '../../../src/oauth/providers/microsoft'
 
 const mockUser = { id: 'user-id-123', displayName: 'Test User', mail: 'fallback@example.com', userPrincipalName: 'upn@example.com' }
 const mockPhotoBlob = new Blob(['photo-data'], { type: 'image/jpeg' })

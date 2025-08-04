@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
-import { SolidAuth } from './index'
+import { SolidAuth } from '../../src/solidstart/index'
 
 const mockAuth = {
   providerMap: new Map(),
 } as any
 
-vi.mock('../core', async (importOriginal) => {
-  const mod = await importOriginal<typeof import('../core')>()
+vi.mock('../../src/core', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('../../src/core')>()
   return {
     ...mod,
     createAuth: vi.fn(() => mockAuth),

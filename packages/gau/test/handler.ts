@@ -1,8 +1,8 @@
 import type { Mock } from 'vitest'
-import type { OAuthProvider } from '../packages/gau/src/oauth'
+import type { OAuthProvider } from '../src/oauth'
 import { vi } from 'vitest'
-import { MemoryAdapter } from '../packages/gau/src/adapters'
-import { createAuth } from '../packages/gau/src/core/createAuth'
+import { MemoryAdapter } from '../src/adapters'
+import { createAuth } from '../src/core/createAuth'
 
 export const mockProvider: OAuthProvider<'mock'> = {
   id: 'mock',

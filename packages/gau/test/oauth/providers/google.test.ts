@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { Google } from './google'
+import { Google } from '../../../src/oauth/providers/google'
 
 const mockTokens = {
   accessToken: () => 'test_access_token',

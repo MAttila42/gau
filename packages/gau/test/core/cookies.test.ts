@@ -1,6 +1,6 @@
 import type { SerializeOptions } from 'cookie'
 import { describe, expect, it } from 'vitest'
-import { Cookies, DEFAULT_COOKIE_SERIALIZE_OPTIONS, parseCookies } from './cookies'
+import { Cookies, DEFAULT_COOKIE_SERIALIZE_OPTIONS, parseCookies } from '../../src/core/cookies'
 
 describe('cookie utilities', () => {
   describe('parseCookies', () => {

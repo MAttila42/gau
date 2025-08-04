@@ -1,7 +1,7 @@
 import type { RequestEvent } from '@sveltejs/kit'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { NULL_SESSION, SESSION_COOKIE_NAME } from '../core'
-import { SvelteKitAuth } from './index'
+import { NULL_SESSION, SESSION_COOKIE_NAME } from '../../src/core'
+import { SvelteKitAuth } from '../../src/sveltekit/index'
 
 const mockAuth = {
   providerMap: new Map(),
@@ -9,8 +9,8 @@ const mockAuth = {
   validateSession: vi.fn(),
 } as any
 
-vi.mock('../core', async (importOriginal) => {
-  const mod = await importOriginal<typeof import('../core')>()
+vi.mock('../../src/core', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('../../src/core')>()
   return {
     ...mod,
     createAuth: vi.fn(() => mockAuth),
