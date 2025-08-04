@@ -24,7 +24,8 @@
   },
   "include": [
     "**/*.ts",
-    "**/*.tsx"
+    "**/*.tsx",
+    "../../tests/handler.ts"
   ],
   "exclude": [
     "**/*.test.ts",
