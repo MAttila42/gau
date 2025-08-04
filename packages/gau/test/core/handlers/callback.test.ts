@@ -15,7 +15,7 @@ describe('callback handler', () => {
   let auth: Auth
 
   beforeEach(() => {
-    void ({ auth } = setup())
+    ({ auth } = setup())
   })
 
   afterEach(() => {

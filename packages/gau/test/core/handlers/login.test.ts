@@ -13,7 +13,7 @@ describe('login handlers', () => {
   let auth: Auth
 
   beforeEach(() => {
-    void ({ auth } = setup())
+    ({ auth } = setup())
   })
 
   afterEach(() => {
@@ -104,6 +104,14 @@ describe('login handlers', () => {
       const response = await handleSignIn(request, auth, 'mock')
       expect(response.status).toBe(302)
     })
+
+    it('should return 400 for a provider that does not exist', async () => {
+      const request = new Request('http://localhost/api/auth/non-existent-provider')
+      const response = await handleSignIn(request, auth, 'non-existent-provider')
+      expect(response.status).toBe(400)
+      const body = await response.json<{ error: string }>()
+      expect(body.error).toBe('Provider not found')
+    })
   })
 
   describe('handleSignOut', () => {
@@ -122,6 +130,28 @@ describe('login handlers', () => {
       const cookieHeader = response.headers.get('Set-Cookie')
       expect(cookieHeader).toContain(`${SESSION_COOKIE_NAME}=;`)
       expect(cookieHeader).toContain('Max-Age=0')
+      expect(cookieHeader).toContain('SameSite=None')
+      expect(cookieHeader).toContain('Secure')
+    })
+
+    it('should clear the session cookie in development mode', async () => {
+      auth.development = true
+      const request = new Request('http://localhost/api/auth/signout', {
+        method: 'POST',
+      })
+      request.headers.set('Cookie', `${SESSION_COOKIE_NAME}=some-token`)
+
+      const response = await handleSignOut(request, auth)
+
+      expect(response.status).toBe(200)
+      const data = await response.json<{ message: string }>()
+      expect(data.message).toBe('Signed out')
+
+      const cookieHeader = response.headers.get('Set-Cookie')
+      expect(cookieHeader).toContain(`${SESSION_COOKIE_NAME}=;`)
+      expect(cookieHeader).toContain('Max-Age=0')
+      expect(cookieHeader).toContain('SameSite=Lax')
+      expect(cookieHeader).not.toContain('Secure')
     })
 
     it('should sign out even with no session', async () => {

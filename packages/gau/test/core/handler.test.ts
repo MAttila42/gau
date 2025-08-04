@@ -8,7 +8,7 @@ describe('createHandler', () => {
   let handler: ReturnType<typeof createHandler>
 
   beforeEach(() => {
-    void ({ auth } = setup())
+    ({ auth } = setup())
     handler = createHandler(auth)
   })
 

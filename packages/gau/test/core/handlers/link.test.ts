@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest'
 import type { Auth } from '../../../src/core/createAuth'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { SESSION_COOKIE_NAME } from '../../../src/core/cookies'
@@ -6,9 +7,10 @@ import { setup } from '../../handler'
 
 describe('link handler', () => {
   let auth: Auth
+  let mockProvider: ReturnType<typeof setup>['mockProvider']
 
   beforeEach(() => {
-    void ({ auth } = setup())
+    ({ auth, mockProvider } = setup())
   })
 
   afterEach(() => {
@@ -71,6 +73,65 @@ describe('link handler', () => {
       expect(response.status).toBe(401)
       const body = await response.json<{ error: string }>()
       expect(body.error).toBe('Unauthorized')
+    })
+
+    it('should return JSON with auth URL when redirect=false', async () => {
+      const user = await auth.createUser({ name: 'Test User' })
+      const sessionToken = await auth.createSession(user.id)
+      const request = new Request('http://localhost/api/auth/link/mock?redirect=false')
+      request.headers.set('Cookie', `${SESSION_COOKIE_NAME}=${sessionToken}`)
+
+      const response = await handleLink(request, auth, 'mock')
+
+      expect(response.status).toBe(200)
+      const body = await response.json<{ url: string }>()
+      expect(body.url).toBe('https://provider.com/auth')
+
+      const cookies = response.headers.getSetCookie()
+      expect(cookies.some(c => c.includes('__gau-linking-token'))).toBe(true)
+    })
+
+    it('should redirect to a trusted redirectTo URL', async () => {
+      const user = await auth.createUser({ name: 'Test User' })
+      const sessionToken = await auth.createSession(user.id)
+      const request = new Request('http://localhost/api/auth/link/mock?redirectTo=http://trusted.app.com/profile')
+      request.headers.set('Cookie', `${SESSION_COOKIE_NAME}=${sessionToken}`)
+
+      const response = await handleLink(request, auth, 'mock')
+
+      expect(response.status).toBe(302)
+      expect(response.headers.get('Location')).toBe('https://provider.com/auth')
+
+      expect(mockProvider.getAuthorizationUrl).toHaveBeenCalled()
+      const stateArg = (mockProvider.getAuthorizationUrl as Mock).mock.calls[0][0] as string
+      const [, encodedRedirect] = stateArg.split('.')
+      expect(encodedRedirect && atob(encodedRedirect)).toBe('http://trusted.app.com/profile')
+    })
+
+    it('should reject an untrusted redirectTo URL', async () => {
+      const user = await auth.createUser({ name: 'Test User' })
+      const sessionToken = await auth.createSession(user.id)
+      const request = new Request('http://localhost/api/auth/link/mock?redirectTo=http://untrusted.app.com/profile')
+      request.headers.set('Cookie', `${SESSION_COOKIE_NAME}=${sessionToken}`)
+
+      const response = await handleLink(request, auth, 'mock')
+
+      expect(response.status).toBe(400)
+      const body = await response.json<{ error: string }>()
+      expect(body.error).toBe('Untrusted redirect host')
+    })
+
+    it('should reject a protocol-relative redirectTo URL', async () => {
+      const user = await auth.createUser({ name: 'Test User' })
+      const sessionToken = await auth.createSession(user.id)
+      const request = new Request('http://localhost/api/auth/link/mock?redirectTo=//untrusted.app.com/profile')
+      request.headers.set('Cookie', `${SESSION_COOKIE_NAME}=${sessionToken}`)
+
+      const response = await handleLink(request, auth, 'mock')
+
+      expect(response.status).toBe(400)
+      const body = await response.json<{ error: string }>()
+      expect(body.error).toBe('Invalid "redirectTo" URL')
     })
   })
 
