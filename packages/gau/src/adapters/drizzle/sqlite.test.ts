@@ -6,7 +6,6 @@ import { drizzle } from 'drizzle-orm/better-sqlite3'
 import { drizzle as drizzleLibsql } from 'drizzle-orm/libsql'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { DrizzleAdapter } from './index'
 import { SQLiteDrizzleAdapter } from './sqlite'
 import { transaction } from './transaction'
 
@@ -27,7 +26,7 @@ const accountsTable = sqliteTable('accounts', {
   type: text('type'),
 })
 
-describe('sQLiteDrizzleAdapter with better-sqlite3', () => {
+describe('sqlite drizzle adapter with better-sqlite3', () => {
   let db: ReturnType<typeof drizzle>
   let adapter: Adapter
   let client: Database.Database
@@ -157,9 +156,100 @@ describe('sQLiteDrizzleAdapter with better-sqlite3', () => {
     await adapter.deleteUser(user.id)
     expect(await adapter.getUser(user.id)).toBeNull()
   })
+
+  it('getAccounts: should return all accounts for a user', async () => {
+    const user = await adapter.createUser({ email: 'accounts@example.com' })
+    await adapter.linkAccount({ userId: user.id, provider: 'github', providerAccountId: 'gh1' })
+    await adapter.linkAccount({ userId: user.id, provider: 'google', providerAccountId: 'gg1' })
+    const accounts = await adapter.getAccounts(user.id)
+    expect(accounts).toHaveLength(2)
+    expect(accounts).toEqual(expect.arrayContaining([
+      expect.objectContaining({ provider: 'github', providerAccountId: 'gh1' }),
+      expect.objectContaining({ provider: 'google', providerAccountId: 'gg1' }),
+    ]))
+  })
+
+  it('getAccounts: should return an empty array for a user with no accounts', async () => {
+    const user = await adapter.createUser({ email: 'no-accounts@example.com' })
+    const accounts = await adapter.getAccounts(user.id)
+    expect(accounts).toEqual([])
+  })
+
+  it('getAccounts: should return an empty array for a non-existent user', async () => {
+    const accounts = await adapter.getAccounts('non-existent-user-id')
+    expect(accounts).toEqual([])
+  })
+
+  it('getUserAndAccounts: should return user and their accounts', async () => {
+    const user = await adapter.createUser({ email: 'userandaccounts@example.com' })
+    await adapter.linkAccount({ userId: user.id, provider: 'github', providerAccountId: 'gh1' })
+    await adapter.linkAccount({ userId: user.id, provider: 'google', providerAccountId: 'gg1' })
+
+    const result = await adapter.getUserAndAccounts(user.id)
+    expect(result).not.toBeNull()
+    expect(result!.user).toEqual(user)
+    expect(result!.accounts).toHaveLength(2)
+    expect(result!.accounts).toEqual(expect.arrayContaining([
+      expect.objectContaining({ provider: 'github', providerAccountId: 'gh1' }),
+      expect.objectContaining({ provider: 'google', providerAccountId: 'gg1' }),
+    ]))
+  })
+
+  it('getUserAndAccounts: should return user and empty array for user with no accounts', async () => {
+    const user = await adapter.createUser({ email: 'userandnoaccounts@example.com' })
+    const result = await adapter.getUserAndAccounts(user.id)
+    expect(result).not.toBeNull()
+    expect(result!.user).toEqual(user)
+    expect(result!.accounts).toEqual([])
+  })
+
+  it('getUserAndAccounts: should return null for non-existent user', async () => {
+    const result = await adapter.getUserAndAccounts('non-existent-user-id')
+    expect(result).toBeNull()
+  })
+
+  it('unlinkAccount: should unlink an account from a user', async () => {
+    const user = await adapter.createUser({ email: 'unlink@example.com' })
+    await adapter.linkAccount({
+      userId: user.id,
+      provider: 'github',
+      providerAccountId: 'gh1',
+    })
+    let accounts = await adapter.getAccounts(user.id)
+    expect(accounts).toHaveLength(1)
+
+    await adapter.unlinkAccount('github', 'gh1')
+
+    accounts = await adapter.getAccounts(user.id)
+    expect(accounts).toHaveLength(0)
+
+    const userByAccount = await adapter.getUserByAccount('github', 'gh1')
+    expect(userByAccount).toBeNull()
+  })
+
+  it('unlinkAccount: should not affect other accounts for the same user', async () => {
+    const user = await adapter.createUser({ email: 'unlink-multi@example.com' })
+    await adapter.linkAccount({ userId: user.id, provider: 'github', providerAccountId: 'gh1' })
+    await adapter.linkAccount({ userId: user.id, provider: 'google', providerAccountId: 'gg1' })
+
+    await adapter.unlinkAccount('github', 'gh1')
+
+    const accounts = await adapter.getAccounts(user.id)
+    expect(accounts).toHaveLength(1)
+    expect(accounts[0]!.provider).toBe('google')
+
+    const userByGhAccount = await adapter.getUserByAccount('github', 'gh1')
+    expect(userByGhAccount).toBeNull()
+    const userByGgAccount = await adapter.getUserByAccount('google', 'gg1')
+    expect(userByGgAccount).toEqual(user)
+  })
+
+  it('unlinkAccount: unlinking a non-existent account should not throw', async () => {
+    await expect(adapter.unlinkAccount('noop', 'noop')).resolves.toBeUndefined()
+  })
 })
 
-describe('sQLiteDrizzleAdapter with libsql', () => {
+describe('sqlite drizzle adapter with libsql', () => {
   let db: ReturnType<typeof drizzleLibsql>
   let adapter: Adapter
   let client: ReturnType<typeof createClient>
@@ -188,7 +278,7 @@ describe('sQLiteDrizzleAdapter with libsql', () => {
       );
     `)
 
-    adapter = DrizzleAdapter(db, usersTable, accountsTable)
+    adapter = SQLiteDrizzleAdapter(db, usersTable, accountsTable)
   })
 
   afterEach(async () => {
@@ -205,6 +295,37 @@ describe('sQLiteDrizzleAdapter with libsql', () => {
     expect(user).toBeDefined()
     const fetchedUser = await adapter.getUser(user.id)
     expect(fetchedUser).toEqual(user)
+  })
+
+  it('getAccounts: should return accounts for a user with libsql', async () => {
+    const user = await adapter.createUser({ email: 'libsql-accounts@example.com' })
+    await adapter.linkAccount({ userId: user.id, provider: 'github', providerAccountId: 'gh1' })
+    const accounts = await adapter.getAccounts(user.id)
+    expect(accounts).toHaveLength(1)
+    expect(accounts[0]?.provider).toBe('github')
+  })
+
+  it('getUserAndAccounts: should return user and accounts with libsql', async () => {
+    const user = await adapter.createUser({ email: 'libsql-userandaccounts@example.com' })
+    await adapter.linkAccount({ userId: user.id, provider: 'github', providerAccountId: 'gh1' })
+    const result = await adapter.getUserAndAccounts(user.id)
+    expect(result).not.toBeNull()
+    expect(result!.user).toEqual(user)
+    expect(result!.accounts).toHaveLength(1)
+    expect(result!.accounts[0]?.provider).toBe('github')
+  })
+
+  it('unlinkAccount: should unlink an account with libsql', async () => {
+    const user = await adapter.createUser({ email: 'libsql-unlink@example.com' })
+    await adapter.linkAccount({ userId: user.id, provider: 'github', providerAccountId: 'gh1' })
+
+    let accounts = await adapter.getAccounts(user.id)
+    expect(accounts).toHaveLength(1)
+
+    await adapter.unlinkAccount('github', 'gh1')
+
+    accounts = await adapter.getAccounts(user.id)
+    expect(accounts).toHaveLength(0)
   })
 })
 
