@@ -4,9 +4,7 @@
 
 ## docs
 
-- [ ] add same-origin - cross-origin differences
-- [ ] expand trustHosts config, redirectTo in signIn and client auth
-- [ ] autogenerate api reference
+-
 
 ## fix
 
@@ -22,8 +20,8 @@
   - [ ] allowDifferentEmails
   - [ ] updateUserInfoOnLink or updateUserInfoOnUnlink
 - [ ] drizzle drivers for mysql, postgres
+- [ ] refresh-token rotation
 
 ## later
 
-- [ ] refresh-token rotation
 - [ ] Passkeys/WebAuthn

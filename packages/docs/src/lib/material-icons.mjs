@@ -138,7 +138,7 @@ export function resolveFolderIcon(folderName, isOpen) {
       : materialIcons.folderNames[lowerFolderName]
 
     if (iconName && materialIcons.iconDefinitions[iconName])
-      return `i-material-icon-theme:${iconName}`
+      return `i-material-icon-theme:${iconName.replace(/_/g, '-')}`
 
     return isOpen ? 'i-icons:folder-open' : 'i-icons:folder'
   }
@@ -161,7 +161,7 @@ export function resolveIcon(fileName, language) {
         if (pair.lookup) {
           const iconName = pair.lookup[pair.key]
           if (iconName && materialIcons.iconDefinitions[iconName])
-            return `i-material-icon-theme:${iconName}`
+            return `i-material-icon-theme:${iconName.replace(/_/g, '-')}`
         }
       }
       return null
@@ -188,7 +188,7 @@ export function resolveIcon(fileName, language) {
     if (language && materialIcons.languageIds[language]) {
       const iconName = materialIcons.languageIds[language]
       if (materialIcons.iconDefinitions[iconName])
-        return `i-material-icon-theme:${iconName}`
+        return `i-material-icon-theme:${iconName.replace(/_/g, '-')}`
     }
 
     return 'i-material-icon-theme:document'

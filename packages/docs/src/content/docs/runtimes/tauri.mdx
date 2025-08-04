@@ -295,22 +295,29 @@ This guide assumes you have already completed the setup for your web framework (
             The `@rttnd/gau/client/svelte` package automatically handles the Tauri-specific logic. Your `auth.svelte.ts` file remains the same.
             
             Remember that your Tauri app is a static frontend and needs to communicate with your deployed backend.
+            
+            Use envs to set the `baseUrl` for development (`http://localhost:5173/api/auth`) and production.
 
-            ```ts title="src/lib/auth.svelte.ts" ins={6}
-            import { PUBLIC_API_URL } from '$env/static/public'
-            import { createSvelteAuth } from '@rttnd/gau/client/svelte'
+            ```svelte title="src/routes/+layout.svelte" ins={8}
+            <script lang='ts'>
+              import { PUBLIC_API_URL } from '$env/static/public'
+              import AuthProvider from '@rttnd/gau/client/svelte/AuthProvider.svelte'
 
-            export const auth = createSvelteAuth({
-              scheme: 'gau',
-              baseUrl: PUBLIC_API_URL, // for dev, use http://localhost:5173/api/auth
-            })
+              const { children } = $props()
+            </script>
+
+            <AuthProvider scheme="gau" baseUrl={PUBLIC_API_URL}>
+              {@render children()}
+            </AuthProvider>
             ```
 
-            Finally, you can use the `auth` store in your components. The `signIn` method will automatically open the browser for OAuth and the app will receive the token via the deep link.
+            Finally, you can use the `useAuth` hook in your components. The `signIn` method will automatically open the browser for the OAuth flow, and the app will receive the token via the deep link.
 
             ```svelte title="src/routes/+page.svelte"
             <script>
-              import { auth } from '$lib/auth.svelte'
+              import { useAuth } from '@rttnd/gau/client/svelte'
+
+              const { auth } = useAuth()
             </script>
 
             {#if auth.session?.user}

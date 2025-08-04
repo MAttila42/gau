@@ -23,7 +23,7 @@ This guide shows how to integrate `gau` with SvelteKit, using Drizzle (SQLite) a
     import { SvelteKitAuth } from '@rttnd/gau/sveltekit'
     import { auth } from '$lib/server/auth'
 
-    export const { GET, POST } = SvelteKitAuth(auth)
+    export const { GET, POST, OPTIONS } = SvelteKitAuth(auth)
     ```
 
 3. ##### Add Server Hook
@@ -63,27 +63,34 @@ This guide shows how to integrate `gau` with SvelteKit, using Drizzle (SQLite) a
 
     ```svelte title="src/routes/+layout.svelte"
     <script lang="ts">
-      import { clientEnv } from '$lib/env/client'
       import AuthProvider from '@rttnd/gau/client/svelte/AuthProvider.svelte'
 
       const { children } = $props()
     </script>
 
-    <AuthProvider baseUrl={clientEnv.PUBLIC_API_URL}>
+    <AuthProvider>
       {@render children()}
     </AuthProvider>
     ```
 
+    <Aside type="note">
+      If your frontend and backend are on different hosts, set `baseUrl` to the full URL of your backend's auth API. Use envs to set it for development and production.
+
+      ```svelte
+      <AuthProvider baseUrl={env.PUBLIC_API_URL}>
+      ```
+    </Aside>
+
     Next, to get full TypeScript support for your provider IDs, create a typed `useAuth` hook. This is a great practice as you only have to type it once.
 
     ```ts title="src/lib/auth.ts"
-    import { useAuth as useGauAuth } from '@rttnd/gau/client/svelte'
-    import type { Auth as ServerAuth } from '$lib/server/auth'
+    import type { Auth } from '$lib/server/auth'
+    import { useAuth as useAuthCore } from '@rttnd/gau/client/svelte'
 
-    export const useAuth = () => useGauAuth<ServerAuth>()
+    export const useAuth = () => useAuthCore<Auth>()
     ```
 
-    <Aside variant="note">
+    <Aside type="note">
     Exporting and importing the `Auth` type is optional, but it gives better types for the `auth.signIn` method.
     By default, the `provider` param is `string`, but with the `Auth` type, it will be a union of string literals of the configured providers.
     </Aside>

@@ -3,7 +3,7 @@ title: Configuration
 description: A deep-dive into all the createAuth options.
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
 The core of `gau` is the `createAuth` function, which you use to configure your auth setup. This guide covers all the available options in detail.
 
@@ -189,13 +189,22 @@ cookies: {
 > **Type**: `'all' | string[]`,
 > **Default**: `[]`
 
-For CSRF protection. It defines which hosts are allowed to make `POST` requests to your auth endpoints.
+The `trustHosts` option is a crucial security feature that serves two main purposes:
 
-The `Origin` header of incoming requests is checked against this list.
+1.  **CSRF Protection**: It whitelists origins that are allowed to make `POST` requests (e.g., for signing out) to your auth endpoints.
+2.  **Open Redirect Prevention**: It validates the `redirectTo` URL parameter during a login flow, ensuring users are only redirected to trusted domains after authentication.
 
-- **`[]` (Default)**: Only requests from the same origin as the app are allowed.
-- **`['tauri.localhost']`**: For Tauri apps, you should add `tauri.localhost`.
-- **`'all'`**: This is a convenient shortcut for development, not recommended for production.
+The `Origin` header of incoming requests and the host of redirect URLs are checked against this list.
+
+- **`[]` (Default)**: Only requests and redirects from/to the same origin as the app are allowed.
+
+  <Aside type="note">
+    In development, `localhost` and `127.0.0.1` are automatically trusted.
+  </Aside>
+
+- **`['app.example.com', 'tauri.localhost']`**: For multi-domain setups or Tauri apps, you must add the allowed hostnames.
+
+- **`'all'`**: This is a convenient shortcut for development that disables these checks, but it is **not recommended for production**.
 
 See the [Security](/guides/security) guide for more details.
 

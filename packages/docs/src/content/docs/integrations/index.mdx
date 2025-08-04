@@ -30,7 +30,11 @@ You can configure the `AuthProvider` with the following props:
 > **Type**: `string`
 > **Default**: `'/api/auth'`
 
-The base URL for the authentication API endpoints. This should match the `basePath` configured in your `createAuth` setup on the server. If your frontend and backend are on different domains, you'll need to set this to the full URL of your backend's auth API.
+The base URL for the authentication API endpoints. This should match the `basePath` configured in your `createAuth` setup on the server.
+
+<Aside type="note">
+  If your frontend and backend are on different hosts, you'll need to set this to the full URL of your backend's auth API.
+</Aside>
 
 #### `scheme`
 
@@ -56,9 +60,14 @@ The `useAuth` hook returns an object with the following properties:
 
 #### `session`
 
-> **Type**: `{ user: User | null, session: Session | null } | null`
+> **Type**: `GauSession`
 
-An object containing the current user and session information. It's `null` if the user is not authenticated. The shape of the `user` and `session` objects is defined by the `Adapter` and your `createAuth` configuration.
+An object containing the current authentication state. Its `user` and `session` properties will be `null` if the user is not authenticated.
+
+- `user`: The user object from the database, or `null`.
+- `session`: The session object containing the raw JWT payload, or `null`.
+- `accounts`: An array of OAuth accounts linked to the user, or `null`.
+- `providers`: An array of available provider IDs.
 
 #### `signIn`
 
@@ -69,7 +78,7 @@ A function to initiate the sign-in process with a specific OAuth provider.
 - `provider`: The ID of the provider to use (e.g., `'github'`, `'google'`).
 - `options.redirectTo`: A URL to redirect to after a successful sign-in, overriding the default `redirectTo` prop on the `AuthProvider`.
 
-<Aside variant="note">
+<Aside type="note">
   You can get full TypeScript support for your provider IDs by creating a typed `useAuth` hook. See the framework integration guides for examples.
 </Aside>
 
@@ -78,3 +87,24 @@ A function to initiate the sign-in process with a specific OAuth provider.
 > **Type**: `() => Promise<void>`
 
 A function to sign the user out, clearing their session.
+
+#### `linkAccount`
+
+> **Type**: `(provider: string, options?: { redirectTo?: string }) => Promise<void>`
+
+A function to initiate the OAuth flow to manually link an additional provider to the currently authenticated user's account.
+
+- `provider`: The ID of the provider to link (e.g., `'github'`, `'google'`).
+- `options.redirectTo`: A URL to redirect to after a successful link, overriding the default `redirectTo` prop on the `AuthProvider`.
+
+#### `unlinkAccount`
+
+> **Type**: `(provider: string) => Promise<void>`
+
+A function to unlink an OAuth provider from the user's account.
+
+- `provider`: The ID of the provider to unlink.
+
+<Aside type="caution">
+  A user cannot unlink their last remaining account, as this would leave them with no way to sign in. `gau` will prevent this action and return an error.
+</Aside>

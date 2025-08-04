@@ -3,29 +3,50 @@ title: Security
 description: Security best practices when using gau.
 ---
 
+import { Aside } from '@astrojs/starlight/components'
+
 This guide explains `gau`'s security features.
 
-## CSRF Protection
+## Host Validation
 
-Cross-Site Request Forgery is an attack that tricks a user into submitting a malicious request. `gau` mitigates this by validating the `Origin` header on all `POST` requests to its API routes (like `/signout`).
+To protect against common web vulnerabilities, `gau` uses the `trustHosts` option to validate where requests are coming from and where users are being sent. This is a critical defense against both Cross-Site Request Forgery (CSRF) and Open Redirect attacks.
 
 This is configured via the `trustHosts` option in `createAuth`.
 
--   **Default behavior**: By default, `trustHosts` is an empty array (`[]`), which means `gau` will only allow requests that originate from the same host as your application. This is the most secure default setting.
+### Open Redirect Prevention
 
--   **Configuring specific hosts**: When your frontend and backend are on different domains, you can set specific hosts that your backend should trust. 
+An open redirect vulnerability occurs when an application redirects users to a URL that could be controlled by an attacker, often for phishing purposes. `gau` prevents this by validating the `redirectTo` parameter that can be passed during login.
+
+When a user signs in, you can provide a `redirectTo` query parameter to send them to a specific page afterward. `gau` checks if the hostname in the `redirectTo` URL is in your `trustHosts` list. If it isn't, the redirect is blocked.
+
+<Aside type="note">
+  Client-side integrations automatically set `redirectTo` to their URL. You just need to whitelist the hostnames on the server's `createAuth` config.
+</Aside>
+
+### CSRF Protection
+
+Cross-Site Request Forgery is an attack that tricks a user into submitting a malicious request. `gau` mitigates this by validating the `Origin` header on all `POST` requests to its API routes (like `/api/auth/signout` and `/api/auth/unlink`). Only origins from hosts in `trustHosts` are allowed.
+
+### Configuration
+
+-   **Default behavior**: By default, `trustHosts` is an empty array (`[]`), which means `gau` will only allow requests and redirects that originate from or point to the same host as your application.
+
+    <Aside type="note">
+    In development, `localhost` and `127.0.0.1` are automatically trusted.
+    </Aside>
+
+-   **Configuring specific hosts**: When your frontend and backend are on different domains, or you need to redirect to a subdomain, you must add those hosts to the list.
 
     ```ts
     trustHosts: [
-      'localhost:3000',   // Development frontend
-      'example.com',      // Production frontend
-      'tauri.localhost',  // Tauri app
+      'app.example.com',  // Production frontend
+      'tauri.localhost',  // Production Tauri app
     ]
     ```
 
--   **Trust all hosts**: This is **not recommended**, although the only `POST` request `gau` uses is for signing out, you probably still don't want to allow any host to tamper with that.
+-   **Trust all hosts (`'all'`)**: This setting disables host validation and is **not recommended for production**, as it exposes your application to both CSRF and open redirect risks.
 
-In addition to the `Origin` check, `gau` also uses a temporary state-based CSRF token (`__gau-csrf-token` cookie) during the OAuth flow itself to ensure that the user who starts the authentication process is the same one who finishes it.
+In addition to `trustHosts`, `gau` also uses a temporary state-based CSRF token (`__gau-csrf-token` cookie) during the OAuth flow itself. This ensures that the user who starts the authentication process is the same one who finishes it, providing an extra layer of security against CSRF during login.
 
 ## PKCE
 

@@ -37,6 +37,18 @@ Finds a user by their email address.
 
 Fetches a user based on their linked OAuth account.
 
+### `getAccounts`
+
+> **Type**: `(userId: string) => Promise<Account[]>`
+
+Retrieves all accounts linked to a user.
+
+### `getUserAndAccounts`
+
+> **Type**: `(userId: string) => Promise<{ user: User, accounts: Account[] } | null>`
+
+Retrieves a user and all their linked accounts in a single call.
+
 ### `createUser`
 
 > **Type**: `(data: NewUser) => Promise<User>`
@@ -48,6 +60,12 @@ Creates a new user in the database.
 > **Type**: `(data: NewAccount) => Promise<void>`
 
 Links an OAuth account to an existing user.
+
+### `unlinkAccount`
+
+> **Type**: `(provider: string, providerAccountId: string) => Promise<void>`
+
+Unlinks an OAuth account from a user.
 
 ### `updateUser`
 
