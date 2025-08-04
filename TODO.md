@@ -1,6 +1,6 @@
 # TODO
 
-- [ ] how to test svelte 5 runes..........
+- [ ] how to test svelte 5 runes man..........
 
 ## docs
 
@@ -15,7 +15,6 @@
 - [ ] ssr
 - [x] sveltekit tauri dev/build
 - [ ] sveltekit tauri android dev/build
-- [ ] refinements
 
 ## v0.4.0
 
@@ -23,5 +22,8 @@
   - [ ] allowDifferentEmails
   - [ ] updateUserInfoOnLink or updateUserInfoOnUnlink
 - [ ] drizzle drivers for mysql, postgres
+
+## later
+
 - [ ] refresh-token rotation
 - [ ] Passkeys/WebAuthn

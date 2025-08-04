@@ -11,7 +11,7 @@ import {
   PKCE_COOKIE_NAME,
   SESSION_COOKIE_NAME,
 } from './cookies'
-import { json, redirect } from './index'
+import { json, NULL_SESSION, redirect } from './index'
 
 async function _prepareOAuthRedirect(
   request: RequestLike,
@@ -461,13 +461,13 @@ async function handleSession(request: RequestLike, auth: Auth): Promise<Response
   const providers = Array.from(auth.providerMap.keys())
 
   if (!sessionToken)
-    return json({ user: null, session: null, accounts: null, providers })
+    return json({ ...NULL_SESSION, providers })
 
   try {
     const sessionData = await auth.validateSession(sessionToken)
 
     if (!sessionData)
-      return json({ user: null, session: null, accounts: null, providers }, { status: 401 })
+      return json({ ...NULL_SESSION, providers }, { status: 401 })
 
     return json({ ...sessionData, providers })
   }

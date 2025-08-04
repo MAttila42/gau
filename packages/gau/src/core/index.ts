@@ -42,6 +42,12 @@ export interface GauSession<TProviders extends string = string> {
   providers?: TProviders[]
 }
 
+export const NULL_SESSION = {
+  user: null,
+  session: null,
+  accounts: null,
+} as const
+
 export interface NewUser extends Omit<User, 'id' | 'accounts'> {
   id?: string
 }

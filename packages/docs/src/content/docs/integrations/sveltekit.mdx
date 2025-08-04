@@ -37,17 +37,17 @@ This guide shows how to integrate `gau` with SvelteKit, using Drizzle (SQLite) a
     export const { handle } = SvelteKitAuth(auth)
     ```
 
-    Now, in server routes, you can access `event.locals.getSession()` which returns `{ user, session }` or `null`.
+    Now, in server routes, you can access `event.locals.getSession()` which returns `{ user, session, accounts, providers }`.
 
     For full type-safety, update your `src/app.d.ts`:
 
     ```ts title="src/app.d.ts"
-    import type { Session, User } from '@rttnd/gau'
+    import type { GauSession } from '@rttnd/gau'
 
     declare global {
       namespace App {
         interface Locals {
-          getSession: () => Promise<{ user: User, session: Session } | null>
+          getSession: () => Promise<GauSession>
         }
       }
     }

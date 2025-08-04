@@ -1,11 +1,12 @@
 import type { GauSession, ProviderIds } from '../../core'
 import { BROWSER } from 'esm-env'
 import { getContext, setContext } from 'svelte'
+import { NULL_SESSION } from '../../core'
 import { handleTauriDeepLink, isTauri, linkAccountWithTauri, setupTauriListener, signInWithTauri } from '../../runtimes/tauri'
 import { clearSessionToken, getSessionToken, storeSessionToken } from '../token'
 
 interface AuthContextValue<TAuth = unknown> {
-  session: GauSession<ProviderIds<TAuth>> | null
+  session: GauSession<ProviderIds<TAuth>>
   signIn: (provider: ProviderIds<TAuth>, options?: { redirectTo?: string }) => Promise<void>
   linkAccount: (provider: ProviderIds<TAuth>, options?: { redirectTo?: string }) => Promise<void>
   unlinkAccount: (provider: ProviderIds<TAuth>) => Promise<void>
@@ -23,12 +24,12 @@ export function createSvelteAuth<const TAuth = unknown>({
   scheme?: string
   redirectTo?: string
 } = {}) {
-  type CurrentSession = GauSession<ProviderIds<TAuth>> | null
-  let session = $state<CurrentSession>(null)
+  type CurrentSession = GauSession<ProviderIds<TAuth>>
+  let session = $state<CurrentSession>({ ...NULL_SESSION, providers: [] })
 
   async function fetchSession() {
     if (!BROWSER) {
-      session = null
+      session = { ...NULL_SESSION, providers: [] }
       return
     }
 
@@ -37,10 +38,15 @@ export function createSvelteAuth<const TAuth = unknown>({
     const res = await fetch(`${baseUrl}/session`, token ? { headers } : { credentials: 'include' })
 
     const contentType = res.headers.get('content-type')
-    if (contentType?.includes('application/json'))
+    if (contentType?.includes('application/json')) {
       session = await res.json()
-    else
-      session = { user: null, session: null, accounts: null, providers: [] as ProviderIds<TAuth>[] }
+    }
+    else {
+      session = {
+        ...NULL_SESSION,
+        providers: [] as ProviderIds<TAuth>[],
+      }
+    }
   }
 
   async function signIn(provider: ProviderIds<TAuth>, { redirectTo }: { redirectTo?: string } = {}) {

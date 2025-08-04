@@ -4,6 +4,7 @@ import type { OAuthProvider } from '../oauth'
 import type { Auth } from './createAuth'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryAdapter } from '../adapters'
+import { NULL_SESSION } from '../core'
 import {
   CALLBACK_URI_COOKIE_NAME,
   CSRF_COOKIE_NAME,
@@ -407,8 +408,7 @@ describe('createHandler', () => {
       const data = await response.json<GauSession>()
 
       expect(response.status).toBe(200)
-      expect(data.user).toBeNull()
-      expect(data.session).toBeNull()
+      expect(data).toEqual({ ...NULL_SESSION, providers: ['mock'] })
     })
 
     it('should return 401 for an invalid session token', async () => {
@@ -418,8 +418,7 @@ describe('createHandler', () => {
       const response = await handler(request)
       expect(response.status).toBe(401)
       const data = await response.json<GauSession>()
-      expect(data.user).toBeNull()
-      expect(data.session).toBeNull()
+      expect(data).toEqual({ ...NULL_SESSION, providers: ['mock'] })
     })
 
     it('should return 500 if session validation throws', async () => {

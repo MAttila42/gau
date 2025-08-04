@@ -1,10 +1,10 @@
-import type { Session, User } from '@rttnd/gau'
+import type { GauSession } from '@rttnd/gau'
 
 declare global {
   namespace App {
     // interface Error {}
     interface Locals {
-      getSession: () => Promise<{ user: User, session: Session } | null>
+      getSession: () => Promise<GauSession>
     }
     // interface PageData {}
     // interface Platform {}

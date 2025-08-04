@@ -1,6 +1,6 @@
 import type { RequestEvent } from '@sveltejs/kit'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { SESSION_COOKIE_NAME } from '../core'
+import { NULL_SESSION, SESSION_COOKIE_NAME } from '../core'
 import { SvelteKitAuth } from './index'
 
 const mockAuth = {
@@ -70,7 +70,7 @@ describe('svelteKitAuth', () => {
       const resolve = vi.fn()
       await handle({ event, resolve })
       const session = await (event.locals as any).getSession()
-      expect(session).toBeNull()
+      expect(session).toEqual({ ...NULL_SESSION, providers: [] })
     })
 
     it('getSession should validate session from cookie', async () => {
@@ -81,13 +81,13 @@ describe('svelteKitAuth', () => {
         }),
       } as RequestEvent
       const resolve = vi.fn()
-      mockAuth.validateSession.mockResolvedValueOnce({ user: { id: '1' }, session: { sub: '1' } })
+      mockAuth.validateSession.mockResolvedValueOnce({ user: { id: '1' }, session: { sub: '1' }, accounts: [] })
 
       await handle({ event, resolve })
       const session = await (event.locals as any).getSession()
 
       expect(mockAuth.validateSession).toHaveBeenCalledWith('test-token')
-      expect(session).toEqual({ user: { id: '1' }, session: { sub: '1' } })
+      expect(session).toEqual({ user: { id: '1' }, session: { sub: '1' }, accounts: [], providers: [] })
     })
 
     it('getSession should validate session from Authorization header', async () => {
@@ -98,13 +98,13 @@ describe('svelteKitAuth', () => {
         }),
       } as RequestEvent
       const resolve = vi.fn()
-      mockAuth.validateSession.mockResolvedValueOnce({ user: { id: '2' }, session: { sub: '2' } })
+      mockAuth.validateSession.mockResolvedValueOnce({ user: { id: '2' }, session: { sub: '2' }, accounts: [] })
 
       await handle({ event, resolve })
       const session = await (event.locals as any).getSession()
 
       expect(mockAuth.validateSession).toHaveBeenCalledWith('test-token-header')
-      expect(session).toEqual({ user: { id: '2' }, session: { sub: '2' } })
+      expect(session).toEqual({ user: { id: '2' }, session: { sub: '2' }, accounts: [], providers: [] })
     })
 
     it('getSession should return null if validation fails', async () => {
@@ -121,7 +121,7 @@ describe('svelteKitAuth', () => {
       const session = await (event.locals as any).getSession()
 
       expect(mockAuth.validateSession).toHaveBeenCalledWith('bad-token')
-      expect(session).toBeNull()
+      expect(session).toEqual({ ...NULL_SESSION, providers: [] })
     })
 
     it('should call resolve with the event', async () => {

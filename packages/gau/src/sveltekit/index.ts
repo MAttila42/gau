@@ -1,7 +1,7 @@
 import type { Handle, RequestEvent } from '@sveltejs/kit'
 import type { CreateAuthOptions, GauSession, ProviderIds } from '../core'
 import type { OAuthProvider } from '../oauth'
-import { createAuth, createHandler, parseCookies, SESSION_COOKIE_NAME } from '../core'
+import { createAuth, createHandler, NULL_SESSION, parseCookies, SESSION_COOKIE_NAME } from '../core'
 
 type AuthInstance<TProviders extends OAuthProvider<any>[]> = ReturnType<typeof createAuth<TProviders>>
 
@@ -38,7 +38,7 @@ export function SvelteKitAuth<const TProviders extends OAuthProvider<any>[]>(opt
   const sveltekitHandler = (event: RequestEvent) => handler(event.request)
 
   const handle: Handle = async ({ event, resolve }) => {
-    (event.locals as any).getSession = async (): Promise<GauSession<ProviderIds<AuthInstance<TProviders>>> | null> => {
+    (event.locals as any).getSession = async (): Promise<GauSession<ProviderIds<AuthInstance<TProviders>>>> => {
       const requestCookies = parseCookies(event.request.headers.get('Cookie'))
       let sessionToken = requestCookies.get(SESSION_COOKIE_NAME)
 
@@ -51,17 +51,17 @@ export function SvelteKitAuth<const TProviders extends OAuthProvider<any>[]>(opt
       const providers = Array.from(auth.providerMap.keys()) as ProviderIds<AuthInstance<TProviders>>[]
 
       if (!sessionToken)
-        return { user: null, session: null, accounts: null, providers }
+        return { ...NULL_SESSION, providers }
 
       try {
         const validated = await auth.validateSession(sessionToken)
         if (!validated)
-          return { user: null, session: null, accounts: null, providers }
+          return { ...NULL_SESSION, providers }
 
         return { ...validated, providers }
       }
       catch {
-        return { user: null, session: null, accounts: null, providers }
+        return { ...NULL_SESSION, providers }
       }
     }
     return resolve(event)

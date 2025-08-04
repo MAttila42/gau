@@ -2,11 +2,12 @@ import type { Accessor, ParentProps } from 'solid-js'
 import type { GauSession, ProviderIds } from '../../core'
 import { createContext, createResource, onMount, useContext } from 'solid-js'
 import { isServer } from 'solid-js/web'
+import { NULL_SESSION } from '../../core'
 import { handleTauriDeepLink, isTauri, linkAccountWithTauri, setupTauriListener, signInWithTauri } from '../../runtimes/tauri'
 import { clearSessionToken, getSessionToken, storeSessionToken } from '../token'
 
 interface AuthContextValue<TAuth = unknown> {
-  session: Accessor<GauSession<ProviderIds<TAuth>> | null>
+  session: Accessor<GauSession<ProviderIds<TAuth>>>
   signIn: (provider: ProviderIds<TAuth>, options?: { redirectTo?: string }) => Promise<void>
   linkAccount: (provider: ProviderIds<TAuth>, options?: { redirectTo?: string }) => Promise<void>
   unlinkAccount: (provider: ProviderIds<TAuth>) => Promise<void>
@@ -19,10 +20,10 @@ export function AuthProvider<const TAuth = unknown>(props: ParentProps & { auth?
   const scheme = props.scheme ?? 'gau'
   const baseUrl = props.baseUrl ?? '/api/auth'
 
-  const [session, { refetch }] = createResource<GauSession<ProviderIds<TAuth>> | null>(
+  const [session, { refetch }] = createResource<GauSession<ProviderIds<TAuth>>>(
     async () => {
       if (isServer)
-        return null
+        return { ...NULL_SESSION, providers: [] }
 
       const token = getSessionToken()
       const headers = token ? { Authorization: `Bearer ${token}` } : undefined
@@ -32,9 +33,9 @@ export function AuthProvider<const TAuth = unknown>(props: ParentProps & { auth?
       if (contentType?.includes('application/json'))
         return res.json()
 
-      return { user: null, session: null, accounts: null, providers: [] as ProviderIds<TAuth>[] }
+      return { ...NULL_SESSION, providers: [] as ProviderIds<TAuth>[] }
     },
-    { initialValue: null },
+    { initialValue: { ...NULL_SESSION, providers: [] } },
   )
 
   async function signIn(provider: ProviderIds<TAuth>, { redirectTo }: { redirectTo?: string } = {}) {
