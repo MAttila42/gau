@@ -8,6 +8,7 @@
 
 ## fix
 
+- [ ] add a ton of type tests, every config, method etc. that should be typed should be typed
 - [ ] dev: when editing only svelte nr dev deletes all files in dist but svelte files, entries delete each other's work
 - [ ] client/solid async reactivity issue
 - [ ] ssr
