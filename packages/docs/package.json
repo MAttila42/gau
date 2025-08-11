@@ -4,27 +4,24 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "predev": "bun run scripts/generate-icon-safelist.mjs",
     "dev": "astro dev",
     "start": "astro dev",
-    "prebuild": "bun run scripts/generate-icon-safelist.mjs",
     "build": "astro build",
     "preview": "astro preview",
     "sync": "astro sync",
     "check": "astro check",
     "lint": "eslint . --fix",
-    "astro": "astro",
-    "clean-icons-cache": "rm -f .material-icons-cache/material-icons-safelist.json"
+    "astro": "astro"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.35.2",
     "astro": "^5.12.8",
     "sharp": "^0.34.3",
+    "starlight-plugin-icons": "^1.1.1",
     "zod": "3.22.4"
   },
   "devDependencies": {
     "@fontsource/inter": "^5.2.6",
-    "@iconify-json/catppuccin": "^1.2.11",
     "@iconify-json/devicon": "^1.2.35",
     "@iconify-json/logos": "^1.2.5",
     "@iconify-json/material-icon-theme": "^1.2.17",

@@ -3,7 +3,8 @@ title: Account Linking
 description: How gau can link multiple OAuth providers to a single user account, either automatically or manually.
 ---
 
-import { Aside, Steps, Tabs, TabItem } from '@astrojs/starlight/components'
+import { Steps, Tabs, TabItem } from '@astrojs/starlight/components'
+import Aside from 'starlight-plugin-icons/components/Aside.astro'
 
 `gau` allows users to connect multiple OAuth providers (e.g., GitHub and Google) to a single user account. This provides a seamless experience, allowing them to sign in with any of their linked providers to access the same account.
 
@@ -20,13 +21,15 @@ When an existing user signs in with a new provider, `gau` can automatically asso
 ### How It Works
 
 <Steps>
-1.  **Check for Existing Account**: When a user signs in, `gau` first checks if an account already exists for that user with the specific OAuth provider. If so, it logs them in.
 
-2.  **Check for Email to Link**: If no account is found for that provider, `gau` looks at the email address returned by the new OAuth provider. It then checks if any user in your database already has that same email address.
+  1.  **Check for Existing Account**: When a user signs in, `gau` first checks if an account already exists for that user with the specific OAuth provider. If so, it logs them in.
 
-3.  **Link or Create**:
-    -   If a user with that email already exists, `gau` will **link** the new OAuth sign-in to that existing user record.
-    -   If no user with that email is found, a **new user** is created.
+  2.  **Check for Email to Link**: If no account is found for that provider, `gau` looks at the email address returned by the new OAuth provider. It then checks if any user in your database already has that same email address.
+
+  3.  **Link or Create**:
+      -   If a user with that email already exists, `gau` will **link** the new OAuth sign-in to that existing user record.
+      -   If no user with that email is found, a **new user** is created.
+
 </Steps>
 
 This means a user can sign in with GitHub, sign out, and then sign back in with Google, and they will be logged into the same account, as long as both services use the same verified email address.
@@ -50,33 +53,33 @@ The `useAuth` hook (available in client integrations) exposes `linkAccount` and 
 This function initiates the OAuth flow to connect an additional provider to the currently logged-in user's account.
 
 <Tabs syncKey="framework">
-<TabItem label="SvelteKit">
-```svelte title="+page.svelte"
-<script>
-  import { useAuth } from '@rttnd/gau/client/svelte'
-  const auth = useAuth()
-</script>
+  <TabItem label="SvelteKit">
+    ```svelte title="+page.svelte"
+    <script>
+      import { useAuth } from '@rttnd/gau/client/svelte'
+      const auth = useAuth()
+    </script>
 
-<button onclick={() => auth.linkAccount('google')}>
-  Connect Google Account
-</button>
-```
-</TabItem>
-<TabItem label="SolidStart">
-```tsx title="LinkButton.tsx"
-import { useAuth } from '@rttnd/gau/client/solid'
-
-export function LinkButton() {
-  const { linkAccount } = useAuth()
-
-  return (
-    <button onClick={() => linkAccount('google')}>
+    <button onclick={() => auth.linkAccount('google')}>
       Connect Google Account
     </button>
-  )
-}
-```
-</TabItem>
+    ```
+  </TabItem>
+  <TabItem label="SolidStart">
+    ```tsx title="LinkButton.tsx"
+    import { useAuth } from '@rttnd/gau/client/solid'
+
+    export function LinkButton() {
+      const { linkAccount } = useAuth()
+
+      return (
+        <button onClick={() => linkAccount('google')}>
+          Connect Google Account
+        </button>
+      )
+    }
+    ```
+  </TabItem>
 </Tabs>
 
 
@@ -85,43 +88,43 @@ export function LinkButton() {
 This function removes a linked provider from the user's account.
 
 <Tabs syncKey="framework">
-<TabItem label="SvelteKit">
-```svelte title="+page.svelte"
-<script>
-  import { useAuth } from '@rttnd/gau/client/svelte'
-  const auth = useAuth()
-</script>
+  <TabItem label="SvelteKit">
+    ```svelte title="+page.svelte"
+    <script>
+      import { useAuth } from '@rttnd/gau/client/svelte'
+      const auth = useAuth()
+    </script>
 
-<button onclick={() => auth.unlinkAccount('google')}>
-  Disconnect Google Account
-</button>
-```
-</TabItem>
-<TabItem label="SolidStart">
-```tsx title="UnlinkButton.tsx"
-import { useAuth } from '@rttnd/gau/client/solid'
-
-export function UnlinkButton() {
-  const { unlinkAccount } = useAuth()
-
-  return (
-    <button onClick={() => unlinkAccount('google')}>
+    <button onclick={() => auth.unlinkAccount('google')}>
       Disconnect Google Account
     </button>
-  )
-}
-```
-</TabItem>
+    ```
+  </TabItem>
+  <TabItem label="SolidStart">
+    ```tsx title="UnlinkButton.tsx"
+    import { useAuth } from '@rttnd/gau/client/solid'
+
+    export function UnlinkButton() {
+      const { unlinkAccount } = useAuth()
+
+      return (
+        <button onClick={() => unlinkAccount('google')}>
+          Disconnect Google Account
+        </button>
+      )
+    }
+    ```
+  </TabItem>
 </Tabs>
 
 `gau` prevents users from unlinking their last remaining account.
 
 <Aside type="caution">
-#### Unlinking Behavior
+  #### Unlinking Behavior
 
-`gau` allows linking accounts even if they have different primary email addresses. When an account is unlinked, `gau` will currently reset the user's `email` to `null` and `emailVerified` to `false`.
+  `gau` allows linking accounts even if they have different primary email addresses. When an account is unlinked, `gau` will currently reset the user's `email` to `null` and `emailVerified` to `false`.
 
-Because of this, it's a good practice to prompt the user to sign in again after unlinking an account. A new sign-in will automatically re-populate the user's primary email from one of the remaining linked accounts.
+  Because of this, it's a good practice to prompt the user to sign in again after unlinking an account. A new sign-in will automatically re-populate the user's primary email from one of the remaining linked accounts.
 
-This behavior will be better and configurable in a future update.
+  This behavior will be better and configurable in a future update.
 </Aside>

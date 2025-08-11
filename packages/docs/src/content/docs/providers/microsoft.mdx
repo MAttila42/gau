@@ -3,7 +3,7 @@ title: Microsoft Entra ID
 description: How to set up Microsoft Entra ID as an OAuth provider with gau.
 ---
 
-import { Aside } from '@astrojs/starlight/components'
+import Aside from 'starlight-plugin-icons/components/Aside.astro'
 
 ### Resources
 
@@ -38,7 +38,7 @@ The `openid`, `profile`, `email`, and `User.Read` scopes are requested by defaul
 ```ts title="auth.ts"
 import process from 'node:process'
 import { createAuth } from '@rttnd/gau/core'
-import { Microsoft } from '@rttnd/gau/oauth';
+import { Microsoft } from '@rttnd/gau/oauth'
 
 export const auth = createAuth({
   providers: [
@@ -47,7 +47,7 @@ export const auth = createAuth({
       clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
     }),
   ],
-});
+})
 ```
 
 ### Extra config

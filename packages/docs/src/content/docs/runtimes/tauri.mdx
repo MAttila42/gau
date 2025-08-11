@@ -3,7 +3,7 @@ title: Tauri
 description: How to integrate gau with Tauri for desktop applications.
 ---
 
-import { Steps, Tabs, TabItem, Card, LinkCard } from '@astrojs/starlight/components';
+import { Steps, Tabs, TabItem } from '@astrojs/starlight/components'
 
 `gau` has first-class Tauri support. This guide explains how to build desktop apps with OAuth, and also shows how to set up the required deep linking to handle OAuth redirects.
 
@@ -242,95 +242,95 @@ This guide assumes you have already completed the setup for your web framework (
    The frontend needs to be configured to build as a static single-page app for Tauri, listen for the deep link event, and handle the sign-in flow. If you are building a full-stack app, you can still host your backend, and the Tauri app will communicate with it as well.
 
     <Tabs syncKey="framework">
-        <TabItem label="SvelteKit">
-            First, update `svelte.config.js` to use `@sveltejs/adapter-static` when building for Tauri.
+      <TabItem label="SvelteKit">
+        First, update `svelte.config.js` to use `@sveltejs/adapter-static` when building for Tauri.
 
-            ```js title="svelte.config.js"
-            import process from 'node:process'
-            import Auto from '@sveltejs/adapter-auto'
-            import Static from '@sveltejs/adapter-static'
-            import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'
+        ```js title="svelte.config.js"
+        import process from 'node:process'
+        import Auto from '@sveltejs/adapter-auto'
+        import Static from '@sveltejs/adapter-static'
+        import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'
 
-            const isTauri = !!process.env.TAURI_ENV_PLATFORM
+        const isTauri = !!process.env.TAURI_ENV_PLATFORM
 
-            /** @type {import('@sveltejs/kit').Config} */
-            const config = {
-              preprocess: vitePreprocess(),
-              kit: {
-                adapter: isTauri
-                  ? Static({ fallback: 'index.html' })
-                  : Auto(),
-              },
-            }
+        /** @type {import('@sveltejs/kit').Config} */
+        const config = {
+          preprocess: vitePreprocess(),
+          kit: {
+            adapter: isTauri
+              ? Static({ fallback: 'index.html' })
+              : Auto(),
+          },
+        }
 
-            export default config
-            ```
+        export default config
+        ```
 
-            Configure Vite to use a different port for Tauri. This way you can run your app on `localhost:5173` (which serves as the backend) and the Tauri app on `localhost:4173`.
+        Configure Vite to use a different port for Tauri. This way you can run your app on `localhost:5173` (which serves as the backend) and the Tauri app on `localhost:4173`.
 
-            ```ts title="vite.config.ts"
-            import process from 'node:process'
-            import { sveltekit } from '@sveltejs/kit/vite'
-            import { defineConfig } from 'vite'
+        ```ts title="vite.config.ts"
+        import process from 'node:process'
+        import { sveltekit } from '@sveltejs/kit/vite'
+        import { defineConfig } from 'vite'
 
-            const isTauri = !!process.env.TAURI_ENV_PLATFORM
+        const isTauri = !!process.env.TAURI_ENV_PLATFORM
 
-            export default defineConfig({
-              plugins: [sveltekit()],
-              server: {
-                port: isTauri ? 4173 : 5173,
-                strictPort: true,
-              },
-            })
-            ```
+        export default defineConfig({
+          plugins: [sveltekit()],
+          server: {
+            port: isTauri ? 4173 : 5173,
+            strictPort: true,
+          },
+        })
+        ```
 
-            Your Tauri development URL in `tauri.conf.json` should match this port (e.g., `http://localhost:4173`).
+        Your Tauri development URL in `tauri.conf.json` should match this port (e.g., `http://localhost:4173`).
 
-            Create a root layout that disables SSR, as Tauri apps are client-side rendered.
+        Create a root layout that disables SSR, as Tauri apps are client-side rendered.
 
-            ```ts title="src/routes/+layout.ts"
-            export const ssr = false
-            ```
+        ```ts title="src/routes/+layout.ts"
+        export const ssr = false
+        ```
 
-            The `@rttnd/gau/client/svelte` package automatically handles the Tauri-specific logic. Your `auth.svelte.ts` file remains the same.
-            
-            Remember that your Tauri app is a static frontend and needs to communicate with your deployed backend.
-            
-            Use envs to set the `baseUrl` for development (`http://localhost:5173/api/auth`) and production.
+        The `@rttnd/gau/client/svelte` package automatically handles the Tauri-specific logic. Your `auth.svelte.ts` file remains the same.
+        
+        Remember that your Tauri app is a static frontend and needs to communicate with your deployed backend.
+        
+        Use envs to set the `baseUrl` for development (`http://localhost:5173/api/auth`) and production.
 
-            ```svelte title="src/routes/+layout.svelte" ins={8}
-            <script lang='ts'>
-              import { PUBLIC_API_URL } from '$env/static/public'
-              import AuthProvider from '@rttnd/gau/client/svelte/AuthProvider.svelte'
+        ```svelte title="src/routes/+layout.svelte" ins={8}
+        <script lang='ts'>
+          import { PUBLIC_API_URL } from '$env/static/public'
+          import AuthProvider from '@rttnd/gau/client/svelte/AuthProvider.svelte'
 
-              const { children } = $props()
-            </script>
+          const { children } = $props()
+        </script>
 
-            <AuthProvider scheme="gau" baseUrl={PUBLIC_API_URL}>
-              {@render children()}
-            </AuthProvider>
-            ```
+        <AuthProvider scheme="gau" baseUrl={PUBLIC_API_URL}>
+          {@render children()}
+        </AuthProvider>
+        ```
 
-            Finally, you can use the `useAuth` hook in your components. The `signIn` method will automatically open the browser for the OAuth flow, and the app will receive the token via the deep link.
+        Finally, you can use the `useAuth` hook in your components. The `signIn` method will automatically open the browser for the OAuth flow, and the app will receive the token via the deep link.
 
-            ```svelte title="src/routes/+page.svelte"
-            <script>
-              import { useAuth } from '@rttnd/gau/client/svelte'
+        ```svelte title="src/routes/+page.svelte"
+        <script>
+          import { useAuth } from '@rttnd/gau/client/svelte'
 
-              const { auth } = useAuth()
-            </script>
+          const { auth } = useAuth()
+        </script>
 
-            {#if auth.session?.user}
-              <p>Welcome, {auth.session.user.name}!</p>
-              <button onclick={() => auth.signOut()}>Sign Out</button>
-            {:else}
-              <button onclick={() => auth.signIn('github')}>Sign in with GitHub</button>
-            {/if}
-            ```
-        </TabItem>
-        <TabItem label="SolidStart">
-          Coming soon.
-        </TabItem>
+        {#if auth.session?.user}
+          <p>Welcome, {auth.session.user.name}!</p>
+          <button onclick={() => auth.signOut()}>Sign Out</button>
+        {:else}
+          <button onclick={() => auth.signIn('github')}>Sign in with GitHub</button>
+        {/if}
+        ```
+      </TabItem>
+      <TabItem label="SolidStart">
+        Coming soon.
+      </TabItem>
     </Tabs>
 
 6. ##### Configure the Backend

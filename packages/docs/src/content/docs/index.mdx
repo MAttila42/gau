@@ -13,19 +13,20 @@ hero:
       icon: external
       variant: minimal
 ---
-import { Card, CardGrid } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components'
+import Card from 'starlight-plugin-icons/components/Card.astro'
 
 <CardGrid stagger>
-  <Card title="Flexible" icon="puzzle">
+  <Card title="Flexible" icon="i-ph:puzzle-piece-duotone" bordered>
     Small and self-hostable, works with backend-only, full-stack, and native apps, and on different hosts.
   </Card>
-  <Card title="Framework Agnostic" icon="random">
+  <Card title="Framework Agnostic" icon="i-ph:toolbox-duotone" bordered>
     Core is framework-free and uses Web Crypto, with helpers for frameworks and runtimes.
   </Card>
-  <Card title="Runtime Agnostic" icon="rocket">
+  <Card title="Runtime Agnostic" icon="i-ph:computer-tower-duotone" bordered>
     Runs on Bun, Node, Deno, Cloudflare Workers, and even Tauri.
   </Card>
-  <Card title="Database Agnostic" icon="document">
+  <Card title="Database Agnostic" icon="i-ph:database-duotone" bordered>
     Can support any database via adapters.
   </Card>
 </CardGrid>

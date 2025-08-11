@@ -3,18 +3,19 @@ title: Configuration
 description: A deep-dive into all the createAuth options.
 ---
 
-import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+import { Tabs, TabItem } from '@astrojs/starlight/components'
+import Aside from 'starlight-plugin-icons/components/Aside.astro'
 
 The core of `gau` is the `createAuth` function, which you use to configure your auth setup. This guide covers all the available options in detail.
 
 Here's a quick overview of a typical configuration:
 
 ```ts title="auth.ts"
-import { DrizzleAdapter } from '@rttnd/gau/adapters/drizzle';
-import { createAuth } from '@rttnd/gau/core';
-import { GitHub } from '@rttnd/gau/oauth';
-import { db } from './db';
-import { Accounts, Users } from './db/schema';
+import { DrizzleAdapter } from '@rttnd/gau/adapters/drizzle'
+import { createAuth } from '@rttnd/gau/core'
+import { GitHub } from '@rttnd/gau/oauth'
+import { db } from './db'
+import { Accounts, Users } from './db/schema'
 
 export const auth = createAuth({
   adapter: DrizzleAdapter(db, Users, Accounts),
@@ -49,7 +50,7 @@ This option takes an array of configured OAuth providers that your application w
 Each provider typically needs a `clientId` and `clientSecret`.
 
 ```ts
-import { GitHub, Google } from '@rttnd/gau/oauth';
+import { GitHub, Google } from '@rttnd/gau/oauth'
 
 // ...
 providers: [

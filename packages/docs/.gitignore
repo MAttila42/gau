@@ -20,4 +20,5 @@ pnpm-debug.log*
 # macOS-specific files
 .DS_Store
 
-.material-icons-cache/
+.starlight-icons/*
+!.starlight-icons/safelist.json

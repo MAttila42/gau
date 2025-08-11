@@ -1,27 +1,14 @@
 import fs from 'node:fs/promises'
+import { presetStarlightIcons } from 'starlight-plugin-icons/uno'
 import { defineConfig, presetIcons } from 'unocss'
 
-async function getMaterialIconsSafelist() {
-  try {
-    const safelist = await fs.readFile('./.material-icons-cache/material-icons-safelist.json', 'utf-8')
-    return JSON.parse(safelist)
-  }
-  catch {
-    return []
-  }
-}
-
 export default defineConfig({
-  safelist: await getMaterialIconsSafelist(),
   presets: [
+    presetStarlightIcons(),
     presetIcons({
       collections: {
         icons: {
-          'drizzle': () => fs.readFile('./src/assets/adapters/drizzle.svg', 'utf-8'),
-          'svelte-ts': () => fs.readFile('./src/assets/svelte-ts.svg', 'utf-8'),
-          'svelte-js': () => fs.readFile('./src/assets/svelte-js.svg', 'utf-8'),
-          'folder': () => fs.readFile('./src/assets/folder.svg', 'utf-8'),
-          'folder-open': () => fs.readFile('./src/assets/folder-open.svg', 'utf-8'),
+          drizzle: () => fs.readFile('./src/assets/adapters/drizzle.svg', 'utf-8'),
         },
       },
       extraProperties: {
@@ -41,15 +28,4 @@ export default defineConfig({
       },
     }),
   ],
-  content: {
-    pipeline: {
-      include: [
-        /\.(vue|svelte|[jt]sx|vine.ts|mdx?|astro|elm|php|phtml|html|mjs)($|\?)/,
-      ],
-    },
-    filesystem: [
-      'astro.config.mjs',
-      'src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue,mjs}',
-    ],
-  },
 })

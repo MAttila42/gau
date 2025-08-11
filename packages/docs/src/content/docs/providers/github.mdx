@@ -30,7 +30,7 @@ The `user:email` scope is requested by default to retrieve the user's email addr
 ```ts title="auth.ts"
 import process from 'node:process'
 import { createAuth } from '@rttnd/gau/core'
-import { GitHub } from '@rttnd/gau/oauth';
+import { GitHub } from '@rttnd/gau/oauth'
 
 export const auth = createAuth({
   providers: [
@@ -39,5 +39,5 @@ export const auth = createAuth({
       clientSecret: process.env.GITHUB_CLIENT_SECRET,
     }),
   ],
-});
+})
 ```
