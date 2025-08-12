@@ -1,6 +1,6 @@
 import type { Accessor, ParentProps } from 'solid-js'
 import type { GauSession, ProviderIds } from '../../core'
-import { createContext, createResource, onMount, untrack, useContext } from 'solid-js'
+import { createContext, createResource, onCleanup, onMount, untrack, useContext } from 'solid-js'
 import { isServer } from 'solid-js/web'
 import { NULL_SESSION } from '../../core'
 import { handleTauriDeepLink, isTauri, linkAccountWithTauri, setupTauriListener, signInWithTauri } from '../../runtimes/tauri'
@@ -125,11 +125,20 @@ export function AuthProvider<const TAuth = unknown>(props: ParentProps & { auth?
     if (!isTauri)
       return
 
+    let disposed = false
     setupTauriListener(async (url) => {
       handleTauriDeepLink(url, baseUrl, scheme, (token) => {
         storeSessionToken(token)
         refetch()
       })
+    }).then((unlisten) => {
+      if (disposed)
+        unlisten?.()
+      else if (unlisten)
+        onCleanup(() => unlisten())
+    })
+    onCleanup(() => {
+      disposed = true
     })
   })
 

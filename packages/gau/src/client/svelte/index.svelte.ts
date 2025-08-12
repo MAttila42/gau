@@ -145,16 +145,32 @@ export function createSvelteAuth<const TAuth = unknown>({
     else {
       fetchSession()
     }
-
-    if (isTauri) {
-      setupTauriListener(async (url) => {
-        handleTauriDeepLink(url, baseUrl, scheme, async (token) => {
-          storeSessionToken(token)
-          await fetchSession()
-        })
-      })
-    }
   }
+
+  $effect(() => {
+    if (!BROWSER || !isTauri)
+      return
+
+    let cleanup: (() => void) | void
+    let disposed = false
+
+    setupTauriListener(async (url) => {
+      handleTauriDeepLink(url, baseUrl, scheme, async (token) => {
+        storeSessionToken(token)
+        await fetchSession()
+      })
+    }).then((unlisten) => {
+      if (disposed)
+        unlisten?.()
+      else
+        cleanup = unlisten
+    })
+
+    return () => {
+      disposed = true
+      cleanup?.()
+    }
+  })
 
   const contextValue: AuthContextValue<TAuth> = {
     get session() {

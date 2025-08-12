@@ -1,4 +1,3 @@
-import { listen } from '@tauri-apps/api/event'
 import { BROWSER } from 'esm-env'
 import { getSessionToken } from '../../client/token'
 
@@ -30,13 +29,22 @@ export async function signInWithTauri(
   await open(authUrl)
 }
 
-export function setupTauriListener(handler: (url: string) => Promise<void>) {
+export async function setupTauriListener(
+  handler: (url: string) => Promise<void>,
+): Promise<(() => void) | void> {
   if (!isTauri)
     return
 
-  listen<string>('deep-link', async (event) => {
-    await handler(event.payload)
-  }).catch(console.error)
+  const { listen } = await import('@tauri-apps/api/event')
+  try {
+    const unlisten = await listen<string>('deep-link', async (event) => {
+      await handler(event.payload)
+    })
+    return unlisten
+  }
+  catch (err) {
+    console.error(err)
+  }
 }
 
 export function handleTauriDeepLink(url: string, baseUrl: string, scheme: string, onToken: (token: string) => void) {
