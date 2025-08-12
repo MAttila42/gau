@@ -27,21 +27,21 @@ export default function Home() {
               <div class="flex gap-4 justify-center">
                 <button
                   class="px-4 py-2 border border-emerald-900/30 rounded bg-zinc-800 flex gap-2 transition-all duration-200 items-center justify-center hover:border-emerald-800/50 hover:bg-zinc-700"
-                  onClick={() => auth.signIn('github' as Provider)}
+                  onClick={() => auth.signIn('github')}
                 >
                   <div class="i-ph:github-logo size-5" />
                   <p>GitHub</p>
                 </button>
                 <button
                   class="px-4 py-2 border border-emerald-900/30 rounded bg-zinc-800 flex gap-2 transition-all duration-200 items-center justify-center hover:border-emerald-800/50 hover:bg-zinc-700"
-                  onClick={() => auth.signIn('google' as Provider)}
+                  onClick={() => auth.signIn('google')}
                 >
                   <div class="i-ph:google-logo-bold size-5" />
                   <p>Google</p>
                 </button>
                 <button
                   class="px-4 py-2 border border-emerald-900/30 rounded bg-zinc-800 flex gap-2 transition-all duration-200 items-center justify-center hover:border-emerald-800/50 hover:bg-zinc-700"
-                  onClick={() => auth.signIn('microsoft' as Provider)}
+                  onClick={() => auth.signIn('microsoft')}
                 >
                   <div class="i-mdi:microsoft size-5" />
                   <p>Microsoft</p>

@@ -1,9 +1,165 @@
 ---
 title: SolidStart
-sidebar:
-  badge:
-    text: Soon
-    variant: default
+description: How to integrate gau with SolidStart.
 ---
 
-Coming soon.
+import { Steps } from '@astrojs/starlight/components'
+import FileTree from 'starlight-plugin-icons/components/FileTree.astro'
+import Aside from 'starlight-plugin-icons/components/Aside.astro'
+
+This guide shows how to integrate `gau` with SolidStart, using Drizzle (SQLite) and GitHub as examples.
+
+<br />
+
+<Steps>
+1. ##### Follow the basic setup
+
+    Complete the [Getting Started](/guides/getting-started) guide for installation, environment variables, and the auth configuration with the database setup.
+
+2. ##### Set up API Route
+
+    Create a catch-all route for auth endpoints on the server.
+
+    ```ts title="src/routes/api/auth/[...gau].ts"
+    import { SolidAuth } from '@rttnd/gau/solidstart'
+    import { auth } from '~/server/auth'
+
+    export const { GET, POST, OPTIONS } = SolidAuth(auth)
+    ```
+
+3. ##### Add Middleware
+
+    Add the middleware to attach `getSession` to `event.locals`. Optionally, you can preload the session for selected paths or for all requests.
+
+    ```ts title="src/middleware.ts"
+    import { authMiddleware } from '@rttnd/gau/solidstart'
+    import { createMiddleware } from '@solidjs/start/middleware'
+    import { auth } from './server/auth'
+
+    export default createMiddleware({
+      onRequest: [authMiddleware(true, auth)],
+    })
+    ```
+
+    And register the middleware in `app.config.ts`:
+    ```ts title="app.config.ts"
+    export default defineConfig({
+      middleware: 'src/middleware.ts',
+    })
+    ```
+
+    Now, in server code, you can access `event.locals.getSession()` which returns `{ user, session, accounts, providers }`.
+
+    For full type-safety, add the following to `src/global.d.ts`:
+
+    ```ts title="src/global.d.ts"
+    import type { GauSession, ProviderIds } from '@rttnd/gau'
+    import type { Auth } from './server/auth'
+
+    declare global {
+      namespace App {
+        interface RequestEventLocals {
+          getSession: () => Promise<GauSession<ProviderIds<Auth>>>
+        }
+      }
+    }
+
+    export {}
+    ```
+
+4. ##### Set up the Client
+
+    Wrap your application in an `AuthProvider` and use the `useAuth` hook to access session data.
+
+    ```tsx title="src/app.tsx"
+    // @refresh reload
+    import { AuthProvider } from '@rttnd/gau/client/solid'
+    import { Router } from '@solidjs/router'
+    import { FileRoutes } from '@solidjs/start/router'
+    import { Suspense } from 'solid-js'
+
+    export default function App() {
+      return (
+        <AuthProvider>
+          <Router
+            root={props => (
+              <Suspense>{props.children}</Suspense>
+            )}
+          >
+            <FileRoutes />
+          </Router>
+        </AuthProvider>
+      )
+    }
+    ```
+
+    <Aside type="note">
+      If your frontend and backend are on different hosts, set `baseUrl` to the full URL of your backend's auth API. Use envs to set it for development and production.
+
+      ```tsx
+      <AuthProvider baseUrl={import.meta.env.VITE_API_URL}>
+      ```
+    </Aside>
+
+    Next, to get full TypeScript support for your provider IDs, create a typed `useAuth` hook. This is a great practice as you only have to type it once.
+
+    ```ts title="src/lib/auth.ts"
+    import type { Auth } from '~/server/auth'
+    import { useAuth as useAuthCore } from '@rttnd/gau/client/solid'
+
+    export const useAuth = () => useAuthCore<Auth>()
+    ```
+
+    <Aside type="note">
+      Exporting and importing the `Auth` type is optional, but it gives better types for the `auth.signIn` method.
+      By default, the `provider` param is `string`, but with the `Auth` type, it will be a union of string literals of the configured providers, like `'github' | 'google'`.
+    </Aside>
+
+    Now you can use your custom `useAuth` hook in any component to access the session and authentication methods.
+
+    ```tsx title="src/routes/index.tsx"
+    import { useAuth } from '~/lib/auth'
+    import { Show } from 'solid-js'
+
+    export default function Home() {
+      const auth = useAuth()
+
+      return (
+        <Show
+          when={auth.session().user}
+          fallback={(
+            <button onClick={() => auth.signIn('github')}>Sign in with GitHub</button>
+          )}
+        >
+          <button onClick={() => auth.signOut()}>Sign Out</button>
+        </Show>
+      )
+    }
+    ```
+
+5. ##### File Structure
+
+    <FileTree>
+      - src
+        - lib
+          - auth.ts
+        - routes
+          - api
+            - auth
+              - [...gau].ts
+          - index.tsx
+        - server
+          - auth.ts
+        - app.tsx
+        - global.d.ts
+        - middleware.ts
+      - app.config.ts
+      - package.json
+    </FileTree>
+
+6. ##### Next Steps
+
+    - Explore other [OAuth Providers](/oauth-providers).
+    - See [Deployment](/guides/deployment) for production tips.
+    - Learn about how `gau` works.
+</Steps>

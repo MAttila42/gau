@@ -97,7 +97,7 @@ import { Steps, Tabs, TabItem } from '@astrojs/starlight/components'
         ```
       </TabItem>
       <TabItem label="SolidStart">
-        ```ts title="src/db/schema.ts"
+        ```ts title="src/server/db/schema.ts"
         import { integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
         export const Users = sqliteTable('users', {
@@ -162,7 +162,7 @@ import { Steps, Tabs, TabItem } from '@astrojs/starlight/components'
         import { defineConfig } from 'drizzle-kit'
 
         export default defineConfig({
-          schema: './src/db/schema.ts',
+          schema: './src/server/db/schema.ts',
           dialect: 'turso',
           dbCredentials: {
             authToken: process.env.TURSO_AUTH_TOKEN!,
@@ -196,17 +196,17 @@ import { Steps, Tabs, TabItem } from '@astrojs/starlight/components'
         ```
       </TabItem>
       <TabItem label="SolidStart">
-        ```ts title="src/db/index.ts"
+        ```ts title="src/server/db/index.ts"
         import process from 'node:process'
         import { createClient } from '@libsql/client'
         import { drizzle } from 'drizzle-orm/libsql'
         import * as schema from './schema'
-
+ 
         const client = createClient({
           url: process.env.TURSO_DB_URL!,
           authToken: process.env.TURSO_AUTH_TOKEN!,
         })
-
+ 
         export const db = drizzle(client, { schema, casing: 'snake_case' })
         ```
       </TabItem>
@@ -246,11 +246,11 @@ import { Steps, Tabs, TabItem } from '@astrojs/starlight/components'
         ```ts title="src/server/auth.ts"
         import process from 'node:process'
         import { DrizzleAdapter } from '@rttnd/gau/adapters/drizzle'
-        import { createAuth } from '@rttnd/gau/core'
+        import { createAuth } from '@rttnd/gau'
         import { GitHub } from '@rttnd/gau/oauth'
         import { db } from './db'
         import { Accounts, Users } from './db/schema'
-
+ 
         export const auth = createAuth({
           adapter: DrizzleAdapter(db, Users, Accounts),
           providers: [
@@ -263,7 +263,7 @@ import { Steps, Tabs, TabItem } from '@astrojs/starlight/components'
             secret: process.env.AUTH_SECRET!,
           },
         })
-
+ 
         export type Auth = typeof auth
         ```
       </TabItem>

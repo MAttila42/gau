@@ -162,13 +162,36 @@ This guide assumes you have already completed the setup for your web framework (
 
    You need to configure `gau` to use this scheme:
 
-    ```ts title="src/lib/auth.svelte.ts" ins={4}
-    import { createSvelteAuth } from '@rttnd/gau/client/svelte'
+    <Tabs syncKey="framework">
+      <TabItem label="SvelteKit">
+        ```svelte title="src/routes/+layout.svelte" del={7} ins={8}
+        <script lang="ts">
+          import AuthProvider from '@rttnd/gau/client/svelte/AuthProvider.svelte'
 
-    export const auth = createSvelteAuth({
-      scheme: 'gau',
-    })
-    ```
+          const { children } = $props()
+        </script>
+
+        <AuthProvider>
+        <AuthProvider scheme="gau">
+          {@render children()}
+        </AuthProvider>
+        ```
+      </TabItem>
+      <TabItem label="SolidStart">
+        ```tsx title="src/app.tsx" del={5} ins={6}
+        import { AuthProvider } from '@rttnd/gau/client/solid'
+
+        export default function App() {
+          return (
+            <AuthProvider>
+            <AuthProvider scheme="gau">
+              ...
+            </AuthProvider>
+          )
+        }
+        ```
+      </TabItem>
+    </Tabs>
 
     Add the `core:event:default` permission to the `src-tauri/capabilities/default.json` file.
 
@@ -292,10 +315,9 @@ This guide assumes you have already completed the setup for your web framework (
         export const ssr = false
         ```
 
-        The `@rttnd/gau/client/svelte` package automatically handles the Tauri-specific logic. Your `auth.svelte.ts` file remains the same.
-        
+        The `@rttnd/gau/client/svelte` package automatically handles the Tauri-specific logic.
         Remember that your Tauri app is a static frontend and needs to communicate with your deployed backend.
-        
+
         Use envs to set the `baseUrl` for development (`http://localhost:5173/api/auth`) and production.
 
         ```svelte title="src/routes/+layout.svelte" ins={8}
@@ -329,7 +351,7 @@ This guide assumes you have already completed the setup for your web framework (
         ```
       </TabItem>
       <TabItem label="SolidStart">
-        Coming soon.
+        TODO
       </TabItem>
     </Tabs>
 
@@ -338,7 +360,7 @@ This guide assumes you have already completed the setup for your web framework (
    When using Tauri, the request to your authentication backend might not have a standard `Origin` header. `gau`'s CSRF protection checks this header for `POST` requests. You should configure `trustHosts` in your `createAuth` options to allow requests from your Tauri app.
 
    ```ts title="src/lib/server/auth.ts" ins={5}
-   import { createAuth } from '@rttnd/gau/core'
+   import { createAuth } from '@rttnd/gau'
 
    export const auth = createAuth({
      // ... other options

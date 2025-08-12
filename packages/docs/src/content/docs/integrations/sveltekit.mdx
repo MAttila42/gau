@@ -58,7 +58,7 @@ This guide shows how to integrate `gau` with SvelteKit, using Drizzle (SQLite) a
 
 4. ##### Set up the Client
 
-    To use `gau` on the client-side, you'll need to wrap your application in an `AuthProvider` and use the `useAuth` hook to access session data. See the [Client-side Usage](/guides/client) guide for more details.
+    To use `gau` on the client-side, you'll need to wrap your application in an `AuthProvider` and use the `useAuth` hook to access session data.
 
     First, wrap your root layout in the `AuthProvider`. This makes the auth state available to all your components.
 
@@ -92,8 +92,8 @@ This guide shows how to integrate `gau` with SvelteKit, using Drizzle (SQLite) a
     ```
 
     <Aside type="note">
-    Exporting and importing the `Auth` type is optional, but it gives better types for the `auth.signIn` method.
-    By default, the `provider` param is `string`, but with the `Auth` type, it will be a union of string literals of the configured providers.
+      Exporting and importing the `Auth` type is optional, but it gives better types for the `auth.signIn` method.
+      By default, the `provider` param is `string`, but with the `Auth` type, it will be a union of string literals of the configured providers, like `'github' | 'google'`.
     </Aside>
 
     Now you can use your custom `useAuth` hook in any component to access the session and authentication methods.
@@ -115,21 +115,22 @@ This guide shows how to integrate `gau` with SvelteKit, using Drizzle (SQLite) a
 5. ##### File Structure
 
     <FileTree>
-    - routes
-      - api
-        - auth
-          - [...gau]
-            - +server.ts
-      - +layout.svelte
-      - +page.svelte
-    - hooks.server.ts
-    - lib
-      - server
-        - auth.ts
-      - auth.ts
-    - app.d.ts
-    - package.json
-    - svelte.config.js
+      - src
+        - lib
+          - server
+            - auth.ts
+          - auth.ts
+        - routes
+          - api
+            - auth
+              - [...gau]
+                - +server.ts
+          - +layout.svelte
+          - +page.svelte
+        - app.d.ts
+        - hooks.server.ts
+      - package.json
+      - svelte.config.js
     </FileTree>
 
 6. ##### Next Steps

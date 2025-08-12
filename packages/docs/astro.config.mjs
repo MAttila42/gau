@@ -48,7 +48,7 @@ export default defineConfig({
             items: [
               { icon: 'i-ph:puzzle-piece-duotone', label: 'Integrations', slug: 'integrations' },
               { icon: 'i-material-icon-theme:svelte', label: 'SvelteKit', slug: 'integrations/sveltekit' },
-              { icon: 'i-devicon:solidjs', label: 'SolidStart', slug: 'integrations/solidstart', badge: { text: 'Soon', variant: 'default' } },
+              { icon: 'i-devicon:solidjs', label: 'SolidStart', slug: 'integrations/solidstart' },
             ],
           },
           {

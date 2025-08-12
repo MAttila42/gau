@@ -7,6 +7,8 @@
   "i-material-icon-theme:drizzle",
   "i-material-icon-theme:folder-api",
   "i-material-icon-theme:folder-api-open",
+  "i-material-icon-theme:folder-database",
+  "i-material-icon-theme:folder-database-open",
   "i-material-icon-theme:folder-lib",
   "i-material-icon-theme:folder-lib-open",
   "i-material-icon-theme:folder-routes",
@@ -15,6 +17,8 @@
   "i-material-icon-theme:folder-secure-open",
   "i-material-icon-theme:folder-server",
   "i-material-icon-theme:folder-server-open",
+  "i-material-icon-theme:folder-src",
+  "i-material-icon-theme:folder-src-open",
   "i-material-icon-theme:json",
   "i-material-icon-theme:nodejs",
   "i-material-icon-theme:react-ts",
@@ -40,6 +44,5 @@
   "i-ph:terminal-window-duotone",
   "i-simple-icons:github",
   "i-starlight-plugin-icons:folder",
-  "i-starlight-plugin-icons:folder-open",
-  "i-starlight-plugin-icons:svelte-ts"
+  "i-starlight-plugin-icons:folder-open"
 ]
