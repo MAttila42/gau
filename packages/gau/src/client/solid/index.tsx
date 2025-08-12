@@ -1,6 +1,6 @@
 import type { Accessor, ParentProps } from 'solid-js'
 import type { GauSession, ProviderIds } from '../../core'
-import { createContext, createResource, onMount, useContext } from 'solid-js'
+import { createContext, createResource, onMount, untrack, useContext } from 'solid-js'
 import { isServer } from 'solid-js/web'
 import { NULL_SESSION } from '../../core'
 import { handleTauriDeepLink, isTauri, linkAccountWithTauri, setupTauriListener, signInWithTauri } from '../../runtimes/tauri'
@@ -17,24 +17,26 @@ interface AuthContextValue<TAuth = unknown> {
 const AuthContext = createContext<any>()
 
 export function AuthProvider<const TAuth = unknown>(props: ParentProps & { auth?: TAuth, baseUrl?: string, scheme?: string, redirectTo?: string }) {
-  const scheme = props.scheme ?? 'gau'
-  const baseUrl = props.baseUrl ?? '/api/auth'
+  const scheme = untrack(() => props.scheme ?? 'gau')
+  const baseUrl = untrack(() => props.baseUrl ?? '/api/auth')
+
+  const fetchSession = async (): Promise<GauSession<ProviderIds<TAuth>>> => {
+    if (isServer)
+      return { ...NULL_SESSION, providers: [] }
+
+    const token = getSessionToken()
+    const headers = token ? { Authorization: `Bearer ${token}` } : undefined
+    const res = await fetch(`${baseUrl}/session`, token ? { headers } : { credentials: 'include' })
+
+    const contentType = res.headers.get('content-type')
+    if (contentType?.includes('application/json'))
+      return res.json()
+
+    return { ...NULL_SESSION, providers: [] as ProviderIds<TAuth>[] }
+  }
 
   const [session, { refetch }] = createResource<GauSession<ProviderIds<TAuth>>>(
-    async () => {
-      if (isServer)
-        return { ...NULL_SESSION, providers: [] }
-
-      const token = getSessionToken()
-      const headers = token ? { Authorization: `Bearer ${token}` } : undefined
-      const res = await fetch(`${baseUrl}/session`, token ? { headers } : { credentials: 'include' })
-
-      const contentType = res.headers.get('content-type')
-      if (contentType?.includes('application/json'))
-        return res.json()
-
-      return { ...NULL_SESSION, providers: [] as ProviderIds<TAuth>[] }
-    },
+    fetchSession,
     { initialValue: { ...NULL_SESSION, providers: [] } },
   )
 

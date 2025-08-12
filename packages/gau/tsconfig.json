@@ -24,8 +24,8 @@
   },
   "include": [
     "src/**/*.ts",
-    "test/handler.ts"
-, "test/adapters/drizzle/sqlite.test.ts", "test/client/token.test.ts", "test/core/handlers/callback.test.ts", "test/core/handlers/cors.test.ts", "test/core/handlers/link.test.ts", "test/core/handlers/login.test.ts", "test/core/handlers/session.test.ts", "test/core/cookies.test.ts", "test/core/createAuth.test.ts", "test/core/handler.test.ts", "test/jwt/jwt.test.ts", "test/jwt/utils.test.ts", "test/oauth/providers/github.test.ts", "test/oauth/providers/google.test.ts", "test/oauth/providers/microsoft.test.ts", "test/runtimes/tauri.test.ts", "test/solidstart/index.test.ts", "test/sveltekit/index.test.ts"  ],
+    "test/**/*.ts"
+  ],
   "exclude": [
     "src/client",
     "test",

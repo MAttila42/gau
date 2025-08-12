@@ -67,6 +67,14 @@ export default defineConfig(async () => {
       ...commonConfig,
       entry: toEntryObject(solidEntries),
       tsconfig: 'src/client/solid/tsconfig.json',
+      splitting: false,
+      esbuildOptions(options) {
+        options.jsx = 'preserve'
+        options.jsxImportSource = 'solid-js'
+      },
+      outExtension() {
+        return { js: '.jsx' }
+      },
     },
     {
       ...commonConfig,
