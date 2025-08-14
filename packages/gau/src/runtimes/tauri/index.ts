@@ -1,7 +1,7 @@
 import { BROWSER } from 'esm-env'
 import { getSessionToken } from '../../client/token'
 
-export const isTauri = BROWSER && '__TAURI_INTERNALS__' in window
+export const isTauri = BROWSER && '__TAURI_INTERNALS__' in (globalThis as any)
 
 export async function signInWithTauri(
   provider: string,

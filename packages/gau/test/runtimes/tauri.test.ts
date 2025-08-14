@@ -36,8 +36,8 @@ describe('tauri runtime helpers', () => {
 
   async function setup(isTauriEnv: boolean) {
     if (isTauriEnv) {
-      // @ts-expect-error - mocking tauri env
-      globalThis.window = { __TAURI_INTERNALS__: {} }
+      globalThis.__TAURI_INTERNALS__ = {}
+      globalThis.window = globalThis as any
     }
     else {
       // @ts-expect-error - mocking browser env
@@ -56,6 +56,7 @@ describe('tauri runtime helpers', () => {
     vi.clearAllMocks()
     // @ts-expect-error - needs to be optional to be deleted
     delete globalThis.window
+    delete globalThis.__TAURI_INTERNALS__
   })
 
   describe('isTauri', () => {
