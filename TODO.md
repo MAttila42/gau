@@ -26,3 +26,4 @@
 ## later
 
 - [ ] Passkeys/WebAuthn
+- [ ] eliminate waterfalls, currently: initial html, css, some js -> auth/session -> rest of the js
