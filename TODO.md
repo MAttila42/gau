@@ -4,7 +4,7 @@
 
 ## docs
 
--
+- [ ] protected routes: sveltekit, solidstart
 
 ## fix
 

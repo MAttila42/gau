@@ -17,19 +17,19 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "@libsql/client": "^0.15.10",
+    "@libsql/client": "^0.15.12",
     "@rttnd/gau": "workspace:*",
     "@solidjs/router": "^0.15.3",
     "@solidjs/start": "^1.1.7",
     "drizzle-orm": "^0.44.4",
-    "solid-js": "^1.9.8",
+    "solid-js": "^1.9.9",
     "uuid": "^11.1.0",
     "vinxi": "^0.5.8"
   },
   "devDependencies": {
     "@iconify-json/mdi": "^1.2.3",
     "@iconify-json/ph": "^1.2.2",
-    "@types/node": "^24.2.1",
+    "@types/node": "^24.3.0",
     "@unocss/preset-icons": "^66.4.2",
     "drizzle-kit": "^0.31.4",
     "unocss": "^66.4.2",
