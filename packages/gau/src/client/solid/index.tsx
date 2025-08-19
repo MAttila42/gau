@@ -1,6 +1,6 @@
-import type { Accessor, ParentProps } from 'solid-js'
+import type { Accessor, JSXElement, ParentProps, VoidComponent } from 'solid-js'
 import type { GauSession, ProviderIds } from '../../core'
-import { createContext, createResource, onCleanup, onMount, untrack, useContext } from 'solid-js'
+import { createContext, createResource, onCleanup, onMount, Show, untrack, useContext } from 'solid-js'
 import { isServer } from 'solid-js/web'
 import { NULL_SESSION } from '../../core'
 import { handleTauriDeepLink, isTauri, linkAccountWithTauri, setupTauriListener, signInWithTauri } from '../../runtimes/tauri'
@@ -154,4 +154,28 @@ export function useAuth<const TAuth = unknown>(): AuthContextValue<TAuth> {
   if (!context)
     throw new Error('useAuth must be used within an AuthProvider')
   return context as AuthContextValue<TAuth>
+}
+
+export function Protected<const TAuth = unknown>(
+  page: (session: Accessor<GauSession<ProviderIds<TAuth>>>) => JSXElement,
+  fallbackOrRedirect?: (() => JSXElement) | string,
+): VoidComponent {
+  return () => {
+    const auth = useAuth<TAuth>()
+
+    const isRedirectMode = typeof fallbackOrRedirect === 'string' || fallbackOrRedirect === undefined
+    const redirectTo = isRedirectMode ? (fallbackOrRedirect ?? '/') : undefined
+    const Fallback = !isRedirectMode ? (fallbackOrRedirect as (() => JSXElement)) : undefined
+
+    onMount(() => {
+      if (isRedirectMode && !auth.session().user && !isServer && redirectTo)
+        window.location.href = redirectTo
+    })
+
+    return (
+      <Show when={auth.session().user} fallback={Fallback ? <Fallback /> : undefined}>
+        {page(auth.session)}
+      </Show>
+    )
+  }
 }
