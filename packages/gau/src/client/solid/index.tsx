@@ -167,13 +167,19 @@ export function Protected<const TAuth = unknown>(
     const redirectTo = isRedirectMode ? (fallbackOrRedirect ?? '/') : undefined
     const Fallback = !isRedirectMode ? (fallbackOrRedirect as (() => JSXElement)) : undefined
 
-    onMount(() => {
-      if (isRedirectMode && !auth.session().user && !isServer && redirectTo)
-        window.location.href = redirectTo
-    })
+    const Redirect: VoidComponent = () => {
+      onMount(() => {
+        if (!isServer && redirectTo)
+          window.location.replace(redirectTo)
+      })
+      return null
+    }
 
     return (
-      <Show when={auth.session().user} fallback={Fallback ? <Fallback /> : undefined}>
+      <Show
+        when={auth.session().user}
+        fallback={isRedirectMode ? <Redirect /> : (Fallback ? <Fallback /> : null)}
+      >
         {page(auth.session)}
       </Show>
     )
