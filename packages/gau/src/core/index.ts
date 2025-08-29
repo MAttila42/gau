@@ -27,6 +27,7 @@ export interface User {
   email?: string | null
   emailVerified?: boolean | null
   image?: string | null
+  role?: string | null
 }
 
 export interface Session {

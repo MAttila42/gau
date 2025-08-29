@@ -7,8 +7,6 @@
   "i-material-icon-theme:drizzle",
   "i-material-icon-theme:folder-api",
   "i-material-icon-theme:folder-api-open",
-  "i-material-icon-theme:folder-database",
-  "i-material-icon-theme:folder-database-open",
   "i-material-icon-theme:folder-lib",
   "i-material-icon-theme:folder-lib-open",
   "i-material-icon-theme:folder-routes",
@@ -42,6 +40,7 @@
   "i-ph:rocket-launch-duotone",
   "i-ph:shield-check-duotone",
   "i-ph:terminal-window-duotone",
+  "i-ph:user-check-duotone",
   "i-simple-icons:github",
   "i-starlight-plugin-icons:folder",
   "i-starlight-plugin-icons:folder-open"

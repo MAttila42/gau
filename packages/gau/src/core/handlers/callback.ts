@@ -116,11 +116,20 @@ export async function handleCallback(request: RequestLike, auth: Auth, providerI
     }
     if (!user) {
       try {
+        let resolvedRole: string | undefined
+        try {
+          resolvedRole = auth.roles.resolveOnCreate?.({ providerId, profile: providerUser, request: request as unknown as Request })
+        }
+        catch (e) {
+          console.error('roles.resolveOnCreate threw:', e)
+        }
+
         user = await auth.createUser({
           name: providerUser.name,
           email: providerUser.email,
           image: providerUser.avatar,
           emailVerified: providerUser.emailVerified,
+          role: resolvedRole ?? auth.roles.defaultRole,
         })
       }
       catch (error) {

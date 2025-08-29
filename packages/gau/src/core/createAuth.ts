@@ -40,6 +40,17 @@ export interface CreateAuthOptions<TProviders extends OAuthProvider[]> {
   trustHosts?: 'all' | string[]
   /** Account linking behavior: 'verifiedEmail' (default), 'always', or false. */
   autoLink?: 'verifiedEmail' | 'always' | false
+  /** Optional configuration for role-based access control. */
+  roles?: {
+    /** Default role for newly created users. */
+    defaultRole?: string
+    /** Dynamically resolve the role at the moment of user creation. Return undefined to fall back to defaultRole. */
+    resolveOnCreate?: (context: { providerId: string, profile: any, request: Request }) => string | undefined
+    /** Roles that are considered admin-like for helper predicates. */
+    adminRoles?: string[]
+    /** Users that are always treated as admin for helper predicates. */
+    adminUserIds?: string[]
+  }
 }
 
 export type Auth<TProviders extends OAuthProvider[] = any> = Adapter & {
@@ -57,6 +68,12 @@ export type Auth<TProviders extends OAuthProvider[] = any> = Adapter & {
   autoLink: 'verifiedEmail' | 'always' | false
   sessionStrategy: 'auto' | 'cookie' | 'token'
   development: boolean
+  roles: {
+    defaultRole: string
+    resolveOnCreate?: (context: { providerId: string, profile: any, request: Request }) => string | undefined
+    adminRoles: string[]
+    adminUserIds: string[]
+  }
 }
 
 export function createAuth<const TProviders extends OAuthProvider[]>({
@@ -68,6 +85,7 @@ export function createAuth<const TProviders extends OAuthProvider[]>({
   cookies: cookieConfig = {},
   trustHosts = [],
   autoLink = 'verifiedEmail',
+  roles: rolesConfig = {},
 }: CreateAuthOptions<TProviders>): Auth<TProviders> {
   const { algorithm = 'ES256', secret, iss, aud, ttl: defaultTTL = 3600 * 24 } = jwtConfig
   const cookieOptions = { ...DEFAULT_COOKIE_SERIALIZE_OPTIONS, ...cookieConfig }
@@ -153,5 +171,11 @@ export function createAuth<const TProviders extends OAuthProvider[]>({
     autoLink,
     sessionStrategy,
     development: false,
+    roles: {
+      defaultRole: rolesConfig.defaultRole ?? 'user',
+      resolveOnCreate: rolesConfig.resolveOnCreate,
+      adminRoles: rolesConfig.adminRoles ?? ['admin'],
+      adminUserIds: rolesConfig.adminUserIds ?? [],
+    },
   }
 }

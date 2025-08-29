@@ -1,0 +1,141 @@
+---
+title: Role-Based Access Control
+description: Add optional roles to your gau setup and guard routes.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components'
+
+This guide shows how to add roles to your `gau` setup.
+
+- Roles are stored in the `User` table in the database.
+- On first sign-in, you can set a role via `roles.defaultRole` or compute one with `roles.resolveOnCreate`.
+- The session returned by `getSession()` includes `user.role` when your adapter returns it.
+
+## Add `role` to your User table
+
+Add a `role` column. You can constrain values if you want.
+
+```ts title="schema.ts" ins={5}
+import { sqliteTable, text } from 'drizzle-orm/sqlite-core'
+
+export const Users = sqliteTable('users', {
+  // ...
+  role: text('role').$type<'admin' | 'user'>().default('user'),
+})
+```
+
+## Configuration
+
+These are all optional, by default `user` is the default role, `adminRoles` is `['admin']`, and `adminUserIds` is `[]`.
+
+```ts title="auth.ts"
+import { createAuth } from '@rttnd/gau/core'
+
+export const auth = createAuth({
+  // ...
+  roles: {
+    defaultRole: 'user',
+    resolveOnCreate({ providerId, profile }) {
+      // Example:
+      return profile.email === 'admin@example.com' ? 'admin' : 'user'
+    },
+    adminRoles: ['admin'],
+    adminUserIds: ['1234567890'],
+  },
+})
+```
+
+On first sign-in, `resolveOnCreate` is called. If it returns a role, it's used; otherwise `defaultRole`.
+
+## Use roles on the server
+
+Authorize in your route handlers/middleware using `session.user?.role`.
+
+<Tabs>
+  <TabItem label="SvelteKit">
+    ###### Remote functions
+
+    ```ts title="admin.remote.ts"
+    import { getRequestEvent, query } from '$app/server'
+    import { error } from '@sveltejs/kit'
+
+    export const getSession = query(
+      async () => {
+        const event = getRequestEvent()
+        const session = await event.locals.getSession()
+
+        if (session.user?.role !== 'admin')
+          error(403, 'Forbidden')
+
+        return session
+      },
+    )
+    ```
+
+    ###### Load functions
+
+    ```ts title="+page.ts"
+    import type { PageLoad } from './$types'
+    import { error } from '@sveltejs/kit'
+
+    export const load: PageLoad = async (event) => {
+      const session = await event.locals.getSession()
+
+      if (session.user?.role !== 'admin')
+        error(403, 'Forbidden')
+
+      return session
+    }
+    ```
+
+    ###### API routes
+
+    ```ts title="routes/api/+server.ts"
+    import type { RequestHandler } from './$types'
+    import { error } from '@sveltejs/kit'
+
+    export const GET: RequestHandler = async (event) => {
+      const session = await event.locals.getSession()
+
+      if (session.user?.role !== 'admin')
+        error(403, 'Forbidden')
+
+      return session
+    }
+
+    ```
+  </TabItem>
+  <TabItem label="SolidStart">
+    ###### Server functions
+
+    ```ts title="lib/server/session.ts"
+    import { query } from '@solidjs/router'
+    import { getRequestEvent } from 'solid-js/web'
+
+    export const getSession = query(async () => {
+      const event = getRequestEvent()
+      const session = await event.locals.getSession()
+
+      if (session.user?.role !== 'admin')
+        throw new Error('Forbidden')
+
+      return session
+    })
+    ```
+
+    ###### API routes
+
+    ```ts title="routes/api/session.ts"
+    import type { APIHandler } from '@solidjs/start/server'
+
+    export const GET: APIHandler = async (event) => {
+      const session = await event.locals.getSession()
+
+      if (session.user?.role !== 'admin')
+        return new Response('Forbidden', { status: 403 })
+
+      return session
+    }
+    ```
+  </TabItem>
+</Tabs>

@@ -10,6 +10,7 @@ export type UsersTable = Table & {
   email: AnyColumn
   image: AnyColumn
   emailVerified: AnyColumn
+  role?: AnyColumn
   createdAt: AnyColumn
   updatedAt: AnyColumn
 }
@@ -107,6 +108,7 @@ export function SQLiteDrizzleAdapter<
             email: data.email ?? null,
             image: data.image ?? null,
             emailVerified: data.emailVerified ?? null,
+            ...(Users.role ? { role: data.role ?? null } : {}),
             createdAt: new Date(),
             updatedAt: new Date(),
           } as DBInsertUser)
@@ -143,6 +145,7 @@ export function SQLiteDrizzleAdapter<
             email: partial.email,
             image: partial.image,
             emailVerified: partial.emailVerified,
+            ...(Users.role ? { role: partial.role } : {}),
             updatedAt: new Date(),
           } as Partial<DBInsertUser>)
           .where(eq(Users.id, partial.id))

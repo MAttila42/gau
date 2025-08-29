@@ -39,6 +39,7 @@ export default defineConfig({
               { icon: 'i-ph:lego-duotone', label: 'Configuration', slug: 'guides/configuration' },
               { icon: 'i-ph:cookie-duotone', label: 'Session Management', slug: 'guides/session-management' },
               { icon: 'i-ph:plugs-connected-duotone', label: 'Account Linking', slug: 'guides/account-linking' },
+              { icon: 'i-ph:user-check-duotone', label: 'Role-Based Access Control', slug: 'guides/role-based-access-control' },
               { icon: 'i-ph:key-duotone', label: 'JWT', slug: 'guides/jwt' },
               { icon: 'i-ph:shield-check-duotone', label: 'Security', slug: 'guides/security' },
             ],
