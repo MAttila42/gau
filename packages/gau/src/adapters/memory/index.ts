@@ -59,7 +59,8 @@ export function MemoryAdapter(): Adapter {
         name: data.name ?? null,
         email: data.email ?? null,
         image: data.image ?? null,
-        emailVerified: null,
+        emailVerified: data.emailVerified ?? null,
+        role: data.role ?? undefined,
       }
       users.set(id, user)
       if (user.email)
