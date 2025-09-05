@@ -21,7 +21,6 @@
 - [x] manual account linking and unlinking
   - [ ] allowDifferentEmails
   - [ ] updateUserInfoOnLink or updateUserInfoOnUnlink
-- [ ] drizzle drivers for mysql, postgres
 - [x] refresh-token rotation
 
 ## v0.4.1
@@ -31,5 +30,6 @@
 
 ## later
 
+- [ ] drizzle drivers for mysql, postgres
 - [ ] Passkeys/WebAuthn
 - [ ] eliminate waterfalls, currently: initial html, css, some js -> auth/session -> rest of the js

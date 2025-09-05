@@ -2,7 +2,7 @@
   "name": "@rttnd/gau",
   "type": "module",
   "version": "0.3.8",
-  "packageManager": "bun@1.2.20",
+  "packageManager": "bun@1.2.21",
   "description": "gau is a delightful auth library",
   "license": "MIT",
   "homepage": "https://github.com/Rettend/gau#readme",
@@ -140,17 +140,17 @@
     "esm-env": "^1.2.2"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^5.2.1",
-    "@libsql/client": "^0.15.12",
+    "@antfu/eslint-config": "^5.2.2",
+    "@libsql/client": "^0.15.14",
     "@types/better-sqlite3": "^7.6.13",
-    "@types/bun": "^1.2.20",
-    "@types/node": "^24.3.0",
+    "@types/bun": "^1.2.21",
+    "@types/node": "^24.3.1",
     "@vitest/coverage-v8": "^3.2.4",
     "@vitest/ui": "^3.2.4",
     "better-sqlite3": "^12.2.0",
     "bumpp": "^10.2.3",
     "drizzle-kit": "^0.31.4",
-    "eslint": "^9.33.0",
+    "eslint": "^9.34.0",
     "vitest": "^3.2.4"
   }
 }
