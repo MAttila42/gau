@@ -1,5 +1,5 @@
 import type { Auth } from '../createAuth'
-import type { RequestLike, ResponseLike, User } from '../index'
+import type { User } from '../index'
 import {
   CALLBACK_URI_COOKIE_NAME,
   Cookies,
@@ -11,7 +11,7 @@ import {
 } from '../cookies'
 import { json, redirect } from '../index'
 
-export async function handleCallback(request: RequestLike, auth: Auth, providerId: string): Promise<ResponseLike> {
+export async function handleCallback(request: Request, auth: Auth, providerId: string): Promise<Response> {
   const provider = auth.providerMap.get(providerId)
   if (!provider)
     return json({ error: 'Provider not found' }, { status: 400 })

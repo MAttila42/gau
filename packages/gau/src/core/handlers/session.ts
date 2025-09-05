@@ -1,9 +1,8 @@
 import type { Auth } from '../createAuth'
-import type { RequestLike, ResponseLike } from '../index'
 import { parseCookies, SESSION_COOKIE_NAME } from '../cookies'
 import { json, NULL_SESSION } from '../index'
 
-export async function handleSession(request: RequestLike, auth: Auth): Promise<ResponseLike> {
+export async function handleSession(request: Request, auth: Auth): Promise<Response> {
   const rawCookieHeader = request.headers.get('Cookie')
   const requestCookies = parseCookies(rawCookieHeader)
   let sessionToken = requestCookies.get(SESSION_COOKIE_NAME)

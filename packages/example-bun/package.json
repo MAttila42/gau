@@ -1,0 +1,21 @@
+{
+  "name": "gau-bun-example",
+  "type": "module",
+  "private": true,
+  "packageManager": "bun@1.2.21",
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "build": "bun build src/index.ts --outdir dist",
+    "check": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@rttnd/gau": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.21",
+    "typescript": "^5.8.3"
+  }
+}

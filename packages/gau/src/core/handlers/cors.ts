@@ -1,6 +1,4 @@
-import type { RequestLike } from '../index'
-
-export function applyCors(request: RequestLike, response: Response): Response {
+export function applyCors(request: Request, response: Response): Response {
   const origin = request.headers.get('Origin') || request.headers.get('origin')
   if (!origin)
     return response
@@ -12,7 +10,7 @@ export function applyCors(request: RequestLike, response: Response): Response {
   return response
 }
 
-export function handlePreflight(request: RequestLike): Response {
+export function handlePreflight(request: Request): Response {
   const origin = request.headers.get('Origin') || request.headers.get('origin') || '*'
   return new Response(null, {
     status: 204,

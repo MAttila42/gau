@@ -1,0 +1,19 @@
+{
+  "name": "gau-elysia-example",
+  "type": "module",
+  "private": true,
+  "packageManager": "bun@1.2.21",
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "build": "bun build src/index.ts --outdir dist",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@rttnd/gau": "workspace:*",
+    "elysia": "^1.3.21"
+  },
+  "devDependencies": {
+    "bun-types": "^1.2.21",
+    "typescript": "^5.8.3"
+  }
+}

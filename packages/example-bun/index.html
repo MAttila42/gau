@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>gau - Bun example</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@unocss/reset/tailwind.min.css" />
+    <script>
+      window.__unocss = {}
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@unocss/runtime"></script>
+    <style>
+      [un-cloak] {
+        display: none;
+      }
+    </style>
+  </head>
+  <body class="bg-zinc-900 text-zinc-100 font-sans">
+    <main class="min-h-screen p-6">
+      <div class="mx-auto max-w-xl space-y-6" un-cloak>
+        <h1 class="text-2xl font-semibold">gau - Bun example</h1>
+        <div id="session" class="rounded border border-zinc-700/70 bg-zinc-800/50 p-4"></div>
+
+        <div class="space-y-3">
+          <h2 class="text-lg">Sign in</h2>
+          <div id="signin" class="flex flex-wrap gap-2"></div>
+        </div>
+
+        <div class="space-y-3">
+          <h2 class="text-lg">Linked accounts</h2>
+          <div id="linked" class="flex flex-wrap gap-2"></div>
+        </div>
+
+        <div class="space-y-3">
+          <h2 class="text-lg">Link more</h2>
+          <div id="unlinked" class="flex flex-wrap gap-2"></div>
+        </div>
+
+        <button
+          id="signout"
+          class="rounded border border-red-400/30 bg-red-900/30 px-3 py-2 text-sm hover:bg-red-900/50 disabled:opacity-50"
+        >
+          Sign out
+        </button>
+      </div>
+    </main>
+
+    <script>
+      const BASE = '/api/auth'
+      const TOKEN_KEY = 'gau-token'
+
+      function storeToken(token) {
+        try {
+          localStorage.setItem(TOKEN_KEY, token)
+          document.cookie = '__gau-session-token=' + token + '; path=/; max-age=31536000; samesite=lax; secure'
+        } catch {}
+      }
+      function getToken() {
+        try {
+          return localStorage.getItem(TOKEN_KEY)
+        } catch {
+          return null
+        }
+      }
+      function clearToken() {
+        try {
+          localStorage.removeItem(TOKEN_KEY)
+          document.cookie = '__gau-session-token=; path=/; max-age=0'
+        } catch {}
+      }
+
+      ;(function handleHash() {
+        const hash = location.hash.startsWith('#') ? location.hash.slice(1) : ''
+        const params = new URLSearchParams(hash)
+        const t = params.get('token')
+        if (t) {
+          storeToken(t)
+          history.replaceState(null, '', location.pathname + location.search)
+        }
+      })()
+
+      async function authFetch(input, init) {
+        const token = getToken()
+        if (token) {
+          return fetch(input, {
+            ...(init || {}),
+            headers: { ...((init && init.headers) || {}), Authorization: 'Bearer ' + token },
+          })
+        }
+        return fetch(input, { ...(init || {}), credentials: 'include' })
+      }
+
+      async function load() {
+        const res = await authFetch(BASE + '/session')
+        let data = { user: null, session: null, accounts: [], providers: [] }
+        try {
+          data = await res.json()
+        } catch {}
+
+        const sessionEl = document.getElementById('session')
+        const signinEl = document.getElementById('signin')
+        const linkedEl = document.getElementById('linked')
+        const unlinkedEl = document.getElementById('unlinked')
+        const signoutBtn = document.getElementById('signout')
+
+        sessionEl.innerHTML = data.user
+          ? `<div class="flex items-center justify-between"><div><div class=\"text-sm text-zinc-400\">Signed in as</div><div class=\"text-xl\">${data.user.name || 'Unnamed'}</div></div><span class=\"text-xs rounded border border-emerald-400/30 bg-emerald-900/30 px-2 py-1\">userId: ${data.user.id || ''}</span></div>`
+          : '<div class="text-zinc-300">Not signed in</div>'
+
+        signinEl.innerHTML = ''
+        linkedEl.innerHTML = ''
+        unlinkedEl.innerHTML = ''
+
+        const linked = new Set((data.accounts || []).map((a) => a.provider))
+        const providers = data.providers || []
+
+        providers.forEach((p) => {
+          if (linked.has(p)) {
+            const item = document.createElement('div')
+            item.className = 'flex items-center gap-2 rounded border border-emerald-400/30 bg-emerald-900/20 px-3 py-2'
+            item.innerHTML = `<span class=\"capitalize\">${p}</span>`
+            const btn = document.createElement('button')
+            btn.className = 'text-red-400 hover:text-red-300 text-xl leading-none'
+            btn.title = 'Unlink'
+            btn.type = 'button'
+            btn.textContent = '×'
+            btn.onclick = async () => {
+              await unlink(p)
+            }
+            item.appendChild(btn)
+            linkedEl.appendChild(item)
+          } else {
+            const linkBtn = document.createElement('button')
+            linkBtn.className = 'rounded border border-zinc-600 bg-zinc-700/50 px-3 py-2 text-sm hover:bg-zinc-700'
+            linkBtn.textContent = p
+            linkBtn.type = 'button'
+            linkBtn.onclick = async () => {
+              await link(p)
+            }
+            unlinkedEl.appendChild(linkBtn)
+
+            const signinBtn = document.createElement('button')
+            signinBtn.className = 'rounded border border-zinc-600 bg-zinc-700/50 px-3 py-2 text-sm hover:bg-zinc-700'
+            signinBtn.textContent = p
+            signinBtn.type = 'button'
+            signinBtn.onclick = () => signIn(p)
+            signinEl.appendChild(signinBtn)
+          }
+        })
+
+        signoutBtn.disabled = !data.user
+        signoutBtn.onclick = async () => {
+          await signOut()
+        }
+      }
+
+      function signIn(provider) {
+        const redirectTo = location.origin
+        location.href = `${BASE}/${provider}?redirectTo=${encodeURIComponent(redirectTo)}`
+      }
+
+      async function link(provider) {
+        const url = `${BASE}/link/${provider}?redirectTo=${encodeURIComponent(location.href)}&redirect=false`
+        const res = await authFetch(url)
+        if (res.redirected) {
+          location.href = res.url
+          return
+        }
+        try {
+          const data = await res.json()
+          if (data.url) location.href = data.url
+        } catch {}
+      }
+
+      async function unlink(provider) {
+        await authFetch(`${BASE}/unlink/${provider}`, { method: 'POST' })
+        await load()
+      }
+
+      async function signOut() {
+        clearToken()
+        await authFetch(BASE + '/signout', { method: 'POST' })
+        await load()
+      }
+
+      load()
+    </script>
+  </body>
+</html>

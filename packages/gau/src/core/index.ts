@@ -1,26 +1,3 @@
-export interface RequestLike {
-  /** Absolute or relative URL */
-  readonly url: string
-  /** Upper-case HTTP method (e.g. `GET`) */
-  readonly method: string
-  /** All HTTP headers – mutable so adapters can append */
-  readonly headers: Headers
-  /** Lazily parse the body as JSON */
-  json: <T = unknown>() => Promise<T>
-  /** Raw text body */
-  text: () => Promise<string>
-  /** FormData helper (for `application/x-www-form-urlencoded` or `multipart/form-data`) */
-  formData: () => Promise<FormData>
-}
-
-export interface ResponseLike {
-  readonly status: number
-  readonly headers: Headers
-  readonly body?: BodyInit | null
-  json: <T = unknown>() => Promise<T>
-  text: () => Promise<string>
-}
-
 export interface User {
   id: string
   name?: string | null

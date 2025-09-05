@@ -1,5 +1,4 @@
 import type { Auth } from './createAuth'
-import type { RequestLike, ResponseLike } from './index'
 import {
   applyCors,
   handleCallback,
@@ -13,10 +12,10 @@ import {
 } from './handlers'
 import { json } from './index'
 
-export function createHandler(auth: Auth): (request: RequestLike) => Promise<ResponseLike> {
+export function createHandler(auth: Auth): (request: Request) => Promise<Response> {
   const { basePath } = auth
 
-  return async function (request: RequestLike): Promise<ResponseLike> {
+  return async function (request: Request): Promise<Response> {
     // Handle preflight requests early
     if (request.method === 'OPTIONS')
       return handlePreflight(request)
@@ -41,7 +40,7 @@ export function createHandler(auth: Auth): (request: RequestLike) => Promise<Res
     if (!action)
       return applyCors(request, json({ error: 'Not Found' }, { status: 404 }))
 
-    let response: ResponseLike
+    let response: Response
 
     if (request.method === 'GET') {
       if (action === 'session')
@@ -67,6 +66,6 @@ export function createHandler(auth: Auth): (request: RequestLike) => Promise<Res
       response = json({ error: 'Method Not Allowed' }, { status: 405 })
     }
 
-    return applyCors(request, response as Response)
+    return applyCors(request, response)
   }
 }

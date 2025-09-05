@@ -1,5 +1,4 @@
 import type { Auth } from '../createAuth'
-import type { RequestLike, ResponseLike } from '../index'
 import { createOAuthUris } from '../../oauth/utils'
 import {
   CALLBACK_URI_COOKIE_NAME,
@@ -12,7 +11,7 @@ import {
 } from '../cookies'
 import { json, redirect } from '../index'
 
-export function verifyRequestOrigin(request: RequestLike, trustHosts: 'all' | string[], development: boolean): boolean {
+export function verifyRequestOrigin(request: Request, trustHosts: 'all' | string[], development: boolean): boolean {
   if (trustHosts === 'all')
     return true
 
@@ -46,11 +45,11 @@ export function verifyRequestOrigin(request: RequestLike, trustHosts: 'all' | st
 }
 
 export async function prepareOAuthRedirect(
-  request: RequestLike,
+  request: Request,
   auth: Auth,
   providerId: string,
   linkingToken: string | null,
-): Promise<ResponseLike> {
+): Promise<Response> {
   const provider = auth.providerMap.get(providerId)
   if (!provider)
     return json({ error: 'Provider not found' }, { status: 400 })

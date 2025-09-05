@@ -9,6 +9,7 @@ export default defineConfig({
       collections: {
         icons: {
           drizzle: () => fs.readFile('./src/assets/adapters/drizzle.svg', 'utf-8'),
+          elysia: () => fs.readFile('./src/assets/integrations/elysia.svg', 'utf-8'),
         },
       },
       extraProperties: {
@@ -20,10 +21,8 @@ export default defineConfig({
           if (['devicon', 'simple-icons', 'logos'].includes(collection))
             props.transform = 'scale(0.8)'
 
-          if (collection === 'icons') {
-            if (icon === 'drizzle')
-              props.transform = 'scale(0.8)'
-          }
+          if (collection === 'icons')
+            props.transform = 'scale(0.8)'
         },
       },
     }),

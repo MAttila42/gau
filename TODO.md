@@ -22,8 +22,8 @@
   - [x] allowDifferentEmails
   - [x] updateUserInfoOnLink or updateUserInfoOnUnlink
 - [x] refresh-token rotation
-- [ ] bun.serve frameworkless guide
-- [ ] e2e tests with bun.serve and vitest browser mode
+- [x] bun.serve frameworkless guide
+  - [x] elysia
 
 ## later
 

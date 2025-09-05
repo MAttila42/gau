@@ -51,6 +51,8 @@ export default defineConfig({
               { icon: 'i-ph:puzzle-piece-duotone', label: 'Integrations', slug: 'integrations' },
               { icon: 'i-material-icon-theme:svelte', label: 'SvelteKit', slug: 'integrations/sveltekit' },
               { icon: 'i-devicon:solidjs', label: 'SolidStart', slug: 'integrations/solidstart' },
+              { icon: 'i-logos:bun', label: 'Bun.serve', slug: 'integrations/bun-serve' },
+              { icon: 'i-icons:elysia', label: 'Elysia', slug: 'integrations/elysia' },
             ],
           },
           {

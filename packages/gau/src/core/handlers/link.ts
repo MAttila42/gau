@@ -1,10 +1,9 @@
 import type { Auth } from '../createAuth'
-import type { RequestLike, ResponseLike } from '../index'
 import { parseCookies, SESSION_COOKIE_NAME } from '../cookies'
 import { json } from '../index'
 import { prepareOAuthRedirect } from './utils'
 
-export async function handleLink(request: RequestLike, auth: Auth, providerId: string): Promise<ResponseLike> {
+export async function handleLink(request: Request, auth: Auth, providerId: string): Promise<Response> {
   const url = new URL(request.url)
   const requestCookies = parseCookies(request.headers.get('Cookie'))
   let sessionToken = requestCookies.get(SESSION_COOKIE_NAME)
@@ -31,7 +30,7 @@ export async function handleLink(request: RequestLike, auth: Auth, providerId: s
   return prepareOAuthRedirect(cleanRequest, auth, providerId, sessionToken)
 }
 
-export async function handleUnlink(request: RequestLike, auth: Auth, providerId: string): Promise<ResponseLike> {
+export async function handleUnlink(request: Request, auth: Auth, providerId: string): Promise<Response> {
   const requestCookies = parseCookies(request.headers.get('Cookie'))
   let sessionToken = requestCookies.get(SESSION_COOKIE_NAME)
 

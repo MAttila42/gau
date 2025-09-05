@@ -5,6 +5,9 @@ export default antfu({
   svelte: true,
   solid: true,
   astro: true,
+  formatters: {
+    html: true,
+  },
   rules: {
     'no-console': 'warn',
     'curly': ['warn', 'multi-or-nest', 'consistent'],
@@ -16,5 +19,6 @@ export default antfu({
     '**/coverage/**',
     '**/target/**',
     '**/.astro/**',
+    '**/.vinxi/**',
   ],
 })

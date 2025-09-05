@@ -1,0 +1,87 @@
+---
+title: Elysia
+description: How to integrate gau with Elysia.
+---
+
+import { Steps } from '@astrojs/starlight/components'
+import FileTree from 'starlight-plugin-icons/components/FileTree.astro'
+import Aside from 'starlight-plugin-icons/components/Aside.astro'
+
+This guide shows how to integrate `gau` with an Elysia server.
+
+<br />
+
+<Steps>
+1. ##### Follow the basic setup
+
+    Complete the [Getting Started](/guides/getting-started) guide for installation, environment variables, and adding at least one OAuth provider.
+
+2. ##### Create your auth configuration
+
+    ```ts title="src/auth.ts"
+    import process from 'node:process'
+    import { MemoryAdapter } from '@rttnd/gau/adapters/memory'
+    import { createAuth } from '@rttnd/gau/core'
+    import { GitHub, Google } from '@rttnd/gau/oauth'
+
+    export const auth = createAuth({
+      adapter: MemoryAdapter(),
+      providers: [
+        GitHub({
+          clientId: process.env.AUTH_GITHUB_ID!,
+          clientSecret: process.env.AUTH_GITHUB_SECRET!,
+        }),
+        Google({
+          clientId: process.env.AUTH_GOOGLE_ID!,
+          clientSecret: process.env.AUTH_GOOGLE_SECRET!,
+        }),
+      ],
+      jwt: {
+        secret: process.env.AUTH_SECRET!,
+      },
+      // When frontend runs on a different origin, set the trusted hosts, example:
+      // trustHosts: ['http://localhost:5173', 'http://localhost:3000'],
+    })
+
+    export type Auth = typeof auth
+    ```
+
+   <Aside type="note">
+     `gau` handles CORS and CSRF. For cross-origin setups, configure [`trustHosts`](/guides/configuration#trusthosts) in `createAuth`.
+   </Aside>
+
+3. ##### Mount the fetch handler
+
+    `createHandler(auth)` returns a standard Fetch handler `(req: Request) => Promise<Response>`.
+    You can mount it directly on an Elysia app using `.mount()`.
+
+    ```ts title="src/index.ts"
+    import { createHandler } from '@rttnd/gau/core'
+    import { Elysia } from 'elysia'
+    import { auth } from './auth'
+
+    const handler = createHandler(auth)
+
+    const app = new Elysia()
+      .mount('/api/auth', handler)
+      .get('/', () => 'OK')
+      .listen(3000)
+
+    console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`)
+    ```
+
+4. ##### Try it
+
+    Look at the [Elysia Example](https://github.com/Rettend/gau/tree/main/packages/example-elysia).
+
+5. ##### File Structure (example)
+
+    <FileTree>
+      - src
+        - auth.ts
+        - index.ts
+      - package.json
+    </FileTree>
+
+</Steps>
+
