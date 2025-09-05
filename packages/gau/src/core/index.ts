@@ -78,6 +78,7 @@ export interface Adapter {
   createUser: (data: NewUser) => Promise<User>
   linkAccount: (data: NewAccount) => Promise<void>
   unlinkAccount: (provider: string, providerAccountId: string) => Promise<void>
+  updateAccount?: (data: Partial<Account> & { userId: string, provider: string, providerAccountId: string }) => Promise<void>
   updateUser: (data: Partial<User> & { id: string }) => Promise<User>
   deleteUser: (id: string) => Promise<void>
 }

@@ -136,6 +136,25 @@ export function SQLiteDrizzleAdapter<
         .run()
     },
 
+    async updateAccount(data) {
+      await db
+        .update(Accounts)
+        .set({
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken,
+          expiresAt: data.expiresAt,
+          idToken: data.idToken,
+          tokenType: data.tokenType,
+          scope: data.scope,
+        })
+        .where(and(
+          eq(Accounts.userId, data.userId),
+          eq(Accounts.provider, data.provider),
+          eq(Accounts.providerAccountId, data.providerAccountId),
+        ))
+        .run()
+    },
+
     async updateUser(partial) {
       return await transaction(db, async (tx) => {
         await tx

@@ -218,6 +218,56 @@ export async function handleCallback(request: RequestLike, auth: Auth, providerI
       return json({ error: 'Failed to link account' }, { status: 500 })
     }
   }
+  else {
+    // Existing account: update stored tokens on sign-in (access/refresh/expires/idToken/etc.)
+    try {
+      const accounts = await auth.getAccounts(user!.id)
+      const existing = accounts.find(a => a.provider === providerId && a.providerAccountId === providerUser.id)
+
+      if (existing && auth.updateAccount) {
+        let refreshToken: string | null
+        try {
+          refreshToken = tokens.refreshToken()
+        }
+        catch {
+          refreshToken = existing.refreshToken ?? null
+        }
+
+        let expiresAt: number | undefined
+        try {
+          const expiresAtDate = tokens.accessTokenExpiresAt()
+          if (expiresAtDate)
+            expiresAt = Math.floor(expiresAtDate.getTime() / 1000)
+        }
+        catch {
+          expiresAt = existing.expiresAt ?? undefined
+        }
+
+        let idToken: string | null
+        try {
+          idToken = tokens.idToken()
+        }
+        catch {
+          idToken = existing.idToken ?? null
+        }
+
+        await auth.updateAccount({
+          userId: user!.id,
+          provider: providerId,
+          providerAccountId: providerUser.id,
+          accessToken: tokens.accessToken() ?? existing.accessToken ?? undefined,
+          refreshToken,
+          expiresAt: expiresAt ?? existing.expiresAt ?? undefined,
+          tokenType: tokens.tokenType?.() ?? existing.tokenType ?? null,
+          scope: tokens.scopes()?.join(' ') ?? existing.scope ?? null,
+          idToken,
+        })
+      }
+    }
+    catch (error) {
+      console.error('Failed to update account tokens on sign-in:', error)
+    }
+  }
 
   const sessionToken = await auth.createSession(user.id)
 

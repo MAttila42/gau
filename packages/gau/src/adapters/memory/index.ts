@@ -13,6 +13,7 @@ export function MemoryAdapter(): Adapter {
   const users = new Map<string, User>()
   const usersByEmail = new Map<string, string>() // email -> userId
   const accounts = new Map<string, string>() // accountKey -> userId
+  const accountData = new Map<string, Partial<Account>>() // accountKey -> stored account fields
 
   return {
     async getUser(id) {
@@ -38,7 +39,8 @@ export function MemoryAdapter(): Adapter {
       for (const [key, accUserId] of accounts.entries()) {
         if (accUserId === userId) {
           const [provider, providerAccountId] = key.split(':') as [string, string]
-          userAccounts.push({ userId, provider, providerAccountId })
+          const stored = accountData.get(key) ?? {}
+          userAccounts.push({ userId, provider, providerAccountId, ...stored })
         }
       }
       return userAccounts
@@ -69,11 +71,32 @@ export function MemoryAdapter(): Adapter {
     },
 
     async linkAccount(data: NewAccount) {
-      accounts.set(accountKey(data), data.userId)
+      const key = accountKey(data)
+      accounts.set(key, data.userId)
+      accountData.set(key, {
+        type: data.type,
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+        expiresAt: data.expiresAt,
+        idToken: data.idToken,
+        scope: data.scope,
+        tokenType: data.tokenType,
+        sessionState: data.sessionState,
+      })
     },
 
     async unlinkAccount(provider, providerAccountId) {
-      accounts.delete(accountKey({ provider, providerAccountId }))
+      const key = accountKey({ provider, providerAccountId })
+      accounts.delete(key)
+      accountData.delete(key)
+    },
+
+    async updateAccount(data) {
+      const key = accountKey({ provider: data.provider, providerAccountId: data.providerAccountId })
+      if (!accounts.has(key) || accounts.get(key) !== data.userId)
+        return
+      const existing = accountData.get(key) ?? {}
+      accountData.set(key, { ...existing, ...data })
     },
 
     async updateUser(partial) {

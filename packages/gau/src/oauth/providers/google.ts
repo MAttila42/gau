@@ -1,4 +1,4 @@
-import type { AuthUser, OAuthProvider, OAuthProviderConfig } from '../index'
+import type { AuthUser, OAuthProvider, OAuthProviderConfig, RefreshedTokens } from '../index'
 import { CodeChallengeMethod, OAuth2Client } from 'arctic'
 
 const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
@@ -59,6 +59,37 @@ export function Google(config: OAuthProviderConfig): OAuthProvider<'google'> {
       const tokens = await client.validateAuthorizationCode(GOOGLE_TOKEN_URL, code, codeVerifier)
       const user = await getUser(tokens.accessToken())
       return { tokens, user }
+    },
+
+    async refreshAccessToken(refreshToken: string): Promise<RefreshedTokens> {
+      const body = new URLSearchParams({
+        client_id: config.clientId,
+        client_secret: config.clientSecret,
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+      })
+      const res = await fetch(GOOGLE_TOKEN_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body,
+      })
+      const json = await res.json() as any
+      if (!res.ok)
+        throw json
+
+      const expiresIn: number | undefined = json.expires_in
+      const expiresAt = typeof expiresIn === 'number' ? Math.floor(Date.now() / 1000) + Math.floor(expiresIn) : undefined
+
+      return {
+        accessToken: json.access_token,
+        refreshToken: json.refresh_token ?? refreshToken,
+        expiresAt: expiresAt ?? null,
+        idToken: json.id_token ?? null,
+        tokenType: json.token_type ?? null,
+        scope: json.scope ?? null,
+      }
     },
   }
 }

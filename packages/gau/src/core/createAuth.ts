@@ -64,6 +64,11 @@ export type Auth<TProviders extends OAuthProvider[] = any> = Adapter & {
   verifyJWT: <U = Record<string, unknown>>(token: string, customOptions?: Partial<VerifyOptions>) => Promise<U | null>
   createSession: (userId: string, data?: Record<string, unknown>, ttl?: number) => Promise<string>
   validateSession: (token: string) => Promise<GauSession | null>
+  /**
+   * Get a valid access token for a linked provider. If the stored token is expired and a refresh token exists,
+   * this will refresh it using the provider's refreshAccessToken and persist rotated tokens.
+   */
+  getAccessToken: (userId: string, providerId: ProviderId<TProviders[number]>) => Promise<{ accessToken: string, expiresAt?: number | null } | null>
   trustHosts: 'all' | string[]
   autoLink: 'verifiedEmail' | 'always' | false
   sessionStrategy: 'auto' | 'cookie' | 'token'
@@ -155,6 +160,46 @@ export function createAuth<const TProviders extends OAuthProvider[]>({
     return { user, session: { id: token, ...payload }, accounts }
   }
 
+  async function getAccessToken(userId: string, providerId: ProviderId<TProviders[number]>) {
+    const provider = providerMap.get(providerId)
+    if (!provider)
+      return null
+
+    const accounts = await adapter.getAccounts(userId)
+    const account = accounts.find(a => a.provider === providerId)
+    if (!account || !account.accessToken)
+      return null
+
+    const now = Math.floor(Date.now() / 1000)
+    const isExpired = typeof account.expiresAt === 'number' ? account.expiresAt <= now : false
+
+    if (!isExpired)
+      return { accessToken: account.accessToken, expiresAt: account.expiresAt ?? null }
+
+    if (!account.refreshToken || !provider.refreshAccessToken)
+      return null
+
+    try {
+      const refreshed = await provider.refreshAccessToken(account.refreshToken)
+      const updated = {
+        userId,
+        provider: account.provider,
+        providerAccountId: account.providerAccountId,
+        accessToken: refreshed.accessToken ?? account.accessToken,
+        refreshToken: refreshed.refreshToken ?? account.refreshToken,
+        expiresAt: refreshed.expiresAt ?? null,
+        idToken: refreshed.idToken ?? account.idToken ?? null,
+        tokenType: refreshed.tokenType ?? account.tokenType ?? null,
+        scope: refreshed.scope ?? account.scope ?? null,
+      }
+      await adapter.updateAccount?.(updated)
+      return { accessToken: updated.accessToken!, expiresAt: updated.expiresAt }
+    }
+    catch {
+      return null
+    }
+  }
+
   return {
     ...adapter,
     providerMap: providerMap as Map<ProviderId<TProviders[number]>, TProviders[number]>,
@@ -167,6 +212,7 @@ export function createAuth<const TProviders extends OAuthProvider[]>({
     verifyJWT,
     createSession,
     validateSession,
+    getAccessToken,
     trustHosts,
     autoLink,
     sessionStrategy,
