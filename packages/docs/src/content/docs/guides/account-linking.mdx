@@ -48,6 +48,10 @@ In addition to automatic linking, `gau` provides functions for users to manually
 
 The `useAuth` hook (available in client integrations) exposes `linkAccount` and `unlinkAccount` functions.
 
+### Configuration
+
+You can control manual linking behavior with the [`allowDifferentEmails`](/guides/configuration#allowdifferentemails) and [`updateUserInfoOnLink`](/guides/configuration#updateuserinfoonlink) options   in `createAuth`.
+
 ### `linkAccount`
 
 This function initiates the OAuth flow to connect an additional provider to the currently logged-in user's account.
@@ -122,7 +126,7 @@ This function removes a linked provider from the user's account.
 <Aside type="caution">
   #### Unlinking Behavior
 
-  `gau` allows linking accounts even if they have different primary email addresses. When an account is unlinked, `gau` will currently reset the user's `email` to `null` and `emailVerified` to `false`.
+  By default, `gau` allows linking accounts even if they have different primary email addresses. You can enforce matching emails during manual linking with the `allowDifferentEmails: false` configuration. When an account is unlinked, `gau` will currently reset the user's `email` to `null` and `emailVerified` to `false`.
 
   Because of this, it's a good practice to prompt the user to sign in again after unlinking an account. A new sign-in will automatically re-populate the user's primary email from one of the remaining linked accounts.
 

@@ -79,7 +79,7 @@ export async function handleCallback(request: RequestLike, auth: Auth, providerI
   const userFromAccount = await auth.getUserByAccount(providerId, providerUser.id)
 
   if (isLinking) {
-    const session = await auth.validateSession(linkingToken!)
+    const session = await auth.validateSession(linkingToken)
     user = session!.user
 
     if (!user)
@@ -87,6 +87,59 @@ export async function handleCallback(request: RequestLike, auth: Auth, providerI
 
     if (userFromAccount && userFromAccount.id !== user.id)
       return json({ error: 'Account already linked to another user' }, { status: 409 })
+
+    if (auth.allowDifferentEmails === false) {
+      const currentEmail = user.email
+      const providerEmail = providerUser.email
+      if (currentEmail && providerEmail && currentEmail !== providerEmail)
+        return json({ error: 'Email mismatch between existing account and provider' }, { status: 400 })
+    }
+
+    if (user) {
+      const update: Partial<User> & { id: string } = { id: user.id }
+      let needsUpdate = false
+
+      if (auth.updateUserInfoOnLink) {
+        if (providerUser.name && providerUser.name !== user.name) {
+          update.name = providerUser.name
+          needsUpdate = true
+        }
+        if (providerUser.avatar && providerUser.avatar !== user.image) {
+          update.image = providerUser.avatar
+          needsUpdate = true
+        }
+      }
+      else {
+        if (!user.name && providerUser.name) {
+          update.name = providerUser.name
+          needsUpdate = true
+        }
+        if (!user.image && providerUser.avatar) {
+          update.image = providerUser.avatar
+          needsUpdate = true
+        }
+      }
+
+      if (
+        user.email
+        && providerUser.email
+        && user.email === providerUser.email
+        && providerUser.emailVerified === true
+        && (!user.emailVerified || auth.updateUserInfoOnLink)
+      ) {
+        update.emailVerified = true
+        needsUpdate = true
+      }
+
+      if (needsUpdate) {
+        try {
+          user = await auth.updateUser(update)
+        }
+        catch (e) {
+          console.error('Failed to update user info on link:', e)
+        }
+      }
+    }
   }
   else {
     user = userFromAccount

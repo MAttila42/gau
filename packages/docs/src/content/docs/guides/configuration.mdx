@@ -222,6 +222,26 @@ Read the [Account Linking](/guides/account-linking) guide for a full explanation
 - **`'always'`**: Links accounts if the email addresses match, regardless of whether the email is verified by the provider.
 - **`false`**: Disables automatic account linking. A new user will be created for each new OAuth provider sign-in, even if the email already exists.
 
+## allowDifferentEmails
+
+> **Type**: `boolean`,
+> **Default**: `true`
+
+Controls whether a user can manually link a provider whose primary email differs from the user's current primary email.
+
+- `true` (default): Allow linking even if the emails differ.
+- `false`: Reject manual linking with a 400 error when the emails differ.
+
+This is only enforced during manual linking; it does not affect the auto-link checks above.
+
+## updateUserInfoOnLink
+
+> **Type**: `boolean`,
+> **Default**: `false`
+
+When enabled, during manual linking gau will update the user's profile fields from the new provider (e.g. `name`, `image`).
+If the provider's email matches the user's current email and is verified, gau will also set `emailVerified: true`.
+
 ## roles
 
 > **Type**: `{ defaultRole?: string, resolveOnCreate?: (ctx) => string | undefined, adminRoles?: string[], adminUserIds?: string[] }`,

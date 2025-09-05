@@ -40,6 +40,10 @@ export interface CreateAuthOptions<TProviders extends OAuthProvider[]> {
   trustHosts?: 'all' | string[]
   /** Account linking behavior: 'verifiedEmail' (default), 'always', or false. */
   autoLink?: 'verifiedEmail' | 'always' | false
+  /** Allow linking providers whose primary emails differ from the user's current primary email. Defaults to true. */
+  allowDifferentEmails?: boolean
+  /** When linking a new provider, update missing user info (name/image/emailVerified) from provider profile. Defaults to false. */
+  updateUserInfoOnLink?: boolean
   /** Optional configuration for role-based access control. */
   roles?: {
     /** Default role for newly created users. */
@@ -71,6 +75,8 @@ export type Auth<TProviders extends OAuthProvider[] = any> = Adapter & {
   getAccessToken: (userId: string, providerId: string) => Promise<{ accessToken: string, expiresAt?: number | null } | null>
   trustHosts: 'all' | string[]
   autoLink: 'verifiedEmail' | 'always' | false
+  allowDifferentEmails: boolean
+  updateUserInfoOnLink: boolean
   sessionStrategy: 'auto' | 'cookie' | 'token'
   development: boolean
   roles: {
@@ -90,6 +96,8 @@ export function createAuth<const TProviders extends OAuthProvider[]>({
   cookies: cookieConfig = {},
   trustHosts = [],
   autoLink = 'verifiedEmail',
+  allowDifferentEmails = true,
+  updateUserInfoOnLink = false,
   roles: rolesConfig = {},
 }: CreateAuthOptions<TProviders>): Auth<TProviders> {
   const { algorithm = 'ES256', secret, iss, aud, ttl: defaultTTL = 3600 * 24 } = jwtConfig
@@ -215,6 +223,8 @@ export function createAuth<const TProviders extends OAuthProvider[]>({
     getAccessToken,
     trustHosts,
     autoLink,
+    allowDifferentEmails,
+    updateUserInfoOnLink,
     sessionStrategy,
     development: false,
     roles: {

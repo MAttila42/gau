@@ -19,12 +19,9 @@
 ## v0.4.0
 
 - [x] manual account linking and unlinking
-  - [ ] allowDifferentEmails
-  - [ ] updateUserInfoOnLink or updateUserInfoOnUnlink
+  - [x] allowDifferentEmails
+  - [x] updateUserInfoOnLink or updateUserInfoOnUnlink
 - [x] refresh-token rotation
-
-## v0.4.1
-
 - [ ] bun.serve frameworkless guide
 - [ ] e2e tests with bun.serve and vitest browser mode
 
