@@ -105,6 +105,8 @@ export function MemoryAdapter(): Adapter {
         throw new Error('User not found')
       const updated: User = { ...existing, ...partial }
       users.set(updated.id, updated)
+      if (existing.email && existing.email !== updated.email)
+        usersByEmail.delete(existing.email)
       if (updated.email)
         usersByEmail.set(updated.email, updated.id)
       return updated
