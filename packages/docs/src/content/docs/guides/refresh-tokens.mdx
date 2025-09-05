@@ -1,0 +1,46 @@
+---
+title: Refresh Tokens
+description: How provider refresh tokens work in gau and how to use automatic rotation.
+---
+
+import { Steps, Tabs, TabItem } from '@astrojs/starlight/components'
+import Aside from 'starlight-plugin-icons/components/Aside.astro'
+
+`gau` uses its own JWT for sessions and does not require OAuth refresh tokens to keep a user signed in. However, when you need to call a provider API (Google, Microsoft), `gau` can store provider access/refresh tokens and automatically refresh/rotate them for you.
+
+<br />
+
+## What are refresh tokens?
+
+Refresh tokens are long-lived credentials issued by OAuth providers to obtain new, short-lived access tokens without user re-authentication. Some providers (e.g., Google, Microsoft) issue them; others (e.g., GitHub) often do not.
+
+## How gau stores tokens
+
+During the OAuth callback, `gau` saves provider tokens into the `accounts` table via your adapter:
+
+- `accessToken`, `refreshToken`, `expiresAt`, `tokenType`, `scope`, `idToken` (when available)
+- On subsequent sign-ins, these values are updated for already-linked accounts.
+
+<Aside type="note">
+  You don't need refresh tokens for gau sessions. They are only for calling provider APIs on behalf of the user.
+  If your provider never issues refresh tokens, the column will remain `null`.
+  
+</Aside>
+
+## Automatic Refresh & Rotation
+
+`gau` exposes a server-side helper to retrieve a valid provider access token, refreshing and rotating as needed:
+
+```ts title="server/usage.ts"
+const result = await auth.getAccessToken(userId, 'google')
+if (!result)
+  throw new Error('No access token available')
+
+const { accessToken } = result
+// Use accessToken to call Google APIs...
+```
+
+Behavior:
+- If the stored access token is still valid, it's returned as-is.
+- If it's expired and a `refreshToken` exists (and the provider supports it), `gau` calls the provider's token endpoint.
+- If a new refresh token is returned, `gau` rotates it and persists the change via your adapter.

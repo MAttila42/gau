@@ -9,6 +9,7 @@
     "dev": "bun --bun --cwd packages/gau tsup --watch",
     "lint": "eslint . --fix",
     "lint:test": "eslint coverage.json --fix",
+    "check": "cd packages/gau && tsc --noEmit --skipLibCheck",
     "test": "vitest && bun run lint:test",
     "test:ui": "vitest --ui",
     "update:deps": "taze latest -wr",
