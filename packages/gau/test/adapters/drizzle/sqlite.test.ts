@@ -24,6 +24,12 @@ const accountsTable = sqliteTable('accounts', {
   provider: text('provider').notNull(),
   providerAccountId: text('providerAccountId').notNull(),
   type: text('type'),
+  refreshToken: text('refreshToken'),
+  accessToken: text('accessToken'),
+  expiresAt: integer('expiresAt'),
+  tokenType: text('tokenType'),
+  scope: text('scope'),
+  idToken: text('idToken'),
 })
 
 describe('sqlite drizzle adapter with better-sqlite3', () => {
@@ -51,6 +57,12 @@ describe('sqlite drizzle adapter with better-sqlite3', () => {
         "provider" text NOT NULL,
         "providerAccountId" text NOT NULL,
         "type" text,
+        "refreshToken" text,
+        "accessToken" text,
+        "expiresAt" integer,
+        "tokenType" text,
+        "scope" text,
+        "idToken" text,
         FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE cascade
       );
     `)
@@ -148,6 +160,32 @@ describe('sqlite drizzle adapter with better-sqlite3', () => {
     })
     const retrievedUser = await adapter.getUserByAccount('test-provider', 'test-provider-id')
     expect(retrievedUser).toEqual(user)
+  })
+
+  it('updateAccount: should update token fields for an account', async () => {
+    const user = await adapter.createUser({ email: 'tokens@example.com' })
+    await adapter.linkAccount({ userId: user.id, provider: 'github', providerAccountId: 'gh1' })
+
+    await adapter.updateAccount!({
+      userId: user.id,
+      provider: 'github',
+      providerAccountId: 'gh1',
+      accessToken: 'new-access',
+      refreshToken: 'new-refresh',
+      expiresAt: 123456,
+      idToken: 'id-token',
+      tokenType: 'Bearer',
+      scope: 'read',
+    })
+
+    const accounts = await adapter.getAccounts(user.id)
+    const acc = accounts.find(a => a.provider === 'github' && a.providerAccountId === 'gh1')!
+    expect(acc.accessToken).toBe('new-access')
+    expect(acc.refreshToken).toBe('new-refresh')
+    expect(acc.expiresAt).toBe(123456)
+    expect(acc.idToken).toBe('id-token')
+    expect(acc.tokenType).toBe('Bearer')
+    expect(acc.scope).toBe('read')
   })
 
   it('deleteUser: should delete a user', async () => {
@@ -274,6 +312,12 @@ describe('sqlite drizzle adapter with libsql', () => {
         "provider" text NOT NULL,
         "providerAccountId" text NOT NULL,
         "type" text,
+        "refreshToken" text,
+        "accessToken" text,
+        "expiresAt" integer,
+        "tokenType" text,
+        "scope" text,
+        "idToken" text,
         FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE cascade
       );
     `)
@@ -313,6 +357,32 @@ describe('sqlite drizzle adapter with libsql', () => {
     expect(result!.user).toEqual(user)
     expect(result!.accounts).toHaveLength(1)
     expect(result!.accounts[0]?.provider).toBe('github')
+  })
+
+  it('updateAccount: should update token fields for an account with libsql', async () => {
+    const user = await adapter.createUser({ email: 'libsql-tokens@example.com' })
+    await adapter.linkAccount({ userId: user.id, provider: 'github', providerAccountId: 'gh1' })
+
+    await adapter.updateAccount!({
+      userId: user.id,
+      provider: 'github',
+      providerAccountId: 'gh1',
+      accessToken: 'libsql-access',
+      refreshToken: 'libsql-refresh',
+      expiresAt: 654321,
+      idToken: 'libsql-id',
+      tokenType: 'Bearer',
+      scope: 'email',
+    })
+
+    const accounts = await adapter.getAccounts(user.id)
+    const acc = accounts.find(a => a.provider === 'github' && a.providerAccountId === 'gh1')!
+    expect(acc.accessToken).toBe('libsql-access')
+    expect(acc.refreshToken).toBe('libsql-refresh')
+    expect(acc.expiresAt).toBe(654321)
+    expect(acc.idToken).toBe('libsql-id')
+    expect(acc.tokenType).toBe('Bearer')
+    expect(acc.scope).toBe('email')
   })
 
   it('unlinkAccount: should unlink an account with libsql', async () => {

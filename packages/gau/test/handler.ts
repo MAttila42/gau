@@ -11,11 +11,15 @@ export const mockProvider: OAuthProvider<'mock'> = {
   validateCallback: vi.fn().mockResolvedValue({
     user: { id: 'provider-user-id', name: 'Provider User', email: 'user@provider.com', emailVerified: true, avatar: 'https://avatar.url' },
     tokens: {
+      data: {},
       accessToken: () => 'access-token',
       refreshToken: () => 'refresh-token',
       idToken: () => 'id-token',
       accessTokenExpiresAt: () => new Date(Date.now() + 3600 * 1000),
+      accessTokenExpiresInSeconds: () => 3600,
       scopes: () => ['read'],
+      hasScopes: () => true,
+      hasRefreshToken: () => true,
       tokenType: () => 'Bearer',
     },
   }),
@@ -27,11 +31,15 @@ export function setup() {
   void (mockProvider.validateCallback as Mock).mockResolvedValue({
     user: { id: 'provider-user-id', name: 'Provider User', email: 'user@provider.com', emailVerified: true, avatar: 'https://avatar.url' },
     tokens: {
+      data: {},
       accessToken: () => 'access-token',
       refreshToken: () => 'refresh-token',
       idToken: () => 'id-token',
       accessTokenExpiresAt: () => new Date(Date.now() + 3600 * 1000),
+      accessTokenExpiresInSeconds: () => 3600,
       scopes: () => ['read'],
+      hasScopes: () => true,
+      hasRefreshToken: () => true,
       tokenType: () => 'Bearer',
     },
   })

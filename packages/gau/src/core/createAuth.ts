@@ -68,7 +68,7 @@ export type Auth<TProviders extends OAuthProvider[] = any> = Adapter & {
    * Get a valid access token for a linked provider. If the stored token is expired and a refresh token exists,
    * this will refresh it using the provider's refreshAccessToken and persist rotated tokens.
    */
-  getAccessToken: (userId: string, providerId: ProviderId<TProviders[number]>) => Promise<{ accessToken: string, expiresAt?: number | null } | null>
+  getAccessToken: (userId: string, providerId: string) => Promise<{ accessToken: string, expiresAt?: number | null } | null>
   trustHosts: 'all' | string[]
   autoLink: 'verifiedEmail' | 'always' | false
   sessionStrategy: 'auto' | 'cookie' | 'token'
@@ -160,7 +160,7 @@ export function createAuth<const TProviders extends OAuthProvider[]>({
     return { user, session: { id: token, ...payload }, accounts }
   }
 
-  async function getAccessToken(userId: string, providerId: ProviderId<TProviders[number]>) {
+  async function getAccessToken(userId: string, providerId: string) {
     const provider = providerMap.get(providerId)
     if (!provider)
       return null
@@ -180,7 +180,7 @@ export function createAuth<const TProviders extends OAuthProvider[]>({
       return null
 
     try {
-      const refreshed = await provider.refreshAccessToken(account.refreshToken)
+      const refreshed = await provider.refreshAccessToken(account.refreshToken, {})
       const updated = {
         userId,
         provider: account.provider,
