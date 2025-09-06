@@ -1,8 +1,8 @@
 {
   "$schema": "../../../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "gau-sveltekit",
+  "productName": "gau-sveltekit-mobile",
   "version": "0.1.0",
-  "identifier": "gau.sveltekit.dev",
+  "identifier": "gau.sveltekit-mobile.dev",
   "build": {
     "frontendDist": "../build",
     "devUrl": "http://localhost:4173",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "gau-sveltekit",
+        "title": "gau-sveltekit-mobile",
         "width": 800,
         "height": 600,
         "resizable": true,
@@ -40,7 +40,12 @@
         "schemes": [
           "gau"
         ]
-      }
+      },
+      "mobile": [
+        {
+          "host": "tauri.localhost"
+        }
+      ]
     }
   }
 }
