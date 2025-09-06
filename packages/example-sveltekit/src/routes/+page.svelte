@@ -1,8 +1,6 @@
 <script lang='ts'>
   import type { Provider } from '$lib/auth'
   import { useAuth } from '$lib/auth'
-  import '@unocss/reset/tailwind.css'
-  import 'virtual:uno.css'
 
   const auth = useAuth()
 

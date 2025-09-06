@@ -1,0 +1,9 @@
+name = "the-stack"
+main = "packages/example-sveltekit/.svelte-kit/cloudflare/_worker.js"
+compatibility_date = "2025-01-01"
+compatibility_flags = [ "nodejs_compat" ]
+keep_vars = true
+
+[assets]
+binding = "ASSETS"
+directory = "packages/example-sveltekit/.svelte-kit/cloudflare"
