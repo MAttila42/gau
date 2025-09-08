@@ -244,11 +244,37 @@ If the provider's email matches the user's current email and is verified, gau wi
 
 ## roles
 
-> **Type**: `{ defaultRole?: string, resolveOnCreate?: (ctx) => string | undefined, adminRoles?: string[], adminUserIds?: string[] }`,
-> **Default**: `{ defaultRole: 'user', adminRoles: ['admin'], adminUserIds: [] }`
+> **Type**: `object`,
+> **Default**: `{}`
 
-Optional role-based configuration. When set, new users will be assigned a role on creation.
-Use `resolveOnCreate` to dynamically derive roles (e.g. first-user-is-admin, domain-based),
-otherwise `defaultRole` is used. `adminRoles` and `adminUserIds` are used by future helper predicates and are not enforced by core.
+This object allows you to configure role-based access control.
+
+### roles.defaultRole
+
+> **Type**: `string`,
+> **Default**: `'user'`
+
+The default role assigned to newly created users.
+
+### roles.resolveOnCreate
+
+> **Type**: `(context: { providerId: string, profile: any, request: Request }) => string | undefined`,
+> **Required**: No
+
+A function to dynamically resolve the role for a new user at creation time. Return `undefined` to fall back to `defaultRole`.
+
+### roles.adminRoles
+
+> **Type**: `string[]`,
+> **Default**: `['admin']`
+
+An array of role names that are considered admin roles for helper predicates.
+
+### roles.adminUserIds
+
+> **Type**: `string[]`,
+> **Default**: `[]`
+
+An array of user IDs that are always treated as admin for helper predicates.
 
 For a full guide, see [Role-Based Access Control](/guides/role-based-access-control).

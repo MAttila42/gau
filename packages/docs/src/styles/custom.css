@@ -71,10 +71,6 @@ html[data-theme='light'] {
   gap: 1rem;
 }
 
-code[dir="auto"] {
-  white-space: nowrap;
-}
-
 .i-icons\:drizzle {
   color: #C5F74F !important;
 }
