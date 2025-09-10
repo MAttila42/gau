@@ -63,7 +63,7 @@ This guide shows how to integrate `gau` with an Elysia server.
     const handler = createHandler(auth)
 
     const app = new Elysia()
-      .mount('/api/auth', handler)
+      .mount(handler)
       .get('/', () => 'OK')
       .listen(3000)
 

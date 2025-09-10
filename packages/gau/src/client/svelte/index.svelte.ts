@@ -131,14 +131,15 @@ export function createSvelteAuth<const TAuth = unknown>({
     if (tokenFromUrl) {
       storeSessionToken(tokenFromUrl)
       void (async () => {
+        let replaceUrl: (url: string) => void = url => window.history.replaceState(null, '', url)
         try {
-          // @ts-expect-error - SvelteKit-only
-          const { replaceState } = await import('$app/navigation')
-          await replaceState(window.location.pathname + window.location.search, {})
+          const navPath = '$' + 'app/navigation'
+          const { replaceState } = await import(navPath)
+          replaceUrl = url => replaceState(url, {})
         }
-        catch {
-          window.history.replaceState(null, '', window.location.pathname + window.location.search)
-        }
+        catch {}
+
+        replaceUrl(window.location.pathname + window.location.search)
         await fetchSession()
       })()
     }
