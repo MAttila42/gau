@@ -22,7 +22,7 @@ This guide shows how to integrate `gau` with an Elysia server.
     import process from 'node:process'
     import { MemoryAdapter } from '@rttnd/gau/adapters/memory'
     import { createAuth } from '@rttnd/gau/core'
-    import { GitHub, Google } from '@rttnd/gau/oauth'
+    import { GitHub } from '@rttnd/gau/oauth'
 
     export const auth = createAuth({
       adapter: MemoryAdapter(),
@@ -31,16 +31,12 @@ This guide shows how to integrate `gau` with an Elysia server.
           clientId: process.env.AUTH_GITHUB_ID!,
           clientSecret: process.env.AUTH_GITHUB_SECRET!,
         }),
-        Google({
-          clientId: process.env.AUTH_GOOGLE_ID!,
-          clientSecret: process.env.AUTH_GOOGLE_SECRET!,
-        }),
       ],
       jwt: {
         secret: process.env.AUTH_SECRET!,
       },
       // When frontend runs on a different origin, set the trusted hosts, example:
-      // trustHosts: ['http://localhost:5173', 'http://localhost:3000'],
+      // trustHosts: ['http://localhost:5173'],
     })
 
     export type Auth = typeof auth
@@ -70,11 +66,33 @@ This guide shows how to integrate `gau` with an Elysia server.
     console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`)
     ```
 
-4. ##### Try it
+4. ##### Configure CORS
+
+    You are probably not using Elysia exclusively for auth. In that case, disable `gau`'s CORS handling by setting `cors: false` in `createAuth`.
+    Then, configure CORS for your whole app using Elysia's [CORS plugin](https://elysiajs.com/plugins/cors.html#cors-plugin).
+
+    ```ts title="src/index.ts" ins={1, 10}
+    import { cors } from '@elysiajs/cors'
+    import { createHandler } from '@rttnd/gau/core'
+    import { Elysia } from 'elysia'
+    import { auth } from './auth'
+
+    const handler = createHandler(auth)
+
+    const app = new Elysia()
+      .mount(handler)
+      .use(cors())
+      .get('/', () => 'OK')
+      .listen(3000)
+
+    console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`)
+    ```
+
+5. ##### Try it
 
     Look at the [Elysia Example](https://github.com/Rettend/gau/tree/main/packages/example-elysia).
 
-5. ##### File Structure (example)
+6. ##### File Structure (example)
 
     <FileTree>
       - src

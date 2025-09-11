@@ -26,7 +26,7 @@ Bun's docs: [Bun.serve](https://bun.com/docs/api/http).
    import process from 'node:process'
    import { MemoryAdapter } from '@rttnd/gau/adapters/memory'
    import { createAuth } from '@rttnd/gau/core'
-   import { GitHub, Google } from '@rttnd/gau/oauth'
+   import { GitHub } from '@rttnd/gau/oauth'
 
    export const auth = createAuth({
      adapter: MemoryAdapter(),
@@ -35,16 +35,12 @@ Bun's docs: [Bun.serve](https://bun.com/docs/api/http).
          clientId: process.env.AUTH_GITHUB_ID!,
          clientSecret: process.env.AUTH_GITHUB_SECRET!,
        }),
-       Google({
-         clientId: process.env.AUTH_GOOGLE_ID!,
-         clientSecret: process.env.AUTH_GOOGLE_SECRET!,
-       }),
      ],
      jwt: {
        secret: process.env.AUTH_SECRET!,
      },
      // When frontend runs on a different origin, set the trusted hosts, example:
-     // trustHosts: ['http://localhost:5173', 'http://localhost:3000'],
+     // trustHosts: ['http://localhost:5173'],
    })
 
    export type Auth = typeof auth
