@@ -209,6 +209,32 @@ The `Origin` header of incoming requests and the host of redirect URLs are check
 
 See the [Security](/guides/security) guide for more details.
 
+## cors
+
+> **Type**: `boolean | CORSOptions`,
+> **Default**: `true`
+
+Configures Cross-Origin Resource Sharing (CORS) for all auth endpoints.
+
+- `true` (default): Enables CORS, defaults:
+  - `allowedOrigins: 'all'` (all origins allowed)
+  - `allowCredentials: true` (credentials reflected, origin echoed — never `*`)
+  - `allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']`
+  - `allowedMethods: ['GET', 'POST', 'OPTIONS']`
+- `false`: Disables CORS completely (no CORS headers are added).
+- `CORSOptions`: Manually configure CORS headers.
+
+Options:
+
+- `allowedOrigins: 'all'`: Allow any origin. When `allowCredentials: false`, the response uses `Access-Control-Allow-Origin: *`. When credentials are enabled, the requesting origin is echoed.
+- `allowedOrigins: 'trust'`: Reuses your `trustHosts` list. If `trustHosts: 'all'`, every origin is allowed (origin echoed).
+- `allowedOrigins: string[]`: Provide an explicit allow-list. Items can be full origins (`https://app.example.com`), bare hostnames (`app.example.com`), host:port, or `*` (which allows any origin but still echoes the caller instead of using `*`).
+- `allowCredentials`: Toggles the `Access-Control-Allow-Credentials` header. If `false` and `allowedOrigins === 'all'`, wildcard `*` is used; otherwise origin is echoed without the credentials header.
+- `allowedHeaders`: Array of request headers you want to allow (sent as a comma‑separated list).
+- `allowedMethods`: HTTP methods allowed for preflight / actual requests.
+- `exposeHeaders`: Extra response headers accessible to the browser (sets `Access-Control-Expose-Headers`).
+- `maxAge`: Seconds browsers may cache the preflight response.
+
 ## autoLink
 
 > **Type**: `'verifiedEmail' | 'always' | false`,

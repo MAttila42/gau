@@ -18,19 +18,19 @@ export function createHandler(auth: Auth): (request: Request) => Promise<Respons
   return async function (request: Request): Promise<Response> {
     // Handle preflight requests early
     if (request.method === 'OPTIONS')
-      return handlePreflight(request)
+      return handlePreflight(request, auth)
 
     const url = new URL(request.url)
     if (!url.pathname.startsWith(basePath))
-      return applyCors(request, json({ error: 'Not Found' }, { status: 404 }))
+      return applyCors(request, json({ error: 'Not Found' }, { status: 404 }), auth)
 
     if (request.method === 'POST' && !verifyRequestOrigin(request, auth.trustHosts, auth.development)) {
       if (auth.development) {
         const origin = request.headers.get('origin') ?? 'N/A'
         const message = `Untrusted origin: '${origin}'. Add this origin to 'trustHosts' in createAuth() or ensure you are using 'localhost' or '127.0.0.1' for development.`
-        return applyCors(request, json({ error: 'Forbidden', message }, { status: 403 }))
+        return applyCors(request, json({ error: 'Forbidden', message }, { status: 403 }), auth)
       }
-      return applyCors(request, json({ error: 'Forbidden' }, { status: 403 }))
+      return applyCors(request, json({ error: 'Forbidden' }, { status: 403 }), auth)
     }
 
     const path = url.pathname.substring(basePath.length)
@@ -38,7 +38,7 @@ export function createHandler(auth: Auth): (request: Request) => Promise<Respons
     const action = parts[0]
 
     if (!action)
-      return applyCors(request, json({ error: 'Not Found' }, { status: 404 }))
+      return applyCors(request, json({ error: 'Not Found' }, { status: 404 }), auth)
 
     let response: Response
 
@@ -66,6 +66,6 @@ export function createHandler(auth: Auth): (request: Request) => Promise<Respons
       response = json({ error: 'Method Not Allowed' }, { status: 405 })
     }
 
-    return applyCors(request, response)
+    return applyCors(request, response, auth)
   }
 }

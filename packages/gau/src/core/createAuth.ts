@@ -55,6 +55,32 @@ export interface CreateAuthOptions<TProviders extends OAuthProvider[]> {
     /** Users that are always treated as admin for helper predicates. */
     adminUserIds?: string[]
   }
+  /**
+   * CORS configuration. When true (default): request Origin & allow credentials
+   * When false, CORS headers are not added at all.
+   * Provide an object to fine-tune behaviour.
+   */
+  cors?: true | false | {
+    /**
+     * Allowed origins.
+     * - 'all' (default) allows any origin (reflected when credentials enabled),
+     * - 'trust' reuses the createAuth trustHosts list
+     * - specify an explicit array of full origins (e.g. https://app.example.com)
+     *   or hostnames (e.g. app.example.com).
+     * When array contains '*', it's treated as 'all'.
+     */
+    allowedOrigins?: 'all' | 'trust' | string[]
+    /** Whether to send Access-Control-Allow-Credentials (defaults to true). */
+    allowCredentials?: boolean
+    /** Allowed headers (defaults to ['Content-Type','Authorization','Cookie']). */
+    allowedHeaders?: string[]
+    /** Allowed methods (defaults to ['GET','POST','OPTIONS']). */
+    allowedMethods?: string[]
+    /** Exposed headers (optional). */
+    exposeHeaders?: string[]
+    /** Preflight max age in seconds (optional). */
+    maxAge?: number
+  }
 }
 
 export type Auth<TProviders extends OAuthProvider[] = any> = Adapter & {
@@ -85,6 +111,14 @@ export type Auth<TProviders extends OAuthProvider[] = any> = Adapter & {
     adminRoles: string[]
     adminUserIds: string[]
   }
+  cors: false | {
+    allowedOrigins: 'all' | 'trust' | string[]
+    allowCredentials: boolean
+    allowedHeaders: string[]
+    allowedMethods: string[]
+    exposeHeaders?: string[]
+    maxAge?: number
+  }
 }
 
 export function createAuth<const TProviders extends OAuthProvider[]>({
@@ -99,6 +133,7 @@ export function createAuth<const TProviders extends OAuthProvider[]>({
   allowDifferentEmails = true,
   updateUserInfoOnLink = false,
   roles: rolesConfig = {},
+  cors = true,
 }: CreateAuthOptions<TProviders>): Auth<TProviders> {
   const { algorithm = 'ES256', secret, iss, aud, ttl: defaultTTL = 3600 * 24 } = jwtConfig
   const cookieOptions = { ...DEFAULT_COOKIE_SERIALIZE_OPTIONS, ...cookieConfig }
@@ -109,6 +144,18 @@ export function createAuth<const TProviders extends OAuthProvider[]>({
     throw new AuthError('For ES256, the secret option must be a string.')
 
   const providerMap = new Map(providers.map(p => [p.id, p]))
+
+  // Resolve CORS configuration
+  const resolvedCors: Auth['cors'] = cors === false
+    ? false
+    : {
+        allowedOrigins: (cors === true ? 'all' : cors.allowedOrigins) ?? 'all',
+        allowCredentials: (cors === true ? true : cors.allowCredentials) ?? true,
+        allowedHeaders: (cors === true ? undefined : cors.allowedHeaders) ?? ['Content-Type', 'Authorization', 'Cookie'],
+        allowedMethods: (cors === true ? undefined : cors.allowedMethods) ?? ['GET', 'POST', 'OPTIONS'],
+        exposeHeaders: cors === true ? undefined : cors.exposeHeaders,
+        maxAge: cors === true ? undefined : cors.maxAge,
+      }
 
   function buildSignOptions(custom: Partial<SignOptions> = {}): SignOptions {
     const base = { ttl: custom.ttl, iss: custom.iss ?? iss, aud: custom.aud ?? aud, sub: custom.sub }
@@ -233,5 +280,6 @@ export function createAuth<const TProviders extends OAuthProvider[]>({
       adminRoles: rolesConfig.adminRoles ?? ['admin'],
       adminUserIds: rolesConfig.adminUserIds ?? [],
     },
+    cors: resolvedCors,
   }
 }
