@@ -51,7 +51,7 @@ export function createSvelteAuth<const TAuth = unknown>({
 
   async function signIn(provider: ProviderIds<TAuth>, { redirectTo }: { redirectTo?: string } = {}) {
     let finalRedirectTo = redirectTo ?? defaultRedirectTo
-    if (isTauri) {
+    if (isTauri()) {
       await signInWithTauri(provider as string, baseUrl, scheme, finalRedirectTo)
     }
     else {
@@ -64,7 +64,7 @@ export function createSvelteAuth<const TAuth = unknown>({
   }
 
   async function linkAccount(provider: ProviderIds<TAuth>, { redirectTo }: { redirectTo?: string } = {}) {
-    if (isTauri) {
+    if (isTauri()) {
       await linkAccountWithTauri(provider as string, baseUrl, scheme, redirectTo)
       return
     }
@@ -149,7 +149,7 @@ export function createSvelteAuth<const TAuth = unknown>({
   }
 
   $effect(() => {
-    if (!BROWSER || !isTauri)
+    if (!BROWSER || !isTauri())
       return
 
     let cleanup: (() => void) | void

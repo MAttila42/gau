@@ -1,7 +1,9 @@
 import { BROWSER } from 'esm-env'
 import { getSessionToken } from '../../client/token'
 
-export const isTauri = BROWSER && '__TAURI_INTERNALS__' in (globalThis as any)
+export function isTauri(): boolean {
+  return BROWSER && '__TAURI_INTERNALS__' in (globalThis as any)
+}
 
 export async function signInWithTauri(
   provider: string,
@@ -9,7 +11,7 @@ export async function signInWithTauri(
   scheme: string = 'gau',
   redirectOverride?: string,
 ) {
-  if (!isTauri)
+  if (!isTauri())
     return
 
   const { platform } = await import('@tauri-apps/plugin-os')
@@ -32,7 +34,7 @@ export async function signInWithTauri(
 export async function setupTauriListener(
   handler: (url: string) => Promise<void>,
 ): Promise<(() => void) | void> {
-  if (!isTauri)
+  if (!isTauri())
     return
 
   const { listen } = await import('@tauri-apps/api/event')
@@ -64,7 +66,7 @@ export async function linkAccountWithTauri(
   scheme: string = 'gau',
   redirectOverride?: string,
 ) {
-  if (!isTauri)
+  if (!isTauri())
     return
 
   const { platform } = await import('@tauri-apps/plugin-os')

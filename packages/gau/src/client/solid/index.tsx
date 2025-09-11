@@ -42,7 +42,7 @@ export function AuthProvider<const TAuth = unknown>(props: ParentProps & { auth?
 
   async function signIn(provider: ProviderIds<TAuth>, { redirectTo }: { redirectTo?: string } = {}) {
     let finalRedirectTo = redirectTo ?? props.redirectTo
-    if (isTauri) {
+    if (isTauri()) {
       await signInWithTauri(provider as string, baseUrl, scheme, finalRedirectTo)
     }
     else {
@@ -56,7 +56,7 @@ export function AuthProvider<const TAuth = unknown>(props: ParentProps & { auth?
   }
 
   async function linkAccount(provider: ProviderIds<TAuth>, { redirectTo }: { redirectTo?: string } = {}) {
-    if (isTauri) {
+    if (isTauri()) {
       await linkAccountWithTauri(provider as string, baseUrl, scheme, redirectTo)
       return
     }
@@ -111,7 +111,7 @@ export function AuthProvider<const TAuth = unknown>(props: ParentProps & { auth?
   }
 
   onMount(() => {
-    if (!isTauri) {
+    if (!isTauri()) {
       const hash = new URL(window.location.href).hash.substring(1)
       const params = new URLSearchParams(hash)
       const tokenParam = params.get('token')
@@ -122,7 +122,7 @@ export function AuthProvider<const TAuth = unknown>(props: ParentProps & { auth?
       }
     }
 
-    if (!isTauri)
+    if (!isTauri())
       return
 
     let disposed = false
