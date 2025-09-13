@@ -1,7 +1,7 @@
 import type { OAuth2Tokens } from 'arctic'
 import type { SerializeOptions } from 'cookie'
 import type { SignOptions, VerifyOptions } from '../jwt'
-import type { AuthUser, OAuthProvider } from '../oauth'
+import type { AuthUser, OAuthProvider, OAuthProviderConfig, ProviderProfileOverrides } from '../oauth'
 import type { Cookies } from './cookies'
 import type { Adapter, GauSession } from './index'
 import { sign, verify } from '../jwt'
@@ -186,10 +186,17 @@ export interface ProfileDefinition {
   redirectUri?: string
   /** When true, this profile can only be linked to an existing session; standalone sign-in is disabled. */
   linkOnly?: boolean
+  /** Additional provider-specific authorization params. */
+  params?: Record<string, string>
 }
 
 type ProviderIdOfArray<TProviders extends OAuthProvider[]> = ProviderId<TProviders[number]>
-export type ProfilesConfig<TProviders extends OAuthProvider[]> = Partial<Record<ProviderIdOfArray<TProviders>, Record<string, ProfileDefinition>>>
+type ProviderConfigFor<TProviders extends OAuthProvider[], K extends string>
+  = Extract<TProviders[number], OAuthProvider<K, any>> extends OAuthProvider<any, infer C> ? C : OAuthProviderConfig
+
+export type ProfilesConfig<TProviders extends OAuthProvider[]> = Partial<{
+  [K in ProviderIdOfArray<TProviders>]: Record<string, ProfileDefinition & ProviderProfileOverrides<ProviderConfigFor<TProviders, K>>>
+}>
 export type ResolvedProfiles<TProviders extends OAuthProvider[]> = ProfilesConfig<TProviders>
 
 export function createAuth<const TProviders extends OAuthProvider[]>({

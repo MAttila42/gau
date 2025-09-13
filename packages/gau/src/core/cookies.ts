@@ -56,5 +56,6 @@ export const SESSION_STRATEGY_COOKIE_NAME = '__gau-session-strategy'
 export const LINKING_TOKEN_COOKIE_NAME = '__gau-linking-token'
 export const PKCE_COOKIE_NAME = '__gau-pkce-code-verifier'
 export const CALLBACK_URI_COOKIE_NAME = '__gau-callback-uri'
+export const PROVIDER_OPTIONS_COOKIE_NAME = '__gau-provider-options'
 
 export const CSRF_MAX_AGE = 60 * 10 // 10 minutes

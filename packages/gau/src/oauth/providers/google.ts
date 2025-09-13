@@ -48,10 +48,16 @@ export function Google(config: OAuthProviderConfig): OAuthProvider<'google'> {
     linkOnly: config.linkOnly,
     requiresRedirectUri: true,
 
-    async getAuthorizationUrl(state: string, codeVerifier: string, options?: { scopes?: string[], redirectUri?: string }) {
+    async getAuthorizationUrl(state: string, codeVerifier: string, options?: { scopes?: string[], redirectUri?: string, params?: Record<string, string>, overrides?: any }) {
       const client = getClient(options?.redirectUri)
       const scopes = options?.scopes ?? config.scope ?? ['openid', 'email', 'profile']
       const url = await client.createAuthorizationURLWithPKCE(GOOGLE_AUTH_URL, state, CodeChallengeMethod.S256, codeVerifier, scopes)
+      if (options?.params) {
+        for (const [k, v] of Object.entries(options.params)) {
+          if (v != null)
+            url.searchParams.set(k, String(v))
+        }
+      }
       return url
     },
 

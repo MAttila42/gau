@@ -69,11 +69,11 @@ async function getUser(accessToken: string): Promise<AuthUser> {
   }
 }
 
-export function GitHub(config: OAuthProviderConfig): OAuthProvider<'github'> {
+export function GitHub(config: OAuthProviderConfig): OAuthProvider<'github', OAuthProviderConfig> {
   const defaultClient = new OAuth2Client(config.clientId, config.clientSecret, config.redirectUri ?? null)
 
   function getClient(redirectUri?: string): OAuth2Client {
-    if (!redirectUri || (config.redirectUri && redirectUri === config.redirectUri))
+    if (!redirectUri || redirectUri === config.redirectUri)
       return defaultClient
 
     return new OAuth2Client(config.clientId, config.clientSecret, redirectUri)
@@ -82,11 +82,18 @@ export function GitHub(config: OAuthProviderConfig): OAuthProvider<'github'> {
   return {
     id: 'github',
     linkOnly: config.linkOnly,
+    requiresRedirectUri: true,
 
-    async getAuthorizationUrl(state: string, codeVerifier: string, options?: { scopes?: string[], redirectUri?: string }) {
+    async getAuthorizationUrl(state: string, codeVerifier: string, options?: { scopes?: string[], redirectUri?: string, params?: Record<string, string>, overrides?: any }) {
       const client = getClient(options?.redirectUri)
-      const scopes = options?.scopes ?? config.scope ?? ['user:email']
+      const scopes = options?.scopes ?? config.scope ?? ['read:user', 'user:email']
       const url = await client.createAuthorizationURLWithPKCE(GITHUB_AUTH_URL, state, CodeChallengeMethod.S256, codeVerifier, scopes)
+      if (options?.params) {
+        for (const [k, v] of Object.entries(options.params)) {
+          if (v != null)
+            url.searchParams.set(k, String(v))
+        }
+      }
       return url
     },
 

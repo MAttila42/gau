@@ -7,6 +7,7 @@ import {
   LINKING_TOKEN_COOKIE_NAME,
   parseCookies,
   PKCE_COOKIE_NAME,
+  PROVIDER_OPTIONS_COOKIE_NAME,
   SESSION_COOKIE_NAME,
 } from '../cookies'
 import { maybeMapExternalProfile, runOnAfterLinkAccount, runOnBeforeLinkAccount, runOnOAuthExchange } from '../hooks'
@@ -53,6 +54,16 @@ export async function handleCallback(request: Request, auth: Auth, providerId: s
     return json({ error: 'Missing PKCE code verifier' }, { status: 400 })
 
   const callbackUri = cookies.get(CALLBACK_URI_COOKIE_NAME)
+  const providerOptionsRaw = cookies.get(PROVIDER_OPTIONS_COOKIE_NAME)
+  let providerOverrides: any | undefined
+  if (providerOptionsRaw) {
+    try {
+      const decoded = atob(providerOptionsRaw)
+      const parsed = JSON.parse(decoded)
+      providerOverrides = parsed?.overrides
+    }
+    catch {}
+  }
   const linkingToken = cookies.get(LINKING_TOKEN_COOKIE_NAME)
 
   if (linkingToken)
@@ -67,13 +78,14 @@ export async function handleCallback(request: Request, auth: Auth, providerId: s
       cookies.delete(PKCE_COOKIE_NAME)
       if (callbackUri)
         cookies.delete(CALLBACK_URI_COOKIE_NAME)
+      cookies.delete(PROVIDER_OPTIONS_COOKIE_NAME)
       const response = redirect(redirectTo)
       cookies.toHeaders().forEach((value, key) => response.headers.append(key, value))
       return response
     }
   }
 
-  const { user: rawProviderUser, tokens } = await provider.validateCallback(code, codeVerifier, callbackUri ?? undefined)
+  const { user: rawProviderUser, tokens } = await provider.validateCallback(code, codeVerifier, callbackUri ?? undefined, providerOverrides)
 
   {
     const session = isLinking ? await auth.validateSession(linkingToken!) : null
@@ -96,6 +108,7 @@ export async function handleCallback(request: Request, auth: Auth, providerId: s
       cookies.delete(PKCE_COOKIE_NAME)
       if (callbackUri)
         cookies.delete(CALLBACK_URI_COOKIE_NAME)
+      cookies.delete(PROVIDER_OPTIONS_COOKIE_NAME)
       const response = hookResult.response
       cookies.toHeaders().forEach((value, key) => response.headers.append(key, value))
       return response
@@ -116,6 +129,7 @@ export async function handleCallback(request: Request, auth: Auth, providerId: s
     cookies.delete(PKCE_COOKIE_NAME)
     if (callbackUri)
       cookies.delete(CALLBACK_URI_COOKIE_NAME)
+    cookies.delete(PROVIDER_OPTIONS_COOKIE_NAME)
     const response = json({ error: 'Sign-in with this provider is disabled. Please link it to an existing account.' }, { status: 400 })
     cookies.toHeaders().forEach((value, key) => response.headers.append(key, value))
     return response
@@ -475,6 +489,7 @@ export async function handleCallback(request: Request, auth: Auth, providerId: s
     cookies.delete(PKCE_COOKIE_NAME)
     if (callbackUri)
       cookies.delete(CALLBACK_URI_COOKIE_NAME)
+    cookies.delete(PROVIDER_OPTIONS_COOKIE_NAME)
 
     const response = new Response(html, {
       status: 200,
@@ -495,6 +510,7 @@ export async function handleCallback(request: Request, auth: Auth, providerId: s
   cookies.delete(PKCE_COOKIE_NAME)
   if (callbackUri)
     cookies.delete(CALLBACK_URI_COOKIE_NAME)
+  cookies.delete(PROVIDER_OPTIONS_COOKIE_NAME)
 
   const redirectParam = url.searchParams.get('redirect')
 

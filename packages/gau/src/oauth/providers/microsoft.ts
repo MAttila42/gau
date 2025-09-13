@@ -7,8 +7,10 @@ const MICROSOFT_USER_INFO_URL = 'https://graph.microsoft.com/v1.0/me'
 // https://learn.microsoft.com/en-us/graph/api/profilephoto-get?view=graph-rest-1.0
 const MICROSOFT_USER_PHOTO_URL = 'https://graph.microsoft.com/v1.0/me/photo/$value'
 
+// https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow#request-an-authorization-code
 interface MicrosoftConfig extends OAuthProviderConfig {
-  tenant?: 'common' | 'organizations' | 'consumers' | string
+  tenant?: 'common' | 'organizations' | 'consumers' | (string & {})
+  prompt?: 'login' | 'none' | 'consent' | 'select_account' | (string & {})
 }
 
 interface MicrosoftUser {
@@ -106,11 +108,11 @@ async function getUser(accessToken: string, idToken: string | null): Promise<Aut
   }
 }
 
-export function Microsoft(config: MicrosoftConfig): OAuthProvider<'microsoft'> {
-  const tenant = config.tenant ?? 'common'
-
-  const authURL = `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/authorize`
-  const tokenURL = `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`
+export function Microsoft(config: MicrosoftConfig): OAuthProvider<'microsoft', MicrosoftConfig> {
+  const getEndpoints = (tenant: MicrosoftConfig['tenant']) => ({
+    authURL: `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/authorize`,
+    tokenURL: `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`,
+  })
 
   const defaultClient = new OAuth2Client(config.clientId, config.clientSecret, config.redirectUri ?? null)
 
@@ -126,21 +128,39 @@ export function Microsoft(config: MicrosoftConfig): OAuthProvider<'microsoft'> {
     linkOnly: config.linkOnly,
     requiresRedirectUri: true,
 
-    async getAuthorizationUrl(state: string, codeVerifier: string, options?: { scopes?: string[], redirectUri?: string }) {
+    async getAuthorizationUrl(state: string, codeVerifier: string, options?: { scopes?: string[], redirectUri?: string, params?: Record<string, string>, overrides?: Partial<Pick<MicrosoftConfig, 'tenant' | 'prompt'>> }) {
       const client = getClient(options?.redirectUri)
       const scopes = options?.scopes ?? config.scope ?? ['openid', 'profile', 'email', 'User.Read']
+      const effectiveTenant: MicrosoftConfig['tenant'] = options?.overrides?.tenant ?? config.tenant ?? 'common'
+      const { authURL } = getEndpoints(effectiveTenant)
       const url = await client.createAuthorizationURLWithPKCE(authURL, state, CodeChallengeMethod.S256, codeVerifier, scopes)
+      const prompt = options?.overrides?.prompt ?? options?.params?.prompt ?? config.prompt
+      if (prompt)
+        url.searchParams.set('prompt', prompt)
+      const mergedParams = { ...(config.params ?? {}), ...(options?.params ?? {}) }
+      if (Object.keys(mergedParams).length) {
+        for (const [k, v] of Object.entries(mergedParams)) {
+          if (k === 'prompt')
+            continue
+          if (v != null)
+            url.searchParams.set(k, String(v))
+        }
+      }
       return url
     },
 
-    async validateCallback(code: string, codeVerifier: string, redirectUri?: string) {
+    async validateCallback(code: string, codeVerifier: string, redirectUri?: string, overrides?: Partial<Pick<MicrosoftConfig, 'tenant'>>) {
       const client = getClient(redirectUri)
+      const effectiveTenant: MicrosoftConfig['tenant'] = overrides?.tenant ?? config.tenant ?? 'common'
+      const { tokenURL } = getEndpoints(effectiveTenant)
       const tokens = await client.validateAuthorizationCode(tokenURL, code, codeVerifier)
       const user = await getUser(tokens.accessToken(), tokens.idToken())
       return { tokens, user }
     },
 
-    async refreshAccessToken(refreshToken: string): Promise<RefreshedTokens> {
+    async refreshAccessToken(refreshToken: string, options?: { overrides?: Partial<Pick<MicrosoftConfig, 'tenant'>> }): Promise<RefreshedTokens> {
+      const effectiveTenant: MicrosoftConfig['tenant'] = options?.overrides?.tenant ?? config.tenant ?? 'common'
+      const { tokenURL } = getEndpoints(effectiveTenant)
       const body = new URLSearchParams({
         client_id: config.clientId,
         client_secret: config.clientSecret,
