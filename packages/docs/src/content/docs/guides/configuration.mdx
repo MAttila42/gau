@@ -92,9 +92,9 @@ This object allows you to configure session management.
 
 Determines how sessions are handled. See the [Session Management](/guides/session-management#session-strategy) guide for a detailed explanation of the different strategies.
 
-- **`'auto'` (Default)**: Automatically switches between `cookie` and `token` strategies based on the redirect URL.
-- **`'cookie'`**: Always use cookies.
-- **`'token'`**: Always use tokens passed in the URL.
+## hooks
+
+These hooks let you customize the OAuth callback lifecycle, see [Hooks](/guides/hooks/).
 
 ## jwt
 
@@ -304,3 +304,15 @@ An array of role names that are considered admin roles for helper predicates.
 An array of user IDs that are always treated as admin for helper predicates.
 
 For a full guide, see [Role-Based Access Control](/guides/role-based-access-control).
+
+## linkOnlyProviders
+
+> Type: `string[]`  
+> Default: `[]`
+
+List provider ids that should be treated as link-only, and `gau` will disallow standalone sign-in.
+When a user completes an OAuth callback without an existing session, `gau` returns a 400 and a friendly message.
+
+```ts
+linkOnlyProviders: ['microsoft']
+```

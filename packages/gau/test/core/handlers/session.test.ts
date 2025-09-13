@@ -1,5 +1,4 @@
 import type { Auth } from '../../../src/core/createAuth'
-import type { GauSession } from '../../../src/core/index'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { SESSION_COOKIE_NAME } from '../../../src/core/cookies'
 import { handleSession } from '../../../src/core/handlers/session'
@@ -25,7 +24,7 @@ describe('session handler', () => {
     })
 
     const response = await handleSession(request, auth)
-    const data = await response.json<GauSession>()
+    const data = await response.json()
 
     expect(response.status).toBe(200)
     expect(data.user!.id).toBe(user.id)
@@ -40,7 +39,7 @@ describe('session handler', () => {
     })
 
     const response = await handleSession(request, auth)
-    const data = await response.json<GauSession>()
+    const data = await response.json()
 
     expect(response.status).toBe(200)
     expect(data.user!.id).toBe(user.id)
@@ -49,7 +48,7 @@ describe('session handler', () => {
   it('should return null session for no token', async () => {
     const request = new Request('http://localhost/api/auth/session')
     const response = await handleSession(request, auth)
-    const data = await response.json<GauSession>()
+    const data = await response.json()
 
     expect(response.status).toBe(200)
     expect(data).toEqual({ ...NULL_SESSION, providers: ['mock'] })
@@ -61,7 +60,7 @@ describe('session handler', () => {
     })
     const response = await handleSession(request, auth)
     expect(response.status).toBe(401)
-    const data = await response.json<GauSession>()
+    const data = await response.json()
     expect(data).toEqual({ ...NULL_SESSION, providers: ['mock'] })
   })
 
@@ -75,7 +74,7 @@ describe('session handler', () => {
     })
     const response = await handleSession(request, auth)
     expect(response.status).toBe(500)
-    const data = await response.json<{ error: string }>()
+    const data = await response.json()
     expect(data.error).toBe('Failed to validate session')
   })
 })

@@ -1,6 +1,8 @@
+import type { OAuth2Tokens } from 'arctic'
 import type { SerializeOptions } from 'cookie'
 import type { SignOptions, VerifyOptions } from '../jwt'
-import type { OAuthProvider } from '../oauth'
+import type { AuthUser, OAuthProvider } from '../oauth'
+import type { Cookies } from './cookies'
 import type { Adapter, GauSession } from './index'
 import { sign, verify } from '../jwt'
 import { DEFAULT_COOKIE_SERIALIZE_OPTIONS } from './cookies'
@@ -36,6 +38,52 @@ export interface CreateAuthOptions<TProviders extends OAuthProvider[]> {
   }
   /** Custom options for session cookies. */
   cookies?: Partial<SerializeOptions>
+  /**
+   * Hook that fires right after provider.validateCallback() returns tokens,
+   * but before any user lookup/link/create logic. Return { handled: true, response }
+   * to short-circuit the default flow and send a custom response.
+   */
+  onOAuthExchange?: (context: {
+    request: Request
+    providerId: string
+    state: string
+    code: string
+    codeVerifier: string
+    callbackUri?: string | null
+    redirectTo: string
+    cookies: Cookies
+    providerUser: AuthUser
+    tokens: OAuth2Tokens
+    isLinking: boolean
+    sessionUserId?: string
+  }) => Promise<{ handled: true, response: Response } | { handled: false }>
+  /** Force some providers to be link-only (no standalone sign-in). */
+  linkOnlyProviders?: string[]
+  /** Map/override the provider's profile right after token exchange. */
+  mapExternalProfile?: (context: {
+    request: Request
+    providerId: string
+    providerUser: AuthUser
+    tokens: OAuth2Tokens
+    isLinking: boolean
+  }) => Promise<AuthUser | Partial<AuthUser> | null | undefined>
+  /** Gate the link action just before persisting an account. */
+  onBeforeLinkAccount?: (context: {
+    request: Request
+    providerId: string
+    userId: string
+    providerUser: AuthUser
+    tokens: OAuth2Tokens
+  }) => Promise<{ allow: true } | { allow: false, response?: Response }>
+  /** Observe or augment after link/update tokens. */
+  onAfterLinkAccount?: (context: {
+    request: Request
+    providerId: string
+    userId: string
+    providerUser: AuthUser
+    tokens: OAuth2Tokens
+    action: 'link' | 'update'
+  }) => Promise<void>
   /** Trusted hosts for CSRF protection: 'all' or array of hostnames (defaults to []). */
   trustHosts?: 'all' | string[]
   /** Account linking behavior: 'verifiedEmail' (default), 'always', or false. */
@@ -90,6 +138,11 @@ export type Auth<TProviders extends OAuthProvider[] = any> = Adapter & {
   jwt: {
     ttl: number
   }
+  onOAuthExchange?: CreateAuthOptions<TProviders>['onOAuthExchange']
+  linkOnlyProviders: string[]
+  mapExternalProfile?: CreateAuthOptions<TProviders>['mapExternalProfile']
+  onBeforeLinkAccount?: CreateAuthOptions<TProviders>['onBeforeLinkAccount']
+  onAfterLinkAccount?: CreateAuthOptions<TProviders>['onAfterLinkAccount']
   signJWT: <U extends Record<string, unknown>>(payload: U, customOptions?: Partial<SignOptions>) => Promise<string>
   verifyJWT: <U = Record<string, unknown>>(token: string, customOptions?: Partial<VerifyOptions>) => Promise<U | null>
   createSession: (userId: string, data?: Record<string, unknown>, ttl?: number) => Promise<string>
@@ -128,6 +181,11 @@ export function createAuth<const TProviders extends OAuthProvider[]>({
   jwt: jwtConfig = {},
   session: sessionConfig = {},
   cookies: cookieConfig = {},
+  onOAuthExchange,
+  linkOnlyProviders = [],
+  mapExternalProfile,
+  onBeforeLinkAccount,
+  onAfterLinkAccount,
   trustHosts = [],
   autoLink = 'verifiedEmail',
   allowDifferentEmails = true,
@@ -263,6 +321,11 @@ export function createAuth<const TProviders extends OAuthProvider[]>({
     jwt: {
       ttl: defaultTTL,
     },
+    onOAuthExchange,
+    linkOnlyProviders,
+    mapExternalProfile,
+    onBeforeLinkAccount,
+    onAfterLinkAccount,
     signJWT,
     verifyJWT,
     createSession,

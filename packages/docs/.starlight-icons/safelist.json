@@ -37,6 +37,7 @@
   "i-ph:database-duotone",
   "i-ph:key-duotone",
   "i-ph:lego-duotone",
+  "i-ph:plug-duotone",
   "i-ph:plugs-connected-duotone",
   "i-ph:plugs-duotone",
   "i-ph:puzzle-piece-duotone",
@@ -45,6 +46,7 @@
   "i-ph:terminal-window-duotone",
   "i-ph:user-check-duotone",
   "i-simple-icons:github",
+  "i-simple-icons:xbox",
   "i-starlight-plugin-icons:folder",
   "i-starlight-plugin-icons:folder-open"
 ]

@@ -9,6 +9,13 @@ import {
   PKCE_COOKIE_NAME,
   SESSION_COOKIE_NAME,
 } from '../cookies'
+import {
+  isLinkOnlyProvider,
+  maybeMapExternalProfile,
+  runOnAfterLinkAccount,
+  runOnBeforeLinkAccount,
+  runOnOAuthExchange,
+} from '../hooks'
 import { json, redirect } from '../index'
 
 export async function handleCallback(request: Request, auth: Auth, providerId: string): Promise<Response> {
@@ -72,7 +79,53 @@ export async function handleCallback(request: Request, auth: Auth, providerId: s
     }
   }
 
-  const { user: providerUser, tokens } = await provider.validateCallback(code, codeVerifier, callbackUri ?? undefined)
+  const { user: rawProviderUser, tokens } = await provider.validateCallback(code, codeVerifier, callbackUri ?? undefined)
+
+  {
+    const session = isLinking ? await auth.validateSession(linkingToken!) : null
+    const hookResult = await runOnOAuthExchange(auth, {
+      request,
+      providerId,
+      state,
+      code,
+      codeVerifier,
+      callbackUri,
+      redirectTo,
+      cookies,
+      providerUser: rawProviderUser,
+      tokens,
+      isLinking,
+      sessionUserId: session?.user?.id,
+    })
+    if (hookResult.handled) {
+      cookies.delete(CSRF_COOKIE_NAME)
+      cookies.delete(PKCE_COOKIE_NAME)
+      if (callbackUri)
+        cookies.delete(CALLBACK_URI_COOKIE_NAME)
+      const response = hookResult.response
+      cookies.toHeaders().forEach((value, key) => response.headers.append(key, value))
+      return response
+    }
+  }
+
+  const providerUser = await maybeMapExternalProfile(auth, {
+    request,
+    providerId,
+    providerUser: rawProviderUser,
+    tokens,
+    isLinking,
+  })
+
+  // Enforce link-only providers when not linking
+  if (!isLinking && isLinkOnlyProvider(auth, providerId)) {
+    cookies.delete(CSRF_COOKIE_NAME)
+    cookies.delete(PKCE_COOKIE_NAME)
+    if (callbackUri)
+      cookies.delete(CALLBACK_URI_COOKIE_NAME)
+    const response = json({ error: 'Sign-in with this provider is disabled. Please link it to an existing account.' }, { status: 400 })
+    cookies.toHeaders().forEach((value, key) => response.headers.append(key, value))
+    return response
+  }
 
   let user: User | null = null
 
@@ -253,6 +306,21 @@ export async function handleCallback(request: Request, auth: Auth, providerId: s
       idToken = null
     }
 
+    {
+      const pre = await runOnBeforeLinkAccount(auth, {
+        request,
+        providerId,
+        userId: user.id,
+        providerUser,
+        tokens,
+      })
+      if (pre.allow === false) {
+        const response = pre.response ?? json({ error: 'Linking not allowed' }, { status: 403 })
+        cookies.toHeaders().forEach((value, key) => response.headers.append(key, value))
+        return response
+      }
+    }
+
     try {
       await auth.linkAccount({
         userId: user.id,
@@ -264,6 +332,14 @@ export async function handleCallback(request: Request, auth: Auth, providerId: s
         tokenType: tokens.tokenType?.() ?? null,
         scope: tokens.scopes()?.join(' ') ?? null,
         idToken,
+      })
+      await runOnAfterLinkAccount(auth, {
+        request,
+        providerId,
+        userId: user.id,
+        providerUser,
+        tokens,
+        action: 'link',
       })
     }
     catch (error) {
@@ -314,6 +390,14 @@ export async function handleCallback(request: Request, auth: Auth, providerId: s
           tokenType: tokens.tokenType?.() ?? existing.tokenType ?? null,
           scope: tokens.scopes()?.join(' ') ?? existing.scope ?? null,
           idToken,
+        })
+        await runOnAfterLinkAccount(auth, {
+          request,
+          providerId,
+          userId: user!.id,
+          providerUser,
+          tokens,
+          action: 'update',
         })
       }
     }

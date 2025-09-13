@@ -60,7 +60,7 @@ describe('callback linking options', () => {
 
     const response = await handleCallback(request, auth, 'mock')
     expect(response.status).toBe(400)
-    const body = await response.json<{ error: string }>()
+    const body = await response.json()
     expect(body.error).toContain('Email mismatch')
 
     const linked = await auth.getUserByAccount('mock', 'provider-user-id')

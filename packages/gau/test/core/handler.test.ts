@@ -74,7 +74,7 @@ describe('createHandler', () => {
       const request = new Request('http://localhost/api/auth/unknown-provider')
       const response = await handler(request)
       expect(response.status).toBe(400)
-      const body = await response.json<{ error: string }>()
+      const body = await response.json()
       expect(body.error).toBe('Provider not found')
     })
   })

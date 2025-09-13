@@ -1,0 +1,138 @@
+---
+title: Xbox / Minecraft tokens
+description: Capture Microsoft tokens, exchange for Xbox and Minecraft tokens, and gate linking by entitlement.
+---
+
+import Aside from 'starlight-plugin-icons/components/Aside.astro'
+
+This guide shows how to:
+
+- Request Microsoft scopes that allow Xbox sign-in
+- Capture the Microsoft tokens at callback
+- Exchange them for Xbox Live (XBL), XSTS, then Minecraft tokens
+- Optionally gate linking on ownership (entitlements)
+
+## Prerequisites
+
+- Microsoft provider configured
+- Add the `XboxLive.signin` scope (and `offline_access` if you want refresh tokens)
+
+```ts title="auth.ts"
+import { createAuth } from '@rttnd/gau/core'
+import { Microsoft } from '@rttnd/gau/oauth'
+
+export const auth = createAuth({
+  providers: [
+    Microsoft({
+      clientId: process.env.MICROSOFT_CLIENT_ID!,
+      clientSecret: process.env.MICROSOFT_CLIENT_SECRET!,
+      scope: ['openid','profile','email','User.Read','XboxLive.signin','offline_access'],
+    })
+  ],
+  linkOnlyProviders: ['microsoft'],
+  onOAuthExchange: async (ctx) => {
+    // Example: perform the full chain here and return tokens to the client
+    const msAccess = ctx.tokens.accessToken()
+    const xbl = await xblAuthenticate(msAccess)
+    const xsts = await xstsAuthorize(xbl.Token)
+    const mc = await minecraftLogin(xsts.Token, xsts.DisplayClaims?.xui?.[0]?.uhs)
+
+    return {
+      handled: true,
+      response: new Response(JSON.stringify({
+        microsoft: { access: msAccess },
+        xbl,
+        xsts,
+        minecraft: mc,
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } })
+    }
+  },
+})
+```
+
+<Aside type="note">When you short-circuit with `onOAuthExchange`, gau clears temporary cookies (CSRF/PKCE/callbackUri) and returns your custom Response.</Aside>
+
+## Server helpers (example)
+
+These minimal helpers demonstrate the HTTP calls. You can inline them, move to a module, or adapt to your runtime.
+
+```ts title="server/xbox.ts"
+const XBL_AUTH = 'https://user.auth.xboxlive.com/user/authenticate'
+const XSTS_AUTH = 'https://xsts.auth.xboxlive.com/xsts/authorize'
+const MC_LOGIN = 'https://api.minecraftservices.com/authentication/login_with_xbox'
+const MC_ENTITLEMENTS = 'https://api.minecraftservices.com/entitlements/license'
+const MC_PROFILE = 'https://api.minecraftservices.com/minecraft/profile'
+
+export async function xblAuthenticate(msAccess: string) {
+  const body = {
+    Properties: { AuthMethod: 'RPS', SiteName: 'user.auth.xboxlive.com', RpsTicket: `d=${msAccess}` },
+    RelyingParty: 'http://auth.xboxlive.com',
+    TokenType: 'JWT',
+  }
+  const res = await fetch(XBL_AUTH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+  if (!res.ok) throw new Error('XBL auth failed')
+  return res.json()
+}
+
+export async function xstsAuthorize(xblToken: string) {
+  const body = {
+    Properties: { SandboxId: 'RETAIL', UserTokens: [xblToken] },
+    RelyingParty: 'rp://api.minecraftservices.com/',
+    TokenType: 'JWT',
+  }
+  const res = await fetch(XSTS_AUTH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+  if (!res.ok) throw new Error('XSTS auth failed')
+  return res.json()
+}
+
+export async function minecraftLogin(xstsToken: string, uhs?: string) {
+  const body = { identityToken: `XBL3.0 x=${uhs};${xstsToken}` }
+  const res = await fetch(MC_LOGIN, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+  if (!res.ok) throw new Error('MC login failed')
+  return res.json()
+}
+
+export async function minecraftEntitlements(mcAccess: string) {
+  const url = `${MC_ENTITLEMENTS}`
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${mcAccess}` } })
+  if (!res.ok) throw new Error('MC entitlements failed')
+  return res.json()
+}
+
+export async function minecraftProfile(mcAccess: string) {
+  const res = await fetch(MC_PROFILE, { headers: { Authorization: `Bearer ${mcAccess}` } })
+  if (!res.ok) throw new Error('MC profile failed')
+  return res.json()
+}
+```
+
+## Gate linking by ownership
+
+If you prefer to keep gau's default linking/session behavior, move the ownership check into `onBeforeLinkAccount`.
+
+```ts title="auth.ts"
+export const auth = createAuth({
+  // ...
+  onBeforeLinkAccount: async ({ tokens }) => {
+    const msAccess = tokens.accessToken()
+    const xbl = await xblAuthenticate(msAccess)
+    const xsts = await xstsAuthorize(xbl.Token)
+    const mc = await minecraftLogin(xsts.Token, xsts.DisplayClaims?.xui?.[0]?.uhs)
+
+    // Example: require at least one entitlement
+    const ent = await minecraftEntitlements(mc.access_token)
+    const owns = Array.isArray(ent.items) && ent.items.length > 0
+    if (!owns)
+      return { allow: false, response: new Response('No Minecraft entitlement', { status: 403 }) }
+
+    return { allow: true }
+  },
+})
+```
+
+## Client side
+
+- For desktop/mobile redirects with different hosts, gau uses token-based return and ships a small HTML auto-close page.
+- For Tauri, set `redirectTo` to a custom scheme, e.g. `gau://oauth/callback`, and use the runtime helpers.
+
+<Aside type="tip" icon="i-ph:lightbulb-duotone">You can also set `linkOnlyProviders: ['microsoft']` to ensure users can only link after sign-in and not sign-in directly with Microsoft, which is typical for Minecraft-style flows.</Aside>

@@ -84,7 +84,7 @@ describe('callback handler', () => {
 
     const response = await handleCallback(request, auth, 'mock')
     expect(response.status).toBe(500)
-    const body = await response.json<{ error: string }>()
+    const body = await response.json()
     expect(body.error).toBe('Failed to create user')
   })
 
@@ -97,7 +97,7 @@ describe('callback handler', () => {
 
     const response = await handleCallback(request, auth, 'mock')
     expect(response.status).toBe(500)
-    const body = await response.json<{ error: string }>()
+    const body = await response.json()
     expect(body.error).toBe('Failed to link account')
   })
 
@@ -105,7 +105,7 @@ describe('callback handler', () => {
     const request = new Request('http://localhost/api/auth/unknown-provider/callback?code=c&state=s')
     const response = await handleCallback(request, auth, 'unknown-provider')
     expect(response.status).toBe(400)
-    const body = await response.json<{ error: string }>()
+    const body = await response.json()
     expect(body.error).toBe('Provider not found')
   })
 
@@ -174,7 +174,7 @@ describe('callback handler', () => {
 
     const response = await handleCallback(request, auth, 'mock')
     expect(response.status).toBe(200)
-    const body = await response.json<{ user: { email: string } }>()
+    const body = await response.json()
     expect(body.user).toBeDefined()
     expect(body.user.email).toBe('user@provider.com')
   })

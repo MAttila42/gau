@@ -60,7 +60,7 @@ describe('link handler', () => {
       const response = await handleLink(request, auth, 'mock')
 
       expect(response.status).toBe(401)
-      const body = await response.json<{ error: string }>()
+      const body = await response.json()
       expect(body.error).toBe('Unauthorized')
     })
 
@@ -71,7 +71,7 @@ describe('link handler', () => {
       const response = await handleLink(request, auth, 'mock')
 
       expect(response.status).toBe(401)
-      const body = await response.json<{ error: string }>()
+      const body = await response.json()
       expect(body.error).toBe('Unauthorized')
     })
 
@@ -84,7 +84,7 @@ describe('link handler', () => {
       const response = await handleLink(request, auth, 'mock')
 
       expect(response.status).toBe(200)
-      const body = await response.json<{ url: string }>()
+      const body = await response.json()
       expect(body.url).toBe('https://provider.com/auth')
 
       const cookies = response.headers.getSetCookie()
@@ -117,7 +117,7 @@ describe('link handler', () => {
       const response = await handleLink(request, auth, 'mock')
 
       expect(response.status).toBe(400)
-      const body = await response.json<{ error: string }>()
+      const body = await response.json()
       expect(body.error).toBe('Untrusted redirect host')
     })
 
@@ -130,7 +130,7 @@ describe('link handler', () => {
       const response = await handleLink(request, auth, 'mock')
 
       expect(response.status).toBe(400)
-      const body = await response.json<{ error: string }>()
+      const body = await response.json()
       expect(body.error).toBe('Invalid "redirectTo" URL')
     })
   })
@@ -159,7 +159,7 @@ describe('link handler', () => {
       const response = await handleUnlink(request, auth, 'mock')
 
       expect(response.status).toBe(200)
-      const body = await response.json<{ message: string }>()
+      const body = await response.json()
       expect(body.message).toBe('Account unlinked successfully')
 
       const accounts = await auth.getAccounts(user.id)
@@ -200,7 +200,7 @@ describe('link handler', () => {
       const response = await handleUnlink(request, auth, 'mock')
 
       expect(response.status).toBe(401)
-      const body = await response.json<{ error: string }>()
+      const body = await response.json()
       expect(body.error).toBe('Unauthorized')
     })
 
@@ -213,7 +213,7 @@ describe('link handler', () => {
       const response = await handleUnlink(request, auth, 'mock')
 
       expect(response.status).toBe(401)
-      const body = await response.json<{ error: string }>()
+      const body = await response.json()
       expect(body.error).toBe('Unauthorized')
     })
 
@@ -235,7 +235,7 @@ describe('link handler', () => {
       const response = await handleUnlink(request, auth, 'mock')
 
       expect(response.status).toBe(400)
-      const body = await response.json<{ error: string }>()
+      const body = await response.json()
       expect(body.error).toBe('Cannot unlink the last account')
     })
 
@@ -262,7 +262,7 @@ describe('link handler', () => {
       const response = await handleUnlink(request, auth, 'mock')
 
       expect(response.status).toBe(400)
-      const body = await response.json<{ error: string }>()
+      const body = await response.json()
       expect(body.error).toBe('Provider "mock" not linked to this account')
     })
 

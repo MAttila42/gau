@@ -1,0 +1,143 @@
+---
+title: Hooks
+description: Extend and customize gau's OAuth flow using hooks.
+---
+
+import Aside from 'starlight-plugin-icons/components/Aside.astro'
+
+`gau` exposes hooks to let you intercept the OAuth callback, modify provider profiles, and control linking.
+These are configured in `createAuth`.
+
+They receive a context object (e.g., `providerId`, `tokens`, `providerUser`, and request/cookie details),
+and they return specific values to control the flow.
+
+Conceptual hook example:
+
+```ts title="auth.ts"
+import { createAuth } from '@rttnd/gau/core'
+import { GitHub } from '@rttnd/gau/oauth'
+
+export const auth = createAuth({
+  providers: [
+    GitHub({ clientId: process.env.AUTH_GITHUB_ID!, clientSecret: process.env.AUTH_GITHUB_SECRET! }),
+  ],
+  onHook: async (context) => {
+    return { handled: false }
+  },
+})
+```
+
+### Auth flow
+
+Two common paths run through the callback handler:
+
+#### Sign-in
+- User initiates sign-in (`GET /api/auth/signin/:provider`)
+- Browser is redirected back with `?code=&state=`
+- `gau` validates state/CSRF + PKCE, finds provider
+- Provider validates `code` -> returns `{ tokens, user (provider profile) }`
+- [`onOAuthExchange`](#onoauthexchange) runs
+  - If it returns `{ handled: true, response }`: `gau` clears temp cookies and returns your response (STOP)
+  - Otherwise, continue
+- [`mapExternalProfile`](#mapexternalprofile) runs to adjust `providerUser`
+- If provider is link-only: `gau` returns 400 (STOP)
+- `gau` finds/creates a user and links account (first time) or updates tokens (existing)
+- [`onAfterLinkAccount`](#onafterlinkaccount) runs with action 'link' or 'update'
+- Session is created and response is returned
+
+#### Linking
+- User initiates linking while signed in (`GET /api/auth/link/:provider`)
+- Browser is redirected back with `?code=&state=`
+- `gau` validates state/CSRF + PKCE, finds provider
+- Provider validates `code` → returns `{ tokens, user (provider profile) }`
+- [`onOAuthExchange`](#onoauthexchange) runs
+  - If it returns `{ handled: true, response }`: `gau` clears temp cookies and returns your response (STOP)
+  - Otherwise, continue
+- [`mapExternalProfile`](#mapexternalprofile) runs to adjust `providerUser`
+- [`onBeforeLinkAccount`](#onbeforelinkaccount) runs: may block linking (return `allow:false` or custom response)
+- `gau` links the account and persists tokens
+- [`onAfterLinkAccount`](#onafterlinkaccount) runs with action 'link'
+- Session is (re)created and response is returned
+
+### Hooks
+
+#### onOAuthExchange
+
+> Receives `{ request, providerId, state, code, codeVerifier, callbackUri, redirectTo, cookies, providerUser, tokens, isLinking, sessionUserId }`
+> Return `{ handled: true, response }` to stop; `{ handled: false }` to continue.
+
+When it runs:
+- **After** `provider.validateCallback` returns tokens and provider profile.
+- **Before** any profile mapping, link-only checks, user lookup/linking/creation, or token update.
+
+Use it to:
+- Capture raw provider tokens and short-circuit with a custom Response.
+- Perform a custom token exchange and return results directly.
+
+
+Snippet:
+
+```ts
+onOAuthExchange: async ({ tokens }) => {
+  const access = tokens.accessToken()
+  // optionally: const refresh = tokens.refreshToken?.()
+  return { handled: false }
+}
+```
+
+#### mapExternalProfile
+
+When it runs (timeline):
+- After onOAuthExchange (if not short-circuited)
+- Before link-only enforcement and any persistence.
+
+Use it to:
+- Normalize or augment providerUser (name/email/avatar fields).
+
+```ts
+mapExternalProfile: async ({ providerUser }) => ({
+  name: providerUser.name?.trim(),
+  avatar: providerUser.avatar ?? undefined,
+})
+```
+
+#### onBeforeLinkAccount
+
+When it runs (timeline):
+- Only when an account is about to be linked (new link for a user).
+- After mapExternalProfile and (for sign-in) after user lookup/creation.
+
+Use it to:
+- Gate account linking with custom business logic (entitlements, org membership, etc.).
+
+```ts
+onBeforeLinkAccount: async ({ userId, providerId }) => {
+  const allowed = await checkEntitlements(userId, providerId)
+  if (!allowed)
+    return { allow: false }
+  return { allow: true }
+}
+```
+
+You can also return a custom Response:
+
+```ts
+return { allow: false, response: new Response('blocked', { status: 403 }) }
+```
+
+#### onAfterLinkAccount
+
+When it runs (timeline):
+- After the account has been linked for the first time (action: 'link').
+- After an existing linked account's tokens were updated on sign-in (action: 'update').
+
+Use it to:
+- Audit/log, notify, enqueue background work, or sync data.
+
+```ts
+onAfterLinkAccount: async ({ action, providerId, userId }) => {
+  // audit/log, enqueue jobs, etc.
+}
+```
+
+<Aside type="tip" icon="i-ph:lightbulb-duotone">See the Minecraft/Xbox cookbook for a real-world example that uses these hooks.</Aside>
