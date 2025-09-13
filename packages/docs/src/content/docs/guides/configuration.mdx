@@ -67,6 +67,51 @@ providers: [
 
 Check out the [OAuth Providers](/providers) section for a list of available providers and their specific configuration.
 
+## profiles
+
+> Type: `{ [providerId: string]: { [profileName: string]: { scopes?: string[], redirectUri?: string } } }`  
+> Default: `{}`
+
+Define server-controlled, per-provider `profiles` to group auth provider configs.
+A profile can:
+
+- Override `scopes` used when building the provider authorization URL
+- Override the provider `redirectUri` (useful for desktop/mobile custom schemes)
+
+Profiles are selected by name at login/link time, either via the client helpers or a `?profile=` query parameter. If an unknown profile is requested, `gau` returns `400`.
+
+Example configuration:
+
+```ts title="auth.ts"
+import { createAuth } from '@rttnd/gau/core'
+import { GitHub } from '@rttnd/gau/oauth'
+
+export const auth = createAuth({
+  providers: [
+    GitHub({ clientId: process.env.GITHUB_CLIENT_ID!, clientSecret: process.env.GITHUB_CLIENT_SECRET! }),
+  ],
+  profiles: {
+    github: {
+      // Minimal sign-in with user identity
+      basic: { scopes: ['read:user', 'user:email'] },
+      // Elevated permissions for repo automation
+      maintainer: { scopes: ['read:user', 'user:email', 'repo', 'read:org'] },
+    },
+  },
+})
+```
+
+Select a profile when starting a flow:
+
+- Client: `auth.signIn('github', { profile: 'maintainer' })`
+- URL: `GET /api/auth/login/github?profile=maintainer`
+
+Security notes:
+
+- Profiles are defined on the server; the client can only choose by name. Unknown names are rejected.
+- Use profiles to constrain allowed scope sets, this avoids exposing arbitrary scopes to the client.
+- If you use a custom `redirectUri` for desktop/mobile flows, set it in the profile and configure `trustHosts` appropriately for your return hosts.
+
 ## basePath
 
 > **Type**: `string`,

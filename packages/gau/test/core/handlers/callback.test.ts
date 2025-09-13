@@ -179,6 +179,17 @@ describe('callback handler', () => {
     expect(body.user.email).toBe('user@provider.com')
   })
 
+  it('passes callbackUri from cookie to provider.validateCallback', async () => {
+    const state = 'state123'
+    const code = 'code123'
+    const request = new Request(`http://localhost/api/auth/mock/callback?code=${code}&state=${state}`)
+    request.headers.set('Cookie', `${CSRF_COOKIE_NAME}=${state}; ${PKCE_COOKIE_NAME}=pkce; ${CALLBACK_URI_COOKIE_NAME}=app://custom-callback`)
+
+    await handleCallback(request, auth, 'mock')
+    const validateArgs = (mockProvider.validateCallback as any).mock.calls.at(-1)
+    expect(validateArgs[2]).toBe('app://custom-callback')
+  })
+
   describe('session strategy', () => {
     it('should force token strategy for same-origin when strategy is "token"', async () => {
       auth = createAuth({

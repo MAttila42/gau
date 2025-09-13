@@ -133,6 +133,41 @@ describe('link handler', () => {
       const body = await response.json()
       expect(body.error).toBe('Invalid "redirectTo" URL')
     })
+
+    it('should apply profile overrides during link', async () => {
+      const user = await auth.createUser({ name: 'Test User' })
+      const sessionToken = await auth.createSession(user.id)
+      auth.profiles = {
+        mock: {
+          lite: { scopes: ['link:only'] },
+          desktop: { redirectUri: 'app://desktop-link' },
+        },
+      }
+
+      const req1 = new Request('http://localhost/api/auth/link/mock?profile=lite')
+      req1.headers.set('Cookie', `${SESSION_COOKIE_NAME}=${sessionToken}`)
+      await handleLink(req1, auth, 'mock')
+      const options1 = (auth.providerMap.get('mock')!.getAuthorizationUrl as any).mock.calls.at(-1)[2]
+      expect(options1.scopes).toEqual(['link:only'])
+
+      const req2 = new Request('http://localhost/api/auth/link/mock?profile=desktop')
+      req2.headers.set('Cookie', `${SESSION_COOKIE_NAME}=${sessionToken}`)
+      await handleLink(req2, auth, 'mock')
+      const options2 = (auth.providerMap.get('mock')!.getAuthorizationUrl as any).mock.calls.at(-1)[2]
+      expect(options2.redirectUri).toBe('app://desktop-link')
+    })
+
+    it('should return 400 for unknown profile during link', async () => {
+      const user = await auth.createUser({ name: 'Test User' })
+      const sessionToken = await auth.createSession(user.id)
+      auth.profiles = { mock: { lite: { scopes: ['link:only'] } } }
+      const request = new Request('http://localhost/api/auth/link/mock?profile=unknown')
+      request.headers.set('Cookie', `${SESSION_COOKIE_NAME}=${sessionToken}`)
+      const response = await handleLink(request, auth, 'mock')
+      expect(response.status).toBe(400)
+      const body = await response.json()
+      expect(body.error).toContain('Unknown profile "unknown"')
+    })
   })
 
   describe('handleUnlink', () => {

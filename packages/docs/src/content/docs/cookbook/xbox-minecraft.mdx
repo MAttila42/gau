@@ -12,13 +12,16 @@ This guide shows how to:
 - Exchange them for Xbox Live (XBL), XSTS, then Minecraft tokens
 - Optionally gate linking on ownership (entitlements)
 
-## Prerequisites
+You will need a Microsoft Entra ID app with `XboxLive.signin` permission.
 
-- Microsoft provider configured
-- Add the `XboxLive.signin` scope (and `offline_access` if you want refresh tokens)
+### Auth config
+
+Define a Microsoft `profile` with `XboxLive.signin` (and `offline_access` if you want refresh tokens).
+Profiles let you choose scopes safely from the client by name.
+Optionally, keep regular Microsoft auth (`User.Read`) in a separate profile.
 
 ```ts title="auth.ts"
-import { createAuth } from '@rttnd/gau/core'
+import { createAuth, json } from '@rttnd/gau/core'
 import { Microsoft } from '@rttnd/gau/oauth'
 
 export const auth = createAuth({
@@ -26,10 +29,14 @@ export const auth = createAuth({
     Microsoft({
       clientId: process.env.MICROSOFT_CLIENT_ID!,
       clientSecret: process.env.MICROSOFT_CLIENT_SECRET!,
-      scope: ['openid','profile','email','User.Read','XboxLive.signin','offline_access'],
     })
   ],
-  linkOnlyProviders: ['microsoft'],
+  profiles: {
+    microsoft: {
+      xbox: { scopes: ['XboxLive.signin', 'offline_access'] },
+      graph: { scopes: ['User.Read'] },
+    },
+  },
   onOAuthExchange: async (ctx) => {
     // Example: perform the full chain here and return tokens to the client
     const msAccess = ctx.tokens.accessToken()
@@ -37,22 +44,19 @@ export const auth = createAuth({
     const xsts = await xstsAuthorize(xbl.Token)
     const mc = await minecraftLogin(xsts.Token, xsts.DisplayClaims?.xui?.[0]?.uhs)
 
-    return {
-      handled: true,
-      response: new Response(JSON.stringify({
-        microsoft: { access: msAccess },
-        xbl,
-        xsts,
-        minecraft: mc,
-      }), { status: 200, headers: { 'Content-Type': 'application/json' } })
-    }
+    return { handled: true, response: json({
+      microsoft: { access: msAccess },
+      xbl,
+      xsts,
+      minecraft: mc,
+    }) }
   },
 })
 ```
 
-<Aside type="note">When you short-circuit with `onOAuthExchange`, gau clears temporary cookies (CSRF/PKCE/callbackUri) and returns your custom Response.</Aside>
+<Aside type="note">When you short-circuit with `onOAuthExchange`, gau clears temporary cookies (CSRF/PKCE/callbackUri) and returns your custom response.</Aside>
 
-## Server helpers (example)
+### Server helpers (example)
 
 These minimal helpers demonstrate the HTTP calls. You can inline them, move to a module, or adapt to your runtime.
 
@@ -106,7 +110,7 @@ export async function minecraftProfile(mcAccess: string) {
 }
 ```
 
-## Gate linking by ownership
+### Gate linking by ownership
 
 If you prefer to keep gau's default linking/session behavior, move the ownership check into `onBeforeLinkAccount`.
 
@@ -123,16 +127,19 @@ export const auth = createAuth({
     const ent = await minecraftEntitlements(mc.access_token)
     const owns = Array.isArray(ent.items) && ent.items.length > 0
     if (!owns)
-      return { allow: false, response: new Response('No Minecraft entitlement', { status: 403 }) }
+      return { allow: false, response: json({ error: 'No Minecraft entitlement' }, { status: 403 }) }
 
     return { allow: true }
   },
 })
 ```
 
-## Client side
+### Client side
 
 - For desktop/mobile redirects with different hosts, gau uses token-based return and ships a small HTML auto-close page.
 - For Tauri, set `redirectTo` to a custom scheme, e.g. `gau://oauth/callback`, and use the runtime helpers.
 
-<Aside type="tip" icon="i-ph:lightbulb-duotone">You can also set `linkOnlyProviders: ['microsoft']` to ensure users can only link after sign-in and not sign-in directly with Microsoft, which is typical for Minecraft-style flows.</Aside>
+#### Selecting the Xbox profile
+
+- Client: `auth.signIn('github', { profile: 'maintainer' })`
+- URL: `GET /api/auth/login/github?profile=maintainer`

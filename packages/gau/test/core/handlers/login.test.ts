@@ -54,7 +54,7 @@ describe('login handlers', () => {
     it('should return JSON with auth URL if redirect=false', async () => {
       const request = new Request('http://localhost/api/auth/mock?redirect=false')
       const response = await handleSignIn(request, auth, 'mock')
-      const data = await response.json<{ url: string }>()
+      const data = await response.json()
 
       expect(response.status).toBe(200)
       expect(data.url).toBe('https://provider.com/auth')
@@ -66,7 +66,7 @@ describe('login handlers', () => {
       const request = new Request('http://localhost/api/auth/mock')
       const response = await handleSignIn(request, auth, 'mock')
       expect(response.status).toBe(500)
-      const body = await response.json<{ error: string }>()
+      const body = await response.json()
       expect(body.error).toBe('Could not create authorization URL')
     })
 
@@ -74,7 +74,7 @@ describe('login handlers', () => {
       const request = new Request('http://localhost/api/auth/mock?redirectTo=//invalid-url')
       const response = await handleSignIn(request, auth, 'mock')
       expect(response.status).toBe(400)
-      const body = await response.json<{ error: string }>()
+      const body = await response.json()
       expect(body.error).toBe('Invalid "redirectTo" URL')
     })
 
@@ -82,7 +82,7 @@ describe('login handlers', () => {
       const request = new Request('http://localhost/api/auth/mock?redirectTo=https://evil.com')
       const response = await handleSignIn(request, auth, 'mock')
       expect(response.status).toBe(400)
-      const body = await response.json<{ error: string }>()
+      const body = await response.json()
       expect(body.error).toBe('Untrusted redirect host')
     })
 
@@ -109,8 +109,36 @@ describe('login handlers', () => {
       const request = new Request('http://localhost/api/auth/non-existent-provider')
       const response = await handleSignIn(request, auth, 'non-existent-provider')
       expect(response.status).toBe(400)
-      const body = await response.json<{ error: string }>()
+      const body = await response.json()
       expect(body.error).toBe('Provider not found')
+    })
+
+    it('should apply profile scopes and redirectUri overrides', async () => {
+      auth.profiles = {
+        mock: {
+          lite: { scopes: ['read:litescope', 'email'] },
+          mobile: { redirectUri: 'app://mobile-callback' },
+        },
+      }
+
+      const req1 = new Request('http://localhost/api/auth/mock?profile=lite')
+      await handleSignIn(req1, auth, 'mock')
+      const call1Options = (mockProvider.getAuthorizationUrl as any).mock.calls.at(-1)[2]
+      expect(call1Options.scopes).toEqual(['read:litescope', 'email'])
+
+      const req2 = new Request('http://localhost/api/auth/mock?profile=mobile')
+      await handleSignIn(req2, auth, 'mock')
+      const call2Options = (mockProvider.getAuthorizationUrl as any).mock.calls.at(-1)[2]
+      expect(call2Options.redirectUri).toBe('app://mobile-callback')
+    })
+
+    it('should return 400 for unknown profile name', async () => {
+      auth.profiles = { mock: { lite: { scopes: ['read:litescope'] } } }
+      const request = new Request('http://localhost/api/auth/mock?profile=unknown')
+      const response = await handleSignIn(request, auth, 'mock')
+      expect(response.status).toBe(400)
+      const body = await response.json()
+      expect(body.error).toContain('Unknown profile "unknown"')
     })
   })
 
@@ -124,7 +152,7 @@ describe('login handlers', () => {
       const response = await handleSignOut(request, auth)
 
       expect(response.status).toBe(200)
-      const data = await response.json<{ message: string }>()
+      const data = await response.json()
       expect(data.message).toBe('Signed out')
 
       const cookieHeader = response.headers.get('Set-Cookie')
@@ -144,7 +172,7 @@ describe('login handlers', () => {
       const response = await handleSignOut(request, auth)
 
       expect(response.status).toBe(200)
-      const data = await response.json<{ message: string }>()
+      const data = await response.json()
       expect(data.message).toBe('Signed out')
 
       const cookieHeader = response.headers.get('Set-Cookie')
@@ -160,7 +188,7 @@ describe('login handlers', () => {
       })
       const response = await handleSignOut(request, auth)
       expect(response.status).toBe(200)
-      const data = await response.json<{ message: string }>()
+      const data = await response.json()
       expect(data.message).toBe('Signed out')
     })
   })

@@ -14,43 +14,43 @@
   "eslint.rules.customizations": [
     {
       "rule": "style/*",
-      "severity": "warn"
+      "severity": "off"
     },
     {
       "rule": "format/*",
-      "severity": "warn"
+      "severity": "off"
     },
     {
       "rule": "*-indent",
-      "severity": "warn"
+      "severity": "off"
     },
     {
       "rule": "*-spacing",
-      "severity": "warn"
+      "severity": "off"
     },
     {
       "rule": "*-spaces",
-      "severity": "warn"
+      "severity": "off"
     },
     {
       "rule": "*-order",
-      "severity": "warn"
+      "severity": "off"
     },
     {
       "rule": "*-dangle",
-      "severity": "warn"
+      "severity": "off"
     },
     {
       "rule": "*-newline",
-      "severity": "warn"
+      "severity": "off"
     },
     {
       "rule": "*quotes",
-      "severity": "warn"
+      "severity": "off"
     },
     {
       "rule": "*semi",
-      "severity": "warn"
+      "severity": "off"
     }
   ],
   "eslint.validate": [

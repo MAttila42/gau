@@ -1,8 +1,9 @@
 import { Buffer } from 'node:buffer'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest'
 import { MemoryAdapter } from '../../src/adapters/memory/index'
 import { createAuth } from '../../src/core/createAuth'
 import { AuthError } from '../../src/core/index'
+import { GitHub, Google } from '../../src/oauth'
 
 describe('createAuth', () => {
   const adapter = MemoryAdapter()
@@ -165,5 +166,33 @@ describe('createAuth', () => {
     const token = await auth.signJWT({ es: '256' })
     const promise = auth.verifyJWT(token, { secret: new Uint8Array() as any })
     await expect(promise).rejects.toThrow(new AuthError('For ES256, the secret option must be a string.'))
+  })
+
+  it('exposes configured profiles on the auth object', () => {
+    const auth = createAuth({
+      adapter,
+      providers: [
+        GitHub({ clientId: 'id', clientSecret: 'secret' }),
+        Google({ clientId: 'gid', clientSecret: 'gsecret' }),
+      ],
+      profiles: {
+        github: {
+          lite: { scopes: ['read:user'] },
+        },
+        google: {
+          desktop: { redirectUri: 'app://desktop' },
+        },
+      },
+    })
+
+    expect(auth.profiles).toBeDefined()
+    expect(auth.profiles.github).toBeDefined()
+    expect(auth.profiles.google).toBeDefined()
+    const gh = auth.profiles.github!
+    const gg = auth.profiles.google!
+    expect(gh.lite.scopes).toEqual(['read:user'])
+    expect(gg.desktop.redirectUri).toBe('app://desktop')
+    expectTypeOf(gh.lite.scopes).toEqualTypeOf<string[] | undefined>()
+    expectTypeOf(gg.desktop.redirectUri).toEqualTypeOf<string | undefined>()
   })
 })

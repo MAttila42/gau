@@ -1,5 +1,5 @@
 import type { Accessor, JSXElement, ParentProps, VoidComponent } from 'solid-js'
-import type { GauSession, ProviderIds } from '../../core'
+import type { GauSession, ProfileName, ProviderIds } from '../../core'
 import { createContext, createResource, onCleanup, onMount, Show, untrack, useContext } from 'solid-js'
 import { isServer } from 'solid-js/web'
 import { NULL_SESSION } from '../../core'
@@ -8,8 +8,8 @@ import { clearSessionToken, getSessionToken, storeSessionToken } from '../token'
 
 interface AuthContextValue<TAuth = unknown> {
   session: Accessor<GauSession<ProviderIds<TAuth>>>
-  signIn: (provider: ProviderIds<TAuth>, options?: { redirectTo?: string }) => Promise<void>
-  linkAccount: (provider: ProviderIds<TAuth>, options?: { redirectTo?: string }) => Promise<void>
+  signIn: <P extends ProviderIds<TAuth>>(provider: P, options?: { redirectTo?: string, profile?: ProfileName<TAuth, P> }) => Promise<void>
+  linkAccount: <P extends ProviderIds<TAuth>>(provider: P, options?: { redirectTo?: string, profile?: ProfileName<TAuth, P> }) => Promise<void>
   unlinkAccount: (provider: ProviderIds<TAuth>) => Promise<void>
   signOut: () => Promise<void>
 }
@@ -40,24 +40,29 @@ export function AuthProvider<const TAuth = unknown>(props: ParentProps & { auth?
     { initialValue: { ...NULL_SESSION, providers: [] } },
   )
 
-  async function signIn(provider: ProviderIds<TAuth>, { redirectTo }: { redirectTo?: string } = {}) {
+  async function signIn<P extends ProviderIds<TAuth>>(provider: P, { redirectTo, profile }: { redirectTo?: string, profile?: ProfileName<TAuth, P> } = {}) {
     let finalRedirectTo = redirectTo ?? props.redirectTo
     if (isTauri()) {
-      await signInWithTauri(provider as string, baseUrl, scheme, finalRedirectTo)
+      await signInWithTauri(provider as string, baseUrl, scheme, finalRedirectTo, profile as string | undefined)
     }
     else {
       if (!finalRedirectTo && !isServer)
         finalRedirectTo = window.location.origin
 
-      const query = finalRedirectTo ? `?redirectTo=${encodeURIComponent(finalRedirectTo)}` : ''
-      const authUrl = `${baseUrl}/${provider as string}${query}`
+      const params = new URLSearchParams()
+      if (finalRedirectTo)
+        params.set('redirectTo', finalRedirectTo)
+      if (profile)
+        params.set('profile', String(profile))
+      const q = params.toString()
+      const authUrl = `${baseUrl}/${provider as string}${q ? `?${q}` : ''}`
       window.location.href = authUrl
     }
   }
 
-  async function linkAccount(provider: ProviderIds<TAuth>, { redirectTo }: { redirectTo?: string } = {}) {
+  async function linkAccount<P extends ProviderIds<TAuth>>(provider: P, { redirectTo, profile }: { redirectTo?: string, profile?: ProfileName<TAuth, P> } = {}) {
     if (isTauri()) {
-      await linkAccountWithTauri(provider as string, baseUrl, scheme, redirectTo)
+      await linkAccountWithTauri(provider as string, baseUrl, scheme, redirectTo, profile as string | undefined)
       return
     }
 
@@ -65,8 +70,13 @@ export function AuthProvider<const TAuth = unknown>(props: ParentProps & { auth?
     if (!finalRedirectTo && !isServer)
       finalRedirectTo = window.location.href
 
-    const query = finalRedirectTo ? `?redirectTo=${encodeURIComponent(finalRedirectTo)}` : ''
-    const linkUrl = `${baseUrl}/link/${provider as string}${query}${query ? '&' : '?'}redirect=false`
+    const params = new URLSearchParams()
+    if (finalRedirectTo)
+      params.set('redirectTo', finalRedirectTo)
+    if (profile)
+      params.set('profile', String(profile))
+    params.set('redirect', 'false')
+    const linkUrl = `${baseUrl}/link/${provider as string}?${params.toString()}`
 
     const token = getSessionToken()
 

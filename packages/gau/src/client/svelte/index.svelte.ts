@@ -1,4 +1,4 @@
-import type { GauSession, ProviderIds } from '../../core'
+import type { GauSession, ProfileName, ProviderIds } from '../../core'
 import { BROWSER } from 'esm-env'
 import { getContext, setContext } from 'svelte'
 import { NULL_SESSION } from '../../core'
@@ -7,8 +7,8 @@ import { clearSessionToken, getSessionToken, storeSessionToken } from '../token'
 
 interface AuthContextValue<TAuth = unknown> {
   session: GauSession<ProviderIds<TAuth>>
-  signIn: (provider: ProviderIds<TAuth>, options?: { redirectTo?: string }) => Promise<void>
-  linkAccount: (provider: ProviderIds<TAuth>, options?: { redirectTo?: string }) => Promise<void>
+  signIn: <P extends ProviderIds<TAuth>>(provider: P, options?: { redirectTo?: string, profile?: ProfileName<TAuth, P> }) => Promise<void>
+  linkAccount: <P extends ProviderIds<TAuth>>(provider: P, options?: { redirectTo?: string, profile?: ProfileName<TAuth, P> }) => Promise<void>
   unlinkAccount: (provider: ProviderIds<TAuth>) => Promise<void>
   signOut: () => Promise<void>
 }
@@ -49,23 +49,28 @@ export function createSvelteAuth<const TAuth = unknown>({
     }
   }
 
-  async function signIn(provider: ProviderIds<TAuth>, { redirectTo }: { redirectTo?: string } = {}) {
+  async function signIn<P extends ProviderIds<TAuth>>(provider: P, { redirectTo, profile }: { redirectTo?: string, profile?: ProfileName<TAuth, P> } = {}) {
     let finalRedirectTo = redirectTo ?? defaultRedirectTo
     if (isTauri()) {
-      await signInWithTauri(provider as string, baseUrl, scheme, finalRedirectTo)
+      await signInWithTauri(provider as string, baseUrl, scheme, finalRedirectTo, profile as string | undefined)
     }
     else {
       if (!finalRedirectTo && BROWSER)
         finalRedirectTo = window.location.origin
 
-      const query = finalRedirectTo ? `?redirectTo=${encodeURIComponent(finalRedirectTo)}` : ''
-      window.location.href = `${baseUrl}/${provider as string}${query}`
+      const params = new URLSearchParams()
+      if (finalRedirectTo)
+        params.set('redirectTo', finalRedirectTo)
+      if (profile)
+        params.set('profile', String(profile))
+      const q = params.toString()
+      window.location.href = `${baseUrl}/${provider as string}${q ? `?${q}` : ''}`
     }
   }
 
-  async function linkAccount(provider: ProviderIds<TAuth>, { redirectTo }: { redirectTo?: string } = {}) {
+  async function linkAccount<P extends ProviderIds<TAuth>>(provider: P, { redirectTo, profile }: { redirectTo?: string, profile?: ProfileName<TAuth, P> } = {}) {
     if (isTauri()) {
-      await linkAccountWithTauri(provider as string, baseUrl, scheme, redirectTo)
+      await linkAccountWithTauri(provider as string, baseUrl, scheme, redirectTo, profile as string | undefined)
       return
     }
 
@@ -73,8 +78,13 @@ export function createSvelteAuth<const TAuth = unknown>({
     if (!finalRedirectTo && BROWSER)
       finalRedirectTo = window.location.href
 
-    const query = finalRedirectTo ? `?redirectTo=${encodeURIComponent(finalRedirectTo)}` : ''
-    const linkUrl = `${baseUrl}/link/${provider as string}${query}${query ? '&' : '?'}redirect=false`
+    const params = new URLSearchParams()
+    if (finalRedirectTo)
+      params.set('redirectTo', finalRedirectTo)
+    if (profile)
+      params.set('profile', String(profile))
+    params.set('redirect', 'false')
+    const linkUrl = `${baseUrl}/link/${provider as string}?${params.toString()}`
 
     const token = getSessionToken()
 
@@ -177,8 +187,8 @@ export function createSvelteAuth<const TAuth = unknown>({
     get session() {
       return session
     },
-    signIn: signIn as (provider: ProviderIds<TAuth>, options?: { redirectTo?: string }) => Promise<void>,
-    linkAccount: linkAccount as (provider: ProviderIds<TAuth>, options?: { redirectTo?: string }) => Promise<void>,
+    signIn,
+    linkAccount,
     unlinkAccount: unlinkAccount as (provider: ProviderIds<TAuth>) => Promise<void>,
     signOut,
   }

@@ -57,6 +57,7 @@ export async function prepareOAuthRedirect(
   const { state: originalState, codeVerifier } = createOAuthUris()
   const url = new URL(request.url)
   const redirectTo = url.searchParams.get('redirectTo')
+  const profileName = url.searchParams.get('profile')
 
   if (redirectTo) {
     let parsedRedirect: URL
@@ -85,10 +86,23 @@ export async function prepareOAuthRedirect(
   if (!callbackUri && provider.requiresRedirectUri)
     callbackUri = `${url.origin}${auth.basePath}/${providerId}/callback`
 
+  let scopesOverride: string[] | undefined
+  if (profileName) {
+    const providerProfiles = auth.profiles?.[providerId] ?? {}
+    const selected = providerProfiles[profileName]
+    if (!selected)
+      return json({ error: `Unknown profile "${profileName}" for provider "${providerId}"` }, { status: 400 })
+    if (selected.redirectUri)
+      callbackUri = selected.redirectUri
+    if (selected.scopes)
+      scopesOverride = selected.scopes
+  }
+
   let authUrl: URL | null
   try {
     authUrl = await provider.getAuthorizationUrl(state, codeVerifier, {
       redirectUri: callbackUri ?? undefined,
+      scopes: scopesOverride,
     })
   }
   catch (error) {

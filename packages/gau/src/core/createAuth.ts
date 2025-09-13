@@ -11,6 +11,12 @@ import { AuthError } from './index'
 type ProviderId<P> = P extends OAuthProvider<infer T> ? T : never
 export type ProviderIds<T> = T extends { providerMap: Map<infer K extends string, any> } ? K : string
 
+export type ProfileName<T, P extends string> = T extends { profiles: infer R }
+  ? P extends keyof R
+    ? keyof R[P]
+    : never
+  : never
+
 export interface CreateAuthOptions<TProviders extends OAuthProvider[]> {
   /** The database adapter to use for storing users and accounts. */
   adapter: Adapter
@@ -129,15 +135,18 @@ export interface CreateAuthOptions<TProviders extends OAuthProvider[]> {
     /** Preflight max age in seconds (optional). */
     maxAge?: number
   }
+  /**
+   * Named, server-defined profiles that group provider specific settings.
+   * Clients can reference a profile by name (e.g. signIn('github', { profile: 'myprofile' })).
+   */
+  profiles?: ProfilesConfig<TProviders>
 }
 
 export type Auth<TProviders extends OAuthProvider[] = any> = Adapter & {
   providerMap: Map<ProviderId<TProviders[number]>, TProviders[number]>
   basePath: string
   cookieOptions: SerializeOptions
-  jwt: {
-    ttl: number
-  }
+  jwt: { ttl: number }
   onOAuthExchange?: CreateAuthOptions<TProviders>['onOAuthExchange']
   linkOnlyProviders: string[]
   mapExternalProfile?: CreateAuthOptions<TProviders>['mapExternalProfile']
@@ -172,7 +181,17 @@ export type Auth<TProviders extends OAuthProvider[] = any> = Adapter & {
     exposeHeaders?: string[]
     maxAge?: number
   }
+  profiles: ResolvedProfiles<TProviders>
 }
+
+export interface ProfileDefinition {
+  scopes?: string[]
+  redirectUri?: string
+}
+
+type ProviderIdOfArray<TProviders extends OAuthProvider[]> = ProviderId<TProviders[number]>
+export type ProfilesConfig<TProviders extends OAuthProvider[]> = Partial<Record<ProviderIdOfArray<TProviders>, Record<string, ProfileDefinition>>>
+export type ResolvedProfiles<TProviders extends OAuthProvider[]> = ProfilesConfig<TProviders>
 
 export function createAuth<const TProviders extends OAuthProvider[]>({
   adapter,
@@ -192,6 +211,7 @@ export function createAuth<const TProviders extends OAuthProvider[]>({
   updateUserInfoOnLink = false,
   roles: rolesConfig = {},
   cors = true,
+  profiles: profilesConfig,
 }: CreateAuthOptions<TProviders>): Auth<TProviders> {
   const { algorithm = 'ES256', secret, iss, aud, ttl: defaultTTL = 3600 * 24 } = jwtConfig
   const cookieOptions = { ...DEFAULT_COOKIE_SERIALIZE_OPTIONS, ...cookieConfig }
@@ -214,6 +234,8 @@ export function createAuth<const TProviders extends OAuthProvider[]>({
         exposeHeaders: cors === true ? undefined : cors.exposeHeaders,
         maxAge: cors === true ? undefined : cors.maxAge,
       }
+
+  const resolvedProfiles = (profilesConfig ?? {}) as ResolvedProfiles<TProviders>
 
   function buildSignOptions(custom: Partial<SignOptions> = {}): SignOptions {
     const base = { ttl: custom.ttl, iss: custom.iss ?? iss, aud: custom.aud ?? aud, sub: custom.sub }
@@ -334,6 +356,7 @@ export function createAuth<const TProviders extends OAuthProvider[]>({
     trustHosts,
     autoLink,
     allowDifferentEmails,
+    profiles: resolvedProfiles,
     updateUserInfoOnLink,
     sessionStrategy,
     development: false,

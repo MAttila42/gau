@@ -10,6 +10,7 @@ export async function signInWithTauri(
   baseUrl: string,
   scheme: string = 'gau',
   redirectOverride?: string,
+  profile?: string,
 ) {
   if (!isTauri())
     return
@@ -27,7 +28,11 @@ export async function signInWithTauri(
   else
     redirectTo = `${scheme}://oauth/callback`
 
-  const authUrl = `${baseUrl}/${provider}?redirectTo=${encodeURIComponent(redirectTo)}`
+  const params = new URLSearchParams()
+  params.set('redirectTo', redirectTo)
+  if (profile)
+    params.set('profile', profile)
+  const authUrl = `${baseUrl}/${provider}?${params.toString()}`
   await open(authUrl)
 }
 
@@ -65,6 +70,7 @@ export async function linkAccountWithTauri(
   baseUrl: string,
   scheme: string = 'gau',
   redirectOverride?: string,
+  profile?: string,
 ) {
   if (!isTauri())
     return
@@ -88,7 +94,11 @@ export async function linkAccountWithTauri(
     return
   }
 
-  const query = `?redirectTo=${encodeURIComponent(redirectTo)}&token=${encodeURIComponent(token)}`
-  const linkUrl = `${baseUrl}/link/${provider}${query}`
+  const params = new URLSearchParams()
+  params.set('redirectTo', redirectTo)
+  params.set('token', token)
+  if (profile)
+    params.set('profile', profile)
+  const linkUrl = `${baseUrl}/link/${provider}?${params.toString()}`
   await open(linkUrl)
 }
