@@ -50,8 +50,29 @@ export const auth = createAuth({
 })
 ```
 
-### Extra config
+### Provider params
 
-| Property | Type     | Default    | Description |
-|:---------|:---------|:-----------|:------------|
-| tenant   | `string` | `"common"` | The Microsoft Entra ID tenant to use. `"common"` works with both personal and work/school accounts. Other options include `"organizations"` (work/school accounts only) or a specific tenant ID. |
+#### tenant
+
+> Type: `'common' | 'organizations' | 'consumers' | (string & {})`
+>
+> Default: `'common'`
+
+The tenant segment used in the authorize and token endpoints.
+You can also pass a specific tenant ID.
+
+- `"consumers"` is personal accounts only.
+- `"organizations"` is work/school accounts only.
+- `"common"` works with both.
+
+#### prompt
+
+> Type: `'login' | 'none' | 'consent' | 'select_account' | (string & {})`
+
+Optional prompt behavior to request at Microsoft.
+
+#### params
+
+> Type: `Record<string, string>`
+
+Extra query params appended to the authorization URL.

@@ -65,11 +65,13 @@ providers: [
 ],
 ```
 
+You can pass additional provider-specific options using `params`.
+
 Check out the [OAuth Providers](/providers) section for a list of available providers and their specific configuration.
 
 ## profiles
 
-> Type: `{ [providerId: string]: { [profileName: string]: { scopes?: string[], redirectUri?: string } } }`  
+> Type: `{ [providerId: string]: { [profileName: string]: { scopes?: string[], redirectUri?: string, params?: Record<string,string> } & ProviderSpecificOverrides } }`  
 > Default: `{}`
 
 Define server-controlled, per-provider `profiles` to group auth provider configs.
@@ -77,6 +79,8 @@ A profile can:
 
 - Override `scopes` used when building the provider authorization URL
 - Override the provider `redirectUri` (useful for desktop/mobile custom schemes)
+- Include provider-specific, strongly typed overrides (e.g. `tenant`, `prompt` for Microsoft)
+- Add arbitrary authorization `params` (appended to the provider auth URL)
 
 Profiles are selected by name at login/link time, either via the client helpers or a `?profile=` query parameter. If an unknown profile is requested, `gau` returns `400`.
 
@@ -111,6 +115,23 @@ Security notes:
 - Profiles are defined on the server; the client can only choose by name. Unknown names are rejected.
 - Use profiles to constrain allowed scope sets, this avoids exposing arbitrary scopes to the client.
 - If you use a custom `redirectUri` for desktop/mobile flows, set it in the profile and configure `trustHosts` appropriately for your return hosts.
+- Avoid putting secrets into `params` — they become part of the URL.
+- Precedence for settings (when supported by a provider like Microsoft):
+  - profile override (typed) > query parameter (e.g. `?prompt=...`) > provider default
+
+### Extra params
+
+Some providers accept extra authorization parameters via the provider config:
+
+```ts
+GitHub({
+  clientId: process.env.GITHUB_CLIENT_ID!,
+  clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+  params: { allow_signup: 'false' },
+})
+```
+
+Profile `params` are merged on top of provider `params` for the selected profile.
 
 ## basePath
 
