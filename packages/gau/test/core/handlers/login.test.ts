@@ -140,6 +140,26 @@ describe('login handlers', () => {
       const body = await response.json()
       expect(body.error).toContain('Unknown profile "unknown"')
     })
+
+    it('should block sign-in when provider is link-only', async () => {
+      const provider = auth.providerMap.get('mock')!
+      provider.linkOnly = true
+
+      const request = new Request('http://localhost/api/auth/mock')
+      const response = await handleSignIn(request, auth, 'mock')
+      expect(response.status).toBe(400)
+      const body = await response.json()
+      expect(body.error).toMatch(/Sign-in with this provider is disabled/i)
+    })
+
+    it('should block sign-in when selected profile is link-only', async () => {
+      auth.profiles = { mock: { locked: { linkOnly: true } } }
+      const request = new Request('http://localhost/api/auth/mock?profile=locked')
+      const response = await handleSignIn(request, auth, 'mock')
+      expect(response.status).toBe(400)
+      const body = await response.json()
+      expect(body.error).toMatch(/profile is link-only/i)
+    })
   })
 
   describe('handleSignOut', () => {

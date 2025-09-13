@@ -81,6 +81,7 @@ export function GitHub(config: OAuthProviderConfig): OAuthProvider<'github'> {
 
   return {
     id: 'github',
+    linkOnly: config.linkOnly,
 
     async getAuthorizationUrl(state: string, codeVerifier: string, options?: { scopes?: string[], redirectUri?: string }) {
       const client = getClient(options?.redirectUri)

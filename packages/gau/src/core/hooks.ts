@@ -92,7 +92,3 @@ export async function runOnAfterLinkAccount(auth: Auth | undefined, ctx: AfterLi
     console.error('onAfterLinkAccount hook error:', e)
   }
 }
-
-export function isLinkOnlyProvider(auth: Auth, providerId: string): boolean {
-  return Array.isArray(auth.linkOnlyProviders) && auth.linkOnlyProviders.includes(providerId)
-}

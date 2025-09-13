@@ -350,14 +350,14 @@ An array of user IDs that are always treated as admin for helper predicates.
 
 For a full guide, see [Role-Based Access Control](/guides/role-based-access-control).
 
-## linkOnlyProviders
+## linkOnly
 
-> Type: `string[]`  
-> Default: `[]`
+> **Type**: `boolean`
+> **Default**: `false`
 
-List provider ids that should be treated as link-only, and `gau` will disallow standalone sign-in.
-When a user completes an OAuth callback without an existing session, `gau` returns a 400 and a friendly message.
+When enabled the provider or the profile can only be used for linking to an existing user account, not for signing in or signing up.
 
-```ts
-linkOnlyProviders: ['microsoft']
-```
+- Provider level: pass `linkOnly: true` to the provider config.
+- Profile level: set `linkOnly: true` on a specific profile.
+
+When a user completes an OAuth callback without an existing session for a link-only provider/profile, gau returns a 400 with a friendly message.

@@ -96,7 +96,12 @@ export async function prepareOAuthRedirect(
       callbackUri = selected.redirectUri
     if (selected.scopes)
       scopesOverride = selected.scopes
+    if (!linkingToken && selected.linkOnly === true)
+      return json({ error: 'This profile is link-only. Please link it to an existing account.' }, { status: 400 })
   }
+
+  if (!linkingToken && (provider.linkOnly === true))
+    return json({ error: 'Sign-in with this provider is disabled. Please link it to an existing account.' }, { status: 400 })
 
   let authUrl: URL | null
   try {

@@ -149,12 +149,35 @@ describe('link handler', () => {
       await handleLink(req1, auth, 'mock')
       const options1 = (auth.providerMap.get('mock')!.getAuthorizationUrl as any).mock.calls.at(-1)[2]
       expect(options1.scopes).toEqual(['link:only'])
-
       const req2 = new Request('http://localhost/api/auth/link/mock?profile=desktop')
       req2.headers.set('Cookie', `${SESSION_COOKIE_NAME}=${sessionToken}`)
       await handleLink(req2, auth, 'mock')
       const options2 = (auth.providerMap.get('mock')!.getAuthorizationUrl as any).mock.calls.at(-1)[2]
       expect(options2.redirectUri).toBe('app://desktop-link')
+    })
+
+    it('should allow linking even if provider is link-only', async () => {
+      const user = await auth.createUser({ name: 'Test User' })
+      const sessionToken = await auth.createSession(user.id)
+      ;(auth.providerMap.get('mock') as any).linkOnly = true
+      const request = new Request('http://localhost/api/auth/link/mock')
+      request.headers.set('Cookie', `${SESSION_COOKIE_NAME}=${sessionToken}`)
+
+      const response = await handleLink(request, auth, 'mock')
+      expect(response.status).toBe(302)
+    })
+
+    it('should allow linking when selected profile is link-only', async () => {
+      const user = await auth.createUser({ name: 'Test User' })
+      const sessionToken = await auth.createSession(user.id)
+      auth.profiles = { mock: { locked: { linkOnly: true, scopes: ['special:link'] } } }
+      const request = new Request('http://localhost/api/auth/link/mock?profile=locked')
+      request.headers.set('Cookie', `${SESSION_COOKIE_NAME}=${sessionToken}`)
+
+      const response = await handleLink(request, auth, 'mock')
+      expect(response.status).toBe(302)
+      const options = (auth.providerMap.get('mock')!.getAuthorizationUrl as any).mock.calls.at(-1)[2]
+      expect(options.scopes).toEqual(['special:link'])
     })
 
     it('should return 400 for unknown profile during link', async () => {

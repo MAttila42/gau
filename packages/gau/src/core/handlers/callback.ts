@@ -9,13 +9,7 @@ import {
   PKCE_COOKIE_NAME,
   SESSION_COOKIE_NAME,
 } from '../cookies'
-import {
-  isLinkOnlyProvider,
-  maybeMapExternalProfile,
-  runOnAfterLinkAccount,
-  runOnBeforeLinkAccount,
-  runOnOAuthExchange,
-} from '../hooks'
+import { maybeMapExternalProfile, runOnAfterLinkAccount, runOnBeforeLinkAccount, runOnOAuthExchange } from '../hooks'
 import { json, redirect } from '../index'
 
 export async function handleCallback(request: Request, auth: Auth, providerId: string): Promise<Response> {
@@ -116,8 +110,8 @@ export async function handleCallback(request: Request, auth: Auth, providerId: s
     isLinking,
   })
 
-  // Enforce link-only providers when not linking
-  if (!isLinking && isLinkOnlyProvider(auth, providerId)) {
+  // Enforce provider-level link-only when not linking (profile-level enforced at redirect time)
+  if (!isLinking && (auth.providerMap.get(providerId)?.linkOnly === true)) {
     cookies.delete(CSRF_COOKIE_NAME)
     cookies.delete(PKCE_COOKIE_NAME)
     if (callbackUri)

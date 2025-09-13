@@ -102,14 +102,13 @@ describe('callback hooks', () => {
     expect((auth.mapExternalProfile as any)).toHaveBeenCalledTimes(1)
   })
 
-  it('enforces linkOnlyProviders by blocking sign-in', async () => {
+  it('enforces provider linkOnly by blocking sign-in', async () => {
     const adapter = MemoryAdapter()
-    provider = makeProvider()
+    provider = makeProvider({ linkOnly: true })
     auth = createAuth({
       adapter,
       providers: [provider],
       jwt: { secret: 'test', algorithm: 'HS256' },
-      linkOnlyProviders: ['mock'],
     })
 
     const req = makeRequest('state789')

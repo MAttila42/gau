@@ -123,6 +123,7 @@ export function Microsoft(config: MicrosoftConfig): OAuthProvider<'microsoft'> {
 
   return {
     id: 'microsoft',
+    linkOnly: config.linkOnly,
     requiresRedirectUri: true,
 
     async getAuthorizationUrl(state: string, codeVerifier: string, options?: { scopes?: string[], redirectUri?: string }) {

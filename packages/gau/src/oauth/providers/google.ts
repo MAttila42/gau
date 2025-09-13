@@ -45,6 +45,7 @@ export function Google(config: OAuthProviderConfig): OAuthProvider<'google'> {
 
   return {
     id: 'google',
+    linkOnly: config.linkOnly,
     requiresRedirectUri: true,
 
     async getAuthorizationUrl(state: string, codeVerifier: string, options?: { scopes?: string[], redirectUri?: string }) {

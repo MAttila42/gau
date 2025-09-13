@@ -32,7 +32,7 @@ export const auth = createAuth({
 Two common paths run through the callback handler:
 
 #### Sign-in
-- User initiates sign-in (`GET /api/auth/signin/:provider`)
+- User initiates sign-in (`GET /api/auth/:provider`)
 - Browser is redirected back with `?code=&state=`
 - `gau` validates state/CSRF + PKCE, finds provider
 - Provider validates `code` -> returns `{ tokens, user (provider profile) }`

@@ -33,7 +33,7 @@ export const auth = createAuth({
   ],
   profiles: {
     microsoft: {
-      xbox: { scopes: ['XboxLive.signin', 'offline_access'] },
+      xbox: { scopes: ['XboxLive.signin', 'offline_access'], linkOnly: true },
       graph: { scopes: ['User.Read'] },
     },
   },
@@ -53,6 +53,8 @@ export const auth = createAuth({
   },
 })
 ```
+
+<Aside type="tip" icon="i-ph:lightbulb-duotone">Mark the `xbox` profile as `linkOnly: true` to ensure users can only link it to an existing account and not sign in directly with Microsoft using that profile.</Aside>
 
 <Aside type="note">When you short-circuit with `onOAuthExchange`, gau clears temporary cookies (CSRF/PKCE/callbackUri) and returns your custom response.</Aside>
 
@@ -141,5 +143,5 @@ export const auth = createAuth({
 
 #### Selecting the Xbox profile
 
-- Client: `auth.signIn('github', { profile: 'maintainer' })`
-- URL: `GET /api/auth/login/github?profile=maintainer`
+- Client: `auth.signIn('microsoft', { profile: 'xbox' })`
+- URL: `GET /api/auth/login/microsoft?profile=xbox`

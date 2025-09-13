@@ -63,8 +63,6 @@ export interface CreateAuthOptions<TProviders extends OAuthProvider[]> {
     isLinking: boolean
     sessionUserId?: string
   }) => Promise<{ handled: true, response: Response } | { handled: false }>
-  /** Force some providers to be link-only (no standalone sign-in). */
-  linkOnlyProviders?: string[]
   /** Map/override the provider's profile right after token exchange. */
   mapExternalProfile?: (context: {
     request: Request
@@ -148,7 +146,6 @@ export type Auth<TProviders extends OAuthProvider[] = any> = Adapter & {
   cookieOptions: SerializeOptions
   jwt: { ttl: number }
   onOAuthExchange?: CreateAuthOptions<TProviders>['onOAuthExchange']
-  linkOnlyProviders: string[]
   mapExternalProfile?: CreateAuthOptions<TProviders>['mapExternalProfile']
   onBeforeLinkAccount?: CreateAuthOptions<TProviders>['onBeforeLinkAccount']
   onAfterLinkAccount?: CreateAuthOptions<TProviders>['onAfterLinkAccount']
@@ -187,6 +184,8 @@ export type Auth<TProviders extends OAuthProvider[] = any> = Adapter & {
 export interface ProfileDefinition {
   scopes?: string[]
   redirectUri?: string
+  /** When true, this profile can only be linked to an existing session; standalone sign-in is disabled. */
+  linkOnly?: boolean
 }
 
 type ProviderIdOfArray<TProviders extends OAuthProvider[]> = ProviderId<TProviders[number]>
@@ -201,7 +200,6 @@ export function createAuth<const TProviders extends OAuthProvider[]>({
   session: sessionConfig = {},
   cookies: cookieConfig = {},
   onOAuthExchange,
-  linkOnlyProviders = [],
   mapExternalProfile,
   onBeforeLinkAccount,
   onAfterLinkAccount,
@@ -344,7 +342,6 @@ export function createAuth<const TProviders extends OAuthProvider[]>({
       ttl: defaultTTL,
     },
     onOAuthExchange,
-    linkOnlyProviders,
     mapExternalProfile,
     onBeforeLinkAccount,
     onAfterLinkAccount,
