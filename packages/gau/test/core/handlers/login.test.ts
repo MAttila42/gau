@@ -160,6 +160,27 @@ describe('login handlers', () => {
       const body = await response.json()
       expect(body.error).toMatch(/profile is link-only/i)
     })
+
+    it('should forward profile params and query prompt to provider and set provider-options cookie', async () => {
+      // Add profile with params; also pass prompt via query
+      auth.profiles = { mock: { pro: { params: { a: '1', b: '2' } } } }
+      const request = new Request('http://localhost/api/auth/mock?profile=pro&prompt=login&redirect=false')
+      const response = await handleSignIn(request, auth, 'mock')
+
+      expect(response.status).toBe(200)
+      const options = (mockProvider.getAuthorizationUrl as any).mock.calls.at(-1)[2]
+      expect(options.params).toMatchObject({ a: '1', b: '2', prompt: 'login' })
+
+      const cookies = response.headers.getSetCookie()
+      // Should include provider options cookie
+      const providerCookie = cookies.find(c => c.startsWith('__gau-provider-options='))
+      expect(providerCookie).toBeTruthy()
+
+      // Decode and inspect stored data (Base64 JSON)
+      const encoded = providerCookie!.split('=')[1].split(';')[0]
+      const decoded = JSON.parse(atob(encoded))
+      expect(decoded.params).toMatchObject({ a: '1', b: '2', prompt: 'login' })
+    })
   })
 
   describe('handleSignOut', () => {

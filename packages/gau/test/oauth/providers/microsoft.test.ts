@@ -17,7 +17,11 @@ vi.mock('arctic', async (importOriginal) => {
   return {
     ...original,
     OAuth2Client: vi.fn(() => ({
-      createAuthorizationURLWithPKCE: vi.fn(() => new URL('https://login.microsoftonline.com/common/oauth2/v2.0/authorize?mock=true')),
+      createAuthorizationURLWithPKCE: vi.fn((authURL: string) => {
+        const u = new URL(authURL)
+        u.searchParams.set('mock', 'true')
+        return u
+      }),
       validateAuthorizationCode: vi.fn(() => Promise.resolve(mockTokens)),
     })),
   }
@@ -66,6 +70,16 @@ describe('microsoft Provider', () => {
     const url = await provider.getAuthorizationUrl('state', 'code-verifier')
     expect(url.toString()).toContain('https://login.microsoftonline.com/common/oauth2/v2.0/authorize')
     expect(url.toString()).toContain('mock=true')
+  })
+
+  it('applies prompt and params and tenant overrides in authorization URL', async () => {
+    const url = await provider.getAuthorizationUrl('state', 'cv', {
+      params: { prompt: 'login', foo: 'bar' },
+      overrides: { tenant: 'organizations' },
+    } as any)
+    expect(url.toString()).toContain('/organizations/oauth2/v2.0/authorize')
+    expect(url.searchParams.get('prompt')).toBe('login')
+    expect(url.searchParams.get('foo')).toBe('bar')
   })
 
   describe('validateCallback', () => {

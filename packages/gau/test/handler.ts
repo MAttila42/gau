@@ -43,6 +43,7 @@ export function setup() {
       tokenType: () => 'Bearer',
     },
   })
+  mockProvider.linkOnly = false
 
   const auth = createAuth({
     adapter: MemoryAdapter(),
