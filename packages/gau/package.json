@@ -92,8 +92,8 @@
     "prepublishOnly": "node -e \"require('fs').copyFileSync('../../README.md', 'README.md')\"",
     "postpublish": "node -e \"require('fs').unlinkSync('README.md')\"",
     "dev": "bun run --watch index.ts",
-    "lint": "eslint . --fix",
-    "check": "tsc --noEmit --skipLibCheck",
+    "lint": "bun --bun eslint . --fix",
+    "check": "tsgo --noEmit --skipLibCheck",
     "test": "vitest",
     "test:ui": "vitest --ui"
   },
