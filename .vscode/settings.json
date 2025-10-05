@@ -2,7 +2,7 @@
   "rust-analyzer.linkedProjects": [
     "packages\\example-sveltekit-tauri-mobile\\src-tauri\\Cargo.toml"
   ],
-  "typescript.experimental.useTsgo": false,
+  "typescript.experimental.useTsgo": true,
   "svelte.enable-ts-plugin": true,
   "svelte.plugin.svelte.enable": true,
   "typescript.tsdk": "node_modules\\typescript\\lib",
